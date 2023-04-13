@@ -1,0 +1,5 @@
+output = "funny"
+
+[bundles]
+includes = ["**/Runtime/*.unity"]
+ignores = ["**/Runtime/Subscene/**","**/Editor/**"]

@@ -1,0 +1,6 @@
+﻿tests/csharp-link-rust/.vs
+tests/csharp-link-rust/bin
+tests/csharp-link-rust/obj
+target
+Cargo.lock
+.vscode

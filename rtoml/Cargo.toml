@@ -1,0 +1,13 @@
+[package]
+name = "rtoml"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+toml_edit = "0.19.8"
+
+[lib]
+name = "rtoml" #生成dll的文件名
+crate-type = ["cdylib"]
