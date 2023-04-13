@@ -8,7 +8,7 @@ use toml_edit::{Array, ArrayOfTables, Document, InlineTable, Item, Table, Value}
 // Document
 // ============================================================
 #[no_mangle]
-pub extern "C" fn parse_toml(path: *const c_char) -> *const Document {
+pub extern "C" fn parse_toml_file(path: *const c_char) -> *const Document {
     let path = unsafe {
         assert!(!path.is_null());
         CStr::from_ptr(path).to_str().unwrap()
@@ -17,6 +17,19 @@ pub extern "C" fn parse_toml(path: *const c_char) -> *const Document {
     let Ok(content) = fs::read_to_string(path) else {
         eprintln!("read file failed: {:?}",path);
         return std::ptr::null();
+    };
+
+    match content.parse::<Document>() {
+        Ok(val) => Box::into_raw(Box::new(val)),
+        _ => std::ptr::null(),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn parse_toml_str(content: *const c_char) -> *const Document {
+    let content = unsafe {
+        assert!(!content.is_null());
+        CStr::from_ptr(content).to_str().unwrap()
     };
 
     match content.parse::<Document>() {
@@ -50,6 +63,11 @@ pub extern "C" fn as_item_from_document(ptr: *const Document) -> *const Item {
 pub extern "C" fn as_table_from_document(ptr: *const Document) -> *const Table {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     Box::into_raw(Box::new(item.as_table().to_owned()))
+}
+
+#[no_mangle]
+pub extern "C" fn dispose_document(ptr: *mut Document) {
+    unsafe { Box::from_raw(ptr) };
 }
 
 // ============================================================
@@ -208,6 +226,10 @@ pub extern "C" fn as_inline_table_from_item(ptr: *const Item) -> *const InlineTa
     }
 }
 
+#[no_mangle]
+pub extern "C" fn dispose_item(ptr: *mut Item) {
+    unsafe { Box::from_raw(ptr) };
+}
 // ============================================================
 // Value
 // ============================================================
@@ -317,6 +339,11 @@ pub extern "C" fn as_inline_table_from_value(ptr: *const Value) -> *const Inline
         _ => std::ptr::null(),
     }
 }
+
+#[no_mangle]
+pub extern "C" fn dispose_value(ptr: *mut Value) {
+    unsafe { Box::from_raw(ptr) };
+}
 // ============================================================
 // Array
 // ============================================================
@@ -340,6 +367,11 @@ pub extern "C" fn get_from_array(ptr: *const Array, index: usize) -> *const Valu
         Some(val) => Box::into_raw(Box::new(val.to_owned())),
         _ => std::ptr::null(),
     }
+}
+
+#[no_mangle]
+pub extern "C" fn dispose_array(ptr: *mut Array) {
+    unsafe { Box::from_raw(ptr) };
 }
 
 // ============================================================
@@ -414,6 +446,10 @@ pub extern "C" fn contains_array_of_tables_from_table(
     item.contains_array_of_tables(key)
 }
 
+#[no_mangle]
+pub extern "C" fn dispose_table(ptr: *mut Table) {
+    unsafe { Box::from_raw(ptr) };
+}
 // ============================================================
 // InlineTable
 // ============================================================
@@ -459,47 +495,36 @@ pub extern "C" fn contains_key_from_inline_table(
     item.contains_key(key)
 }
 
+#[no_mangle]
+pub extern "C" fn dispose_inline_table(ptr: *mut InlineTable) {
+    unsafe { Box::from_raw(ptr) };
+}
 // ============================================================
 // ArrayOfTables
 // ============================================================
 #[no_mangle]
-pub extern "C" fn is_empty_from_table_array(ptr: *const InlineTable) -> bool {
+pub extern "C" fn is_empty_from_table_array(ptr: *const ArrayOfTables) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_empty()
 }
 
 #[no_mangle]
-pub extern "C" fn len_from_table_array(ptr: *const InlineTable) -> usize {
+pub extern "C" fn len_from_table_array(ptr: *const ArrayOfTables) -> usize {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.len()
 }
 
 #[no_mangle]
-pub extern "C" fn get_from_table_array(
-    ptr: *const InlineTable,
-    key: *const c_char,
-) -> *const Value {
+pub extern "C" fn get_from_table_array(ptr: *const ArrayOfTables, index: usize) -> *const Table {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    let key = unsafe {
-        assert!(!key.is_null());
-        CStr::from_ptr(key).to_str().unwrap()
-    };
 
-    match item.get(key) {
+    match item.get(index) {
         Some(val) => Box::into_raw(Box::new(val.to_owned())),
         _ => std::ptr::null(),
     }
 }
 
 #[no_mangle]
-pub extern "C" fn contains_key_from_table_array(
-    ptr: *const InlineTable,
-    key: *const c_char,
-) -> bool {
-    let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    let key = unsafe {
-        assert!(!key.is_null());
-        CStr::from_ptr(key).to_str().unwrap()
-    };
-    item.contains_key(key)
+pub extern "C" fn dispose_table_array(ptr: *mut ArrayOfTables) {
+    unsafe { Box::from_raw(ptr) };
 }
