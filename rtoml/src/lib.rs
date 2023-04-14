@@ -1,20 +1,65 @@
 use std::{
-    ffi::{c_char, CStr, CString},
+    ffi::{c_char, CStr},
     fs,
 };
 use toml_edit::{Array, ArrayOfTables, Document, InlineTable, Item, Table, Value};
+
+mod matcher;
+mod utils;
+// ============================================================
+// Info
+// ============================================================
+#[no_mangle]
+pub extern "C" fn get_version() -> *const c_char {
+    let val = std::env!("CARGO_PKG_VERSION");
+    utils::str_to_char_ptr(val)
+}
+
+// ============================================================
+// PKG Matcher
+// ============================================================
+#[no_mangle]
+pub extern "C" fn pkg_match(
+    root_path: *const c_char,
+    patterns: *const *const c_char,
+    patterns_len: usize,
+) -> *const Vec<String> {
+    let root_path = utils::char_ptr_to_str(root_path);
+    let patterns = utils::arr_ptr_to_strs(patterns, patterns_len as usize);
+    let patterns: Vec<&str> = patterns.iter().map(|s| s.as_ref()).collect();
+
+    let files = matcher::pkg_match(root_path, &patterns);
+    Box::into_raw(Box::new(files))
+}
+
+#[no_mangle]
+pub extern "C" fn strs_len(ptr: *const Vec<String>) -> usize {
+    let strs = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    strs.len()
+}
+
+#[no_mangle]
+pub extern "C" fn strs_get(ptr: *const Vec<String>, index: usize) -> *const c_char {
+    let strs = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    match strs.get(index) {
+        Some(s) => utils::str_to_char_ptr(s),
+        _ => std::ptr::null(),
+    }
+}
+
+#[no_mangle]
+pub fn dispose_strs(ptr: *mut Vec<String>) {
+    unsafe { Box::from_raw(ptr) };
+}
 
 // ============================================================
 // Document
 // ============================================================
 #[no_mangle]
 pub extern "C" fn parse_toml_file(path: *const c_char) -> *const Document {
-    let path = unsafe {
-        assert!(!path.is_null());
-        CStr::from_ptr(path).to_str().unwrap()
-    };
+    let path = utils::char_ptr_to_str(path);
 
-    let Ok(content) = fs::read_to_string(path) else {
+    let Ok(content) = fs::read_to_string(&path) else {
         eprintln!("read file failed: {:?}",path);
         return std::ptr::null();
     };
@@ -27,10 +72,7 @@ pub extern "C" fn parse_toml_file(path: *const c_char) -> *const Document {
 
 #[no_mangle]
 pub extern "C" fn parse_toml_str(content: *const c_char) -> *const Document {
-    let content = unsafe {
-        assert!(!content.is_null());
-        CStr::from_ptr(content).to_str().unwrap()
-    };
+    let content = utils::char_ptr_to_str(content);
 
     match content.parse::<Document>() {
         Ok(val) => Box::into_raw(Box::new(val)),
@@ -41,13 +83,9 @@ pub extern "C" fn parse_toml_str(content: *const c_char) -> *const Document {
 #[no_mangle]
 pub extern "C" fn get_from_document(ptr: *const Document, key: *const c_char) -> *const Item {
     let doc = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let key = utils::char_ptr_to_str(key);
 
-    let key = unsafe {
-        assert!(!key.is_null());
-        CStr::from_ptr(key).to_str().unwrap()
-    };
-
-    match doc.get(key) {
+    match doc.get(&key) {
         Some(val) => Box::into_raw(Box::new(val.to_owned())),
         _ => std::ptr::null(),
     }
@@ -186,10 +224,7 @@ pub extern "C" fn as_str_from_item(ptr: *const Item) -> *const c_char {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_str() {
-        Some(val) => {
-            let c_str = CString::new(val).unwrap();
-            c_str.into_raw()
-        }
+        Some(val) => utils::str_to_char_ptr(val),
         _ => std::ptr::null(),
     }
 }
@@ -230,6 +265,7 @@ pub extern "C" fn as_inline_table_from_item(ptr: *const Item) -> *const InlineTa
 pub extern "C" fn dispose_item(ptr: *mut Item) {
     unsafe { Box::from_raw(ptr) };
 }
+
 // ============================================================
 // Value
 // ============================================================
@@ -237,8 +273,7 @@ pub extern "C" fn dispose_item(ptr: *mut Item) {
 pub extern "C" fn type_name_from_value(ptr: *const Value) -> *const c_char {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let val = item.type_name();
-    let c_str = CString::new(val).unwrap();
-    c_str.into_raw()
+    utils::str_to_char_ptr(val)
 }
 
 #[no_mangle]
@@ -300,10 +335,7 @@ pub extern "C" fn as_str_from_value(ptr: *const Value) -> *const c_char {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_str() {
-        Some(val) => {
-            let c_str = CString::new(val).unwrap();
-            c_str.into_raw()
-        }
+        Some(val) => utils::str_to_char_ptr(val),
         _ => std::ptr::null(),
     }
 }
@@ -344,6 +376,7 @@ pub extern "C" fn as_inline_table_from_value(ptr: *const Value) -> *const Inline
 pub extern "C" fn dispose_value(ptr: *mut Value) {
     unsafe { Box::from_raw(ptr) };
 }
+
 // ============================================================
 // Array
 // ============================================================
@@ -392,12 +425,9 @@ pub extern "C" fn len_from_table(ptr: *const Table) -> usize {
 #[no_mangle]
 pub extern "C" fn get_from_table(ptr: *const Table, key: *const c_char) -> *const Item {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    let key = unsafe {
-        assert!(!key.is_null());
-        CStr::from_ptr(key).to_str().unwrap()
-    };
+    let key = utils::char_ptr_to_str(key);
 
-    match item.get(key) {
+    match item.get(&key) {
         Some(val) => Box::into_raw(Box::new(val.to_owned())),
         _ => std::ptr::null(),
     }
@@ -406,31 +436,22 @@ pub extern "C" fn get_from_table(ptr: *const Table, key: *const c_char) -> *cons
 #[no_mangle]
 pub extern "C" fn contains_key_from_table(ptr: *const Table, key: *const c_char) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    let key = unsafe {
-        assert!(!key.is_null());
-        CStr::from_ptr(key).to_str().unwrap()
-    };
-    item.contains_key(key)
+    let key = utils::char_ptr_to_str(key);
+    item.contains_key(&key)
 }
 
 #[no_mangle]
 pub extern "C" fn contains_table_from_table(ptr: *const Table, key: *const c_char) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    let key = unsafe {
-        assert!(!key.is_null());
-        CStr::from_ptr(key).to_str().unwrap()
-    };
-    item.contains_table(key)
+    let key = utils::char_ptr_to_str(key);
+    item.contains_table(&key)
 }
 
 #[no_mangle]
 pub extern "C" fn contains_value_from_table(ptr: *const Table, key: *const c_char) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    let key = unsafe {
-        assert!(!key.is_null());
-        CStr::from_ptr(key).to_str().unwrap()
-    };
-    item.contains_value(key)
+    let key = utils::char_ptr_to_str(key);
+    item.contains_value(&key)
 }
 
 #[no_mangle]
@@ -450,6 +471,7 @@ pub extern "C" fn contains_array_of_tables_from_table(
 pub extern "C" fn dispose_table(ptr: *mut Table) {
     unsafe { Box::from_raw(ptr) };
 }
+
 // ============================================================
 // InlineTable
 // ============================================================
@@ -499,6 +521,7 @@ pub extern "C" fn contains_key_from_inline_table(
 pub extern "C" fn dispose_inline_table(ptr: *mut InlineTable) {
     unsafe { Box::from_raw(ptr) };
 }
+
 // ============================================================
 // ArrayOfTables
 // ============================================================

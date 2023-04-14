@@ -4,11 +4,38 @@ using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using static System.Net.Mime.MediaTypeNames;
+using static System.Net.WebRequestMethods;
 
 namespace csharp_link_rust
 {
     internal class Program
     {
+        // ===============================================
+        // Info
+        // ===============================================
+        [DllImport("../../../../../target/debug/rtoml.dll")]
+        public static extern string get_version();
+
+        // ===============================================
+        // PKG Matcher
+        // ===============================================
+        [DllImport("../../../../../target/debug/rtoml.dll")]
+        public static extern System.IntPtr pkg_match(
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
+                string[] patterns,
+                UInt32 patterns_len
+            );
+
+        [DllImport("../../../../../target/debug/rtoml.dll")]
+        public static extern UInt32 strs_len(System.IntPtr ptr);
+
+        [DllImport("../../../../../target/debug/rtoml.dll")]
+        public static extern string strs_get(System.IntPtr ptr, UInt32 index);
+
+        [DllImport("../../../../../target/debug/rtoml.dll")]
+        public static extern string dispose_strs(System.IntPtr ptr);
+
+
         /// ===============================================
         /// Document in toml
         /// ===============================================
@@ -220,9 +247,75 @@ namespace csharp_link_rust
 
         static void Main(string[] args)
         {
+            get_version_test();
+
+            // parse_toml_test();
+
+            pkg_match_test();
+        }
+
+        public static void get_version_test()
+        {
+            Console.WriteLine(get_version());
+        }
+
+        public static void pkg_match_test()
+        {
+
+            string root_path1 = "../../../../../tests/pkg_assets";
+            string[] patterns1 = { "**/foo1/*.asset", "**/foo1/*.toml" };
+            foreach (string file in pkg_inner_match(root_path1, patterns1))
+            {
+                Console.WriteLine(file);
+            }
+            Console.WriteLine("");
+
+            string root_path2 = "../../../../../tests/pkg_assets";
+            string[] patterns2 = { "**/foo2/*.txt", "!**/foo2/bar/*2.txt" };
+            foreach (string file in pkg_inner_match(root_path2, patterns2))
+            {
+                Console.WriteLine(file);
+            }
+            Console.WriteLine("");
+
+            string root_path3 = "../../../../../tests/pkg_assets";
+            string[] patterns3 = { "**/foo3/*.txt", "**/foo3/**/*.txt" };
+            foreach (string file in pkg_inner_match(root_path3, patterns3))
+            {
+                Console.WriteLine(file);
+            }
+            Console.WriteLine("");
+
+        }
+
+        public static string[] pkg_inner_match(string root_path, string[] patterns)
+        {
+            System.IntPtr strs_ptr = pkg_match(root_path, patterns, (UInt32)patterns.Length);
+
+            if (strs_ptr != System.IntPtr.Zero)
+            {
+                UInt32 len = strs_len(strs_ptr);
+                if (len != 0)
+                {
+                    string[] files = new string[len];
+                    for (uint i = 0; i < len; i++)
+                    {
+                        files[i] = strs_get(strs_ptr, i);
+                    }
+
+                    return files;
+                }
+                dispose_strs(strs_ptr);
+            }
+            return null;
+        }
+        // parse toml test
+        public static void parse_toml_test()
+        {
+
             // System.IntPtr doc = parse_toml_file("../../../../pkg.toml");
 
-            string context = File.ReadAllText("../../../../pkg.toml");
+            string context = System.IO.File.ReadAllText("../../../../pkg.toml");
             System.IntPtr doc = parse_toml_str(context);
 
             System.IntPtr item = get_from_document(doc, "output");
@@ -230,7 +323,7 @@ namespace csharp_link_rust
             Console.WriteLine("output: " + output);
             Console.WriteLine("\n");
             dispose_item(item);
-        
+
 
             System.IntPtr bundles_item = get_from_document(doc, "bundles");
             System.IntPtr bundles_table = as_table_from_item(bundles_item);
@@ -242,8 +335,8 @@ namespace csharp_link_rust
             {
                 System.IntPtr val_ptr = get_from_array(includes_array, i);
                 string str = as_str_from_value(val_ptr);
-                includes.Add(str);              
-          
+                includes.Add(str);
+
                 Console.WriteLine("include: " + str);
                 dispose_value(val_ptr);
             }
@@ -252,7 +345,7 @@ namespace csharp_link_rust
 
             dispose_array(includes_array);
             dispose_item(includes_item);
-            
+
             System.IntPtr ignores_item = get_from_table(bundles_table, "ignores");
             System.IntPtr ignores_array = as_array_from_item(ignores_item);
             List<string> ignores = new List<string>();
@@ -269,7 +362,7 @@ namespace csharp_link_rust
 
             dispose_array(ignores_array);
             dispose_item(includes_item);
-           
+
             dispose_table(bundles_table);
             dispose_item(bundles_item);
             dispose_document(doc);
@@ -277,7 +370,7 @@ namespace csharp_link_rust
             GC.Collect();
             GC.WaitForPendingFinalizers();
             Console.ReadLine();
-        }
+        }  
     }
 }
 
