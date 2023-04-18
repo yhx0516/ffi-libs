@@ -18,209 +18,210 @@ namespace csharp_link_rust.libs
         /// ===============================================
         // return Document ptr
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern IntPtr parse_toml_file([MarshalAs(UnmanagedType.LPUTF8Str)] string url);
+        public static extern IntPtr document_parse_file([MarshalAs(UnmanagedType.LPUTF8Str)] string url);
 
+        // return Document ptr
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern IntPtr parse_toml_str([MarshalAs(UnmanagedType.LPUTF8Str)] string url);
+        public static extern IntPtr document_parse_content([MarshalAs(UnmanagedType.LPUTF8Str)] string url);
 
         // return Item ptr
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern IntPtr get_from_document(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
+        public static extern IntPtr document_get(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern IntPtr as_item_from_document(IntPtr ptr);
+        public static extern IntPtr document_as_item(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern IntPtr as_table_from_document(IntPtr ptr);
+        public static extern IntPtr document_as_table(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern void dispose_document(IntPtr ptr);
+        public static extern void document_dispose(IntPtr ptr);
 
         /// ===============================================
         /// Item in toml
         /// ===============================================
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_value_from_item(IntPtr ptr);
+        public static extern bool item_is_value(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern IntPtr as_value_from_item(IntPtr ptr);
+        public static extern IntPtr item_as_value(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_table_from_item(IntPtr ptr);
+        public static extern bool item_is_table(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern IntPtr as_table_from_item(IntPtr ptr);
+        public static extern IntPtr item_as_table(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_array_of_tables_from_item(IntPtr ptr);
+        public static extern bool item_is_array_of_tables(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern IntPtr as_array_of_tables_from_item(IntPtr ptr);
+        public static extern IntPtr item_as_array_of_tables(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_none_from_item(IntPtr ptr);
+        public static extern bool item_is_none(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_integer_from_item(IntPtr ptr);
+        public static extern bool item_is_integer(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern long as_integer_from_item(IntPtr ptr);
+        public static extern long item_as_integer(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_float_from_item(IntPtr ptr);
+        public static extern bool item_is_float(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern float as_float_from_item(IntPtr ptr);
+        public static extern float item_as_float(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_bool_from_item(IntPtr ptr);
+        public static extern bool item_is_bool(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool as_bool_from_item(IntPtr ptr);
+        public static extern bool item_as_bool(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_str_from_item(IntPtr ptr);
+        public static extern bool item_is_str(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern string as_str_from_item(IntPtr ptr);
+        public static extern string item_as_str(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_array_from_item(IntPtr ptr);
+        public static extern bool item_is_array(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern IntPtr as_array_from_item(IntPtr ptr);
+        public static extern IntPtr item_as_array(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_inline_array_from_item(IntPtr ptr);
+        public static extern bool item_is_inline_array(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern IntPtr as_inline_table_from_item(IntPtr ptr);
+        public static extern IntPtr item_as_inline_table(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern void dispose_item(IntPtr ptr);
+        public static extern void item_dispose(IntPtr ptr);
 
         /// ===============================================
         /// Value in toml
         /// ===============================================
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern string type_name_from_value(IntPtr ptr);
+        public static extern string value_type_name(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_integer_from_value(IntPtr ptr);
+        public static extern bool value_is_integer(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern long as_integer_from_value(IntPtr ptr);
+        public static extern long value_as_integer(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_float_from_value(IntPtr ptr);
+        public static extern bool value_is_float(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern float as_float_from_value(IntPtr ptr);
+        public static extern float value_as_float(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_bool_from_value(IntPtr ptr);
+        public static extern bool value_is_bool(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool as_bool_from_value(IntPtr ptr);
+        public static extern bool value_as_bool(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_str_from_value(IntPtr ptr);
+        public static extern bool value_is_str(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern string as_str_from_value(IntPtr ptr);
+        public static extern string value_as_str(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_array_from_value(IntPtr ptr);
+        public static extern bool value_is_array(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern IntPtr as_array_from_value(IntPtr ptr);
+        public static extern IntPtr value_as_array(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_inline_array_from_value(IntPtr ptr);
+        public static extern bool value_is_inline_array(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern IntPtr as_inline_table_from_value(IntPtr ptr);
+        public static extern IntPtr value_as_inline_table(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern void dispose_value(IntPtr ptr);
+        public static extern void value_dispose(IntPtr ptr);
 
         /// ===============================================
         /// Array in toml
         /// ===============================================
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_empty_from_array(IntPtr ptr);
+        public static extern bool array_is_empty(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern uint len_from_array(IntPtr ptr);
+        public static extern uint array_len(IntPtr ptr);
 
         // return Value ptr
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern IntPtr get_from_array(IntPtr ptr, uint index);
+        public static extern IntPtr array_get(IntPtr ptr, uint index);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern void dispose_array(IntPtr ptr);
+        public static extern void array_dispose(IntPtr ptr);
 
         /// ===============================================
         /// Table in toml
         /// ===============================================
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_empty_from_table(IntPtr ptr);
+        public static extern bool table_is_empty(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern uint len_from_table(IntPtr ptr);
+        public static extern uint table_len(IntPtr ptr);
 
         // return Item ptr
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern IntPtr get_from_table(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
+        public static extern IntPtr table_get(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool contains_key_from_table(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
+        public static extern bool table_contains_key(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool contains_table_from_table(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
+        public static extern bool table_contains_table(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool contains_value_from_table(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
+        public static extern bool table_contains_value(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool contains_array_of_tables_from_table(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
+        public static extern bool table_contains_array_of_tables(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern void dispose_table(IntPtr ptr);
+        public static extern void table_dispose(IntPtr ptr);
         /// ===============================================
         /// InlineTable in toml
         /// ===============================================
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_empty_from_inline_table(IntPtr ptr);
+        public static extern bool inline_table_is_empty(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern uint len_inline_table(IntPtr ptr);
+        public static extern uint inline_table_len(IntPtr ptr);
 
         // return Value ptr
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern IntPtr get_from_inline_table(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
+        public static extern IntPtr inline_table_get(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool contains_key_from_inline_table(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
+        public static extern bool inline_table_contains_key(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern void dispose_inline_table(IntPtr ptr);
+        public static extern void inline_table_dispose(IntPtr ptr);
 
         /// ===============================================
         /// ArrayOfTables in toml
         /// ===============================================
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern bool is_empty_from_table_array(IntPtr ptr);
+        public static extern bool table_array_is_empty(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern uint len_from_table_array(IntPtr ptr);
+        public static extern uint table_array_len(IntPtr ptr);
 
         // return Value ptr
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern IntPtr get_from_table_array(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
+        public static extern IntPtr table_array_get(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern void dispose_table_array(IntPtr ptr);
+        public static extern void table_array_dispose(IntPtr ptr);
 
         // parse toml test
         public static void ParseTomlTest()
@@ -233,56 +234,56 @@ namespace csharp_link_rust.libs
             // System.IntPtr doc = parse_toml_file("../../../../pkg.toml");
 
             string context = System.IO.File.ReadAllText("../../../../pkg.toml");
-            System.IntPtr doc = parse_toml_str(context);
+            System.IntPtr doc = document_parse_content(context);
 
-            System.IntPtr item = get_from_document(doc, "output");
-            string output = as_str_from_item(item);
+            System.IntPtr item = document_get(doc, "output");
+            string output = item_as_str(item);
             Console.WriteLine("output: " + output);
             Console.WriteLine("");
-            dispose_item(item);
+            item_dispose(item);
 
 
-            System.IntPtr bundles_item = get_from_document(doc, "bundles");
-            System.IntPtr bundles_table = as_table_from_item(bundles_item);
+            System.IntPtr bundles_item = document_get(doc, "bundles");
+            System.IntPtr bundles_table = item_as_table(bundles_item);
 
-            System.IntPtr includes_item = get_from_table(bundles_table, "includes");
-            System.IntPtr includes_array = as_array_from_item(includes_item);
+            System.IntPtr includes_item = table_get(bundles_table, "includes");
+            System.IntPtr includes_array = item_as_array(includes_item);
             List<string> includes = new List<string>();
-            for (uint i = 0; i < len_from_array(includes_array); i++)
+            for (uint i = 0; i < array_len(includes_array); i++)
             {
-                System.IntPtr val_ptr = get_from_array(includes_array, i);
-                string str = as_str_from_value(val_ptr);
+                System.IntPtr val_ptr = array_get(includes_array, i);
+                string str = value_as_str(val_ptr);
                 includes.Add(str);
 
                 Console.WriteLine("include: " + str);
-                dispose_value(val_ptr);
+                value_dispose(val_ptr);
             }
             Console.WriteLine("includes len: " + includes.Count);
             Console.WriteLine("");
 
-            dispose_array(includes_array);
-            dispose_item(includes_item);
+            array_dispose(includes_array);
+            item_dispose(includes_item);
 
-            System.IntPtr ignores_item = get_from_table(bundles_table, "ignores");
-            System.IntPtr ignores_array = as_array_from_item(ignores_item);
+            System.IntPtr ignores_item = table_get(bundles_table, "ignores");
+            System.IntPtr ignores_array = item_as_array(ignores_item);
             List<string> ignores = new List<string>();
-            for (uint i = 0; i < len_from_array(ignores_array); i++)
+            for (uint i = 0; i < array_len(ignores_array); i++)
             {
-                System.IntPtr val_ptr = get_from_array(ignores_array, i);
-                string str = as_str_from_value(val_ptr);
+                System.IntPtr val_ptr = array_get(ignores_array, i);
+                string str = value_as_str(val_ptr);
                 ignores.Add(str);
 
                 Console.WriteLine("ignore: " + str);
-                dispose_value(val_ptr);
+                value_dispose(val_ptr);
             }
             Console.WriteLine("ignores len: " + ignores.Count);
 
-            dispose_array(ignores_array);
-            dispose_item(includes_item);
+            array_dispose(ignores_array);
+            item_dispose(includes_item);
 
-            dispose_table(bundles_table);
-            dispose_item(bundles_item);
-            dispose_document(doc);
+            table_dispose(bundles_table);
+            item_dispose(bundles_item);
+            document_dispose(doc);
 
             GC.Collect();
             GC.WaitForPendingFinalizers();

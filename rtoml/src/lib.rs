@@ -21,7 +21,7 @@ pub extern "C" fn get_version() -> *const c_char {
 // Document
 // ============================================================
 #[no_mangle]
-pub extern "C" fn parse_toml_file(path: *const c_char) -> *const Document {
+pub extern "C" fn document_parse_file(path: *const c_char) -> *const Document {
     let path = rutils::char_ptr_to_str(path);
 
     let Ok(content) = fs::read_to_string(&path) else {
@@ -36,7 +36,7 @@ pub extern "C" fn parse_toml_file(path: *const c_char) -> *const Document {
 }
 
 #[no_mangle]
-pub extern "C" fn parse_toml_str(content: *const c_char) -> *const Document {
+pub extern "C" fn document_parse_content(content: *const c_char) -> *const Document {
     let content = rutils::char_ptr_to_str(content);
 
     match content.parse::<Document>() {
@@ -46,7 +46,7 @@ pub extern "C" fn parse_toml_str(content: *const c_char) -> *const Document {
 }
 
 #[no_mangle]
-pub extern "C" fn get_from_document(ptr: *const Document, key: *const c_char) -> *const Item {
+pub extern "C" fn document_get(ptr: *const Document, key: *const c_char) -> *const Item {
     let doc = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let key = rutils::char_ptr_to_str(key);
 
@@ -57,19 +57,19 @@ pub extern "C" fn get_from_document(ptr: *const Document, key: *const c_char) ->
 }
 
 #[no_mangle]
-pub extern "C" fn as_item_from_document(ptr: *const Document) -> *const Item {
+pub extern "C" fn document_as_item(ptr: *const Document) -> *const Item {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     Box::into_raw(Box::new(item.as_item().to_owned()))
 }
 
 #[no_mangle]
-pub extern "C" fn as_table_from_document(ptr: *const Document) -> *const Table {
+pub extern "C" fn document_as_table(ptr: *const Document) -> *const Table {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     Box::into_raw(Box::new(item.as_table().to_owned()))
 }
 
 #[no_mangle]
-pub extern "C" fn dispose_document(ptr: *mut Document) {
+pub extern "C" fn document_dispose(ptr: *mut Document) {
     unsafe { Box::from_raw(ptr) };
 }
 
@@ -77,13 +77,13 @@ pub extern "C" fn dispose_document(ptr: *mut Document) {
 // Item
 // ============================================================
 #[no_mangle]
-pub extern "C" fn is_value_from_item(ptr: *const Item) -> bool {
+pub extern "C" fn item_is_value(ptr: *const Item) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_value()
 }
 
 #[no_mangle]
-pub extern "C" fn as_value_from_item(ptr: *const Item) -> *const Value {
+pub extern "C" fn item_as_value(ptr: *const Item) -> *const Value {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_value() {
@@ -93,13 +93,13 @@ pub extern "C" fn as_value_from_item(ptr: *const Item) -> *const Value {
 }
 
 #[no_mangle]
-pub extern "C" fn is_table_from_item(ptr: *const Item) -> bool {
+pub extern "C" fn item_is_table(ptr: *const Item) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_table()
 }
 
 #[no_mangle]
-pub extern "C" fn as_table_from_item(ptr: *const Item) -> *const Table {
+pub extern "C" fn item_as_table(ptr: *const Item) -> *const Table {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_table() {
@@ -109,13 +109,13 @@ pub extern "C" fn as_table_from_item(ptr: *const Item) -> *const Table {
 }
 
 #[no_mangle]
-pub extern "C" fn is_array_of_tables_from_item(ptr: *const Item) -> bool {
+pub extern "C" fn item_is_array_of_tables(ptr: *const Item) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_array_of_tables()
 }
 
 #[no_mangle]
-pub extern "C" fn as_array_of_tables_from_item(ptr: *const Item) -> *const ArrayOfTables {
+pub extern "C" fn item_as_array_of_tables(ptr: *const Item) -> *const ArrayOfTables {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_array_of_tables() {
@@ -125,19 +125,19 @@ pub extern "C" fn as_array_of_tables_from_item(ptr: *const Item) -> *const Array
 }
 
 #[no_mangle]
-pub extern "C" fn is_none_from_item(ptr: *const Item) -> bool {
+pub extern "C" fn item_is_none(ptr: *const Item) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_none()
 }
 
 #[no_mangle]
-pub extern "C" fn is_integer_from_item(ptr: *const Item) -> bool {
+pub extern "C" fn item_is_integer(ptr: *const Item) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_integer()
 }
 
 #[no_mangle]
-pub extern "C" fn as_integer_from_item(ptr: *const Item) -> i64 {
+pub extern "C" fn item_as_integer(ptr: *const Item) -> i64 {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_integer() {
@@ -147,13 +147,13 @@ pub extern "C" fn as_integer_from_item(ptr: *const Item) -> i64 {
 }
 
 #[no_mangle]
-pub extern "C" fn is_float_from_item(ptr: *const Item) -> bool {
+pub extern "C" fn item_is_float(ptr: *const Item) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_float()
 }
 
 #[no_mangle]
-pub extern "C" fn as_float_from_item(ptr: *const Item) -> f64 {
+pub extern "C" fn item_as_float(ptr: *const Item) -> f64 {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_float() {
@@ -163,13 +163,13 @@ pub extern "C" fn as_float_from_item(ptr: *const Item) -> f64 {
 }
 
 #[no_mangle]
-pub extern "C" fn is_bool_from_item(ptr: *const Item) -> bool {
+pub extern "C" fn item_is_bool(ptr: *const Item) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_bool()
 }
 
 #[no_mangle]
-pub extern "C" fn as_bool_from_item(ptr: *const Item) -> bool {
+pub extern "C" fn item_as_bool(ptr: *const Item) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_bool() {
@@ -179,13 +179,13 @@ pub extern "C" fn as_bool_from_item(ptr: *const Item) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn is_str_from_item(ptr: *const Item) -> bool {
+pub extern "C" fn item_is_str(ptr: *const Item) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_str()
 }
 
 #[no_mangle]
-pub extern "C" fn as_str_from_item(ptr: *const Item) -> *const c_char {
+pub extern "C" fn item_as_str(ptr: *const Item) -> *const c_char {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_str() {
@@ -195,13 +195,13 @@ pub extern "C" fn as_str_from_item(ptr: *const Item) -> *const c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn is_array_from_item(ptr: *const Item) -> bool {
+pub extern "C" fn item_is_array(ptr: *const Item) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_array()
 }
 
 #[no_mangle]
-pub extern "C" fn as_array_from_item(ptr: *const Item) -> *const Array {
+pub extern "C" fn item_as_array(ptr: *const Item) -> *const Array {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_array() {
@@ -211,13 +211,13 @@ pub extern "C" fn as_array_from_item(ptr: *const Item) -> *const Array {
 }
 
 #[no_mangle]
-pub extern "C" fn is_inline_array_from_item(ptr: *const Item) -> bool {
+pub extern "C" fn item_is_inline_array(ptr: *const Item) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_inline_table()
 }
 
 #[no_mangle]
-pub extern "C" fn as_inline_table_from_item(ptr: *const Item) -> *const InlineTable {
+pub extern "C" fn item_as_inline_table(ptr: *const Item) -> *const InlineTable {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_inline_table() {
@@ -227,7 +227,7 @@ pub extern "C" fn as_inline_table_from_item(ptr: *const Item) -> *const InlineTa
 }
 
 #[no_mangle]
-pub extern "C" fn dispose_item(ptr: *mut Item) {
+pub extern "C" fn item_dispose(ptr: *mut Item) {
     unsafe { Box::from_raw(ptr) };
 }
 
@@ -235,20 +235,20 @@ pub extern "C" fn dispose_item(ptr: *mut Item) {
 // Value
 // ============================================================
 #[no_mangle]
-pub extern "C" fn type_name_from_value(ptr: *const Value) -> *const c_char {
+pub extern "C" fn value_type_name(ptr: *const Value) -> *const c_char {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let val = item.type_name();
     rutils::str_to_char_ptr(val)
 }
 
 #[no_mangle]
-pub extern "C" fn is_integer_from_value(ptr: *const Value) -> bool {
+pub extern "C" fn value_is_integer(ptr: *const Value) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_integer()
 }
 
 #[no_mangle]
-pub extern "C" fn as_integer_from_value(ptr: *const Value) -> i64 {
+pub extern "C" fn value_as_integer(ptr: *const Value) -> i64 {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_integer() {
@@ -258,13 +258,13 @@ pub extern "C" fn as_integer_from_value(ptr: *const Value) -> i64 {
 }
 
 #[no_mangle]
-pub extern "C" fn is_float_from_value(ptr: *const Value) -> bool {
+pub extern "C" fn value_is_float(ptr: *const Value) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_float()
 }
 
 #[no_mangle]
-pub extern "C" fn as_float_from_value(ptr: *const Value) -> f64 {
+pub extern "C" fn value_as_float(ptr: *const Value) -> f64 {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_float() {
@@ -274,13 +274,13 @@ pub extern "C" fn as_float_from_value(ptr: *const Value) -> f64 {
 }
 
 #[no_mangle]
-pub extern "C" fn is_bool_from_value(ptr: *const Value) -> bool {
+pub extern "C" fn value_is_bool(ptr: *const Value) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_bool()
 }
 
 #[no_mangle]
-pub extern "C" fn as_bool_from_value(ptr: *const Value) -> bool {
+pub extern "C" fn value_as_bool(ptr: *const Value) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_bool() {
@@ -290,13 +290,13 @@ pub extern "C" fn as_bool_from_value(ptr: *const Value) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn is_str_from_value(ptr: *const Value) -> bool {
+pub extern "C" fn value_is_str(ptr: *const Value) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_str()
 }
 
 #[no_mangle]
-pub extern "C" fn as_str_from_value(ptr: *const Value) -> *const c_char {
+pub extern "C" fn value_as_str(ptr: *const Value) -> *const c_char {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_str() {
@@ -306,13 +306,13 @@ pub extern "C" fn as_str_from_value(ptr: *const Value) -> *const c_char {
 }
 
 #[no_mangle]
-pub extern "C" fn is_array_from_value(ptr: *const Value) -> bool {
+pub extern "C" fn value_is_array(ptr: *const Value) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_array()
 }
 
 #[no_mangle]
-pub extern "C" fn as_array_from_value(ptr: *const Value) -> *const Array {
+pub extern "C" fn value_as_array(ptr: *const Value) -> *const Array {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_array() {
@@ -322,13 +322,13 @@ pub extern "C" fn as_array_from_value(ptr: *const Value) -> *const Array {
 }
 
 #[no_mangle]
-pub extern "C" fn is_inline_array_from_value(ptr: *const Value) -> bool {
+pub extern "C" fn value_is_inline_array(ptr: *const Value) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_inline_table()
 }
 
 #[no_mangle]
-pub extern "C" fn as_inline_table_from_value(ptr: *const Value) -> *const InlineTable {
+pub extern "C" fn value_as_inline_table(ptr: *const Value) -> *const InlineTable {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_inline_table() {
@@ -338,7 +338,7 @@ pub extern "C" fn as_inline_table_from_value(ptr: *const Value) -> *const Inline
 }
 
 #[no_mangle]
-pub extern "C" fn dispose_value(ptr: *mut Value) {
+pub extern "C" fn value_dispose(ptr: *mut Value) {
     unsafe { Box::from_raw(ptr) };
 }
 
@@ -346,19 +346,19 @@ pub extern "C" fn dispose_value(ptr: *mut Value) {
 // Array
 // ============================================================
 #[no_mangle]
-pub extern "C" fn is_empty_from_array(ptr: *const Array) -> bool {
+pub extern "C" fn array_is_empty(ptr: *const Array) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_empty()
 }
 
 #[no_mangle]
-pub extern "C" fn len_from_array(ptr: *const Array) -> usize {
+pub extern "C" fn array_len(ptr: *const Array) -> usize {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.len()
 }
 
 #[no_mangle]
-pub extern "C" fn get_from_array(ptr: *const Array, index: usize) -> *const Value {
+pub extern "C" fn array_get(ptr: *const Array, index: usize) -> *const Value {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.get(index) {
@@ -368,7 +368,7 @@ pub extern "C" fn get_from_array(ptr: *const Array, index: usize) -> *const Valu
 }
 
 #[no_mangle]
-pub extern "C" fn dispose_array(ptr: *mut Array) {
+pub extern "C" fn array_dispose(ptr: *mut Array) {
     unsafe { Box::from_raw(ptr) };
 }
 
@@ -376,19 +376,19 @@ pub extern "C" fn dispose_array(ptr: *mut Array) {
 // Table
 // ============================================================
 #[no_mangle]
-pub extern "C" fn is_empty_from_table(ptr: *const Table) -> bool {
+pub extern "C" fn table_is_empty(ptr: *const Table) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_empty()
 }
 
 #[no_mangle]
-pub extern "C" fn len_from_table(ptr: *const Table) -> usize {
+pub extern "C" fn table_len(ptr: *const Table) -> usize {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.len()
 }
 
 #[no_mangle]
-pub extern "C" fn get_from_table(ptr: *const Table, key: *const c_char) -> *const Item {
+pub extern "C" fn table_get(ptr: *const Table, key: *const c_char) -> *const Item {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let key = rutils::char_ptr_to_str(key);
 
@@ -399,31 +399,28 @@ pub extern "C" fn get_from_table(ptr: *const Table, key: *const c_char) -> *cons
 }
 
 #[no_mangle]
-pub extern "C" fn contains_key_from_table(ptr: *const Table, key: *const c_char) -> bool {
+pub extern "C" fn table_contains_key(ptr: *const Table, key: *const c_char) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let key = rutils::char_ptr_to_str(key);
     item.contains_key(&key)
 }
 
 #[no_mangle]
-pub extern "C" fn contains_table_from_table(ptr: *const Table, key: *const c_char) -> bool {
+pub extern "C" fn table_contains_table(ptr: *const Table, key: *const c_char) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let key = rutils::char_ptr_to_str(key);
     item.contains_table(&key)
 }
 
 #[no_mangle]
-pub extern "C" fn contains_value_from_table(ptr: *const Table, key: *const c_char) -> bool {
+pub extern "C" fn table_contains_value(ptr: *const Table, key: *const c_char) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let key = rutils::char_ptr_to_str(key);
     item.contains_value(&key)
 }
 
 #[no_mangle]
-pub extern "C" fn contains_array_of_tables_from_table(
-    ptr: *const Table,
-    key: *const c_char,
-) -> bool {
+pub extern "C" fn table_contains_array_of_tables(ptr: *const Table, key: *const c_char) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let key = unsafe {
         assert!(!key.is_null());
@@ -433,7 +430,7 @@ pub extern "C" fn contains_array_of_tables_from_table(
 }
 
 #[no_mangle]
-pub extern "C" fn dispose_table(ptr: *mut Table) {
+pub extern "C" fn table_dispose(ptr: *mut Table) {
     unsafe { Box::from_raw(ptr) };
 }
 
@@ -441,22 +438,19 @@ pub extern "C" fn dispose_table(ptr: *mut Table) {
 // InlineTable
 // ============================================================
 #[no_mangle]
-pub extern "C" fn is_empty_from_inline_table(ptr: *const InlineTable) -> bool {
+pub extern "C" fn inline_table_is_empty(ptr: *const InlineTable) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_empty()
 }
 
 #[no_mangle]
-pub extern "C" fn len_inline_table(ptr: *const InlineTable) -> usize {
+pub extern "C" fn inline_table_len(ptr: *const InlineTable) -> usize {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.len()
 }
 
 #[no_mangle]
-pub extern "C" fn get_from_inline_table(
-    ptr: *const InlineTable,
-    key: *const c_char,
-) -> *const Value {
+pub extern "C" fn inline_table_get(ptr: *const InlineTable, key: *const c_char) -> *const Value {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let key = unsafe {
         assert!(!key.is_null());
@@ -470,10 +464,7 @@ pub extern "C" fn get_from_inline_table(
 }
 
 #[no_mangle]
-pub extern "C" fn contains_key_from_inline_table(
-    ptr: *const InlineTable,
-    key: *const c_char,
-) -> bool {
+pub extern "C" fn inline_table_contains_key(ptr: *const InlineTable, key: *const c_char) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let key = unsafe {
         assert!(!key.is_null());
@@ -483,7 +474,7 @@ pub extern "C" fn contains_key_from_inline_table(
 }
 
 #[no_mangle]
-pub extern "C" fn dispose_inline_table(ptr: *mut InlineTable) {
+pub extern "C" fn inline_table_dispose(ptr: *mut InlineTable) {
     unsafe { Box::from_raw(ptr) };
 }
 
@@ -491,19 +482,19 @@ pub extern "C" fn dispose_inline_table(ptr: *mut InlineTable) {
 // ArrayOfTables
 // ============================================================
 #[no_mangle]
-pub extern "C" fn is_empty_from_table_array(ptr: *const ArrayOfTables) -> bool {
+pub extern "C" fn table_array_is_empty(ptr: *const ArrayOfTables) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_empty()
 }
 
 #[no_mangle]
-pub extern "C" fn len_from_table_array(ptr: *const ArrayOfTables) -> usize {
+pub extern "C" fn table_array_len(ptr: *const ArrayOfTables) -> usize {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.len()
 }
 
 #[no_mangle]
-pub extern "C" fn get_from_table_array(ptr: *const ArrayOfTables, index: usize) -> *const Table {
+pub extern "C" fn table_array_get(ptr: *const ArrayOfTables, index: usize) -> *const Table {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.get(index) {
@@ -513,6 +504,6 @@ pub extern "C" fn get_from_table_array(ptr: *const ArrayOfTables, index: usize) 
 }
 
 #[no_mangle]
-pub extern "C" fn dispose_table_array(ptr: *mut ArrayOfTables) {
+pub extern "C" fn table_array_dispose(ptr: *mut ArrayOfTables) {
     unsafe { Box::from_raw(ptr) };
 }
