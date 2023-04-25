@@ -137,7 +137,17 @@ pub extern "C" fn item_is_integer(ptr: *const Item) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn item_as_integer(ptr: *const Item) -> i64 {
+pub extern "C" fn item_as_int32(ptr: *const Item) -> i32 {
+    let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+
+    match item.as_integer() {
+        Some(val) => val as i32,
+        _ => 0,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn item_as_int64(ptr: *const Item) -> i64 {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_integer() {
@@ -153,7 +163,17 @@ pub extern "C" fn item_is_float(ptr: *const Item) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn item_as_float(ptr: *const Item) -> f64 {
+pub extern "C" fn item_as_float(ptr: *const Item) -> f32 {
+    let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+
+    match item.as_float() {
+        Some(val) => val as f32,
+        _ => 0.0,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn item_as_double(ptr: *const Item) -> f64 {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_float() {
@@ -248,7 +268,17 @@ pub extern "C" fn value_is_integer(ptr: *const Value) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn value_as_integer(ptr: *const Value) -> i64 {
+pub extern "C" fn value_as_int32(ptr: *const Value) -> i32 {
+    let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+
+    match item.as_integer() {
+        Some(val) => val as i32,
+        _ => 0,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn value_as_int64(ptr: *const Value) -> i64 {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_integer() {
@@ -264,7 +294,17 @@ pub extern "C" fn value_is_float(ptr: *const Value) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn value_as_float(ptr: *const Value) -> f64 {
+pub extern "C" fn value_as_float(ptr: *const Value) -> f32 {
+    let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+
+    match item.as_float() {
+        Some(val) => val as f32,
+        _ => 0.0,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn value_as_double(ptr: *const Value) -> f64 {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_float() {

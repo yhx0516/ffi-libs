@@ -1,4 +1,8 @@
-output = "funny"
+str_val = "funny"
+int32_val = 4
+int64_val = -2147483649
+float_val = 1.2
+double_val = 3.4028235e+38
 
 [bundles]
 includes = ["**/Runtime/*.unity"]
