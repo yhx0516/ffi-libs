@@ -65,13 +65,19 @@ namespace csharp_link_rust.libs
         public static extern bool item_is_integer(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern long item_as_integer(IntPtr ptr);
+        public static extern int item_as_int32(IntPtr ptr);
+
+        [DllImport("../../../../../target/debug/rtoml.dll")]
+        public static extern long item_as_int64(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
         public static extern bool item_is_float(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
         public static extern float item_as_float(IntPtr ptr);
+
+        [DllImport("../../../../../target/debug/rtoml.dll")]
+        public static extern double item_as_double(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
         public static extern bool item_is_bool(IntPtr ptr);
@@ -110,13 +116,19 @@ namespace csharp_link_rust.libs
         public static extern bool value_is_integer(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern long value_as_integer(IntPtr ptr);
+        public static extern int value_as_int32(IntPtr ptr);
+
+        [DllImport("../../../../../target/debug/rtoml.dll")]
+        public static extern long value_as_int64(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
         public static extern bool value_is_float(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
         public static extern float value_as_float(IntPtr ptr);
+
+        [DllImport("../../../../../target/debug/rtoml.dll")]
+        public static extern double value_as_double(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
         public static extern bool value_is_bool(IntPtr ptr);
@@ -236,12 +248,27 @@ namespace csharp_link_rust.libs
             string context = System.IO.File.ReadAllText("../../../../pkg.toml");
             System.IntPtr doc = document_parse_content(context);
 
-            System.IntPtr item = document_get(doc, "output");
-            string output = item_as_str(item);
-            Console.WriteLine("output: " + output);
-            Console.WriteLine("");
-            item_dispose(item);
+            System.IntPtr item_str = document_get(doc, "str_val");
+            string str_val = item_as_str(item_str);
+            Console.WriteLine("   str val: " + str_val);
+            item_dispose(item_str);
 
+            System.IntPtr item_int32 = document_get(doc, "int32_val");
+            int int32_val = item_as_int32(item_int32);
+            Console.WriteLine(" int32 val: " + int32_val);
+
+            System.IntPtr item_int64 = document_get(doc, "int64_val");
+            long int64_val = item_as_int64(item_int64);
+            Console.WriteLine(" int64 val: " + int64_val);
+
+            System.IntPtr item_float = document_get(doc, "float_val");
+            float float_val = item_as_float(item_float);
+            Console.WriteLine(" float val: " + float_val);
+
+            System.IntPtr item_double = document_get(doc, "double_val");
+            double double_val = item_as_double(item_double);
+            Console.WriteLine("double val: " + double_val);
+            Console.WriteLine("");
 
             System.IntPtr bundles_item = document_get(doc, "bundles");
             System.IntPtr bundles_table = item_as_table(bundles_item);
