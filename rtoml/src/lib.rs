@@ -4,6 +4,10 @@ use std::{
 };
 use toml_edit::{Array, ArrayOfTables, Document, InlineTable, Item, Table, Value};
 
+// NOTE: 作为第三方库可以直接调用
+#[allow(unused)]
+use rutils::ffi::{dispose_strs, strs_get, strs_len};
+
 // ============================================================
 // Info
 // ============================================================
@@ -54,6 +58,65 @@ pub extern "C" fn document_get(ptr: *const Document, key: *const c_char) -> *con
         Some(val) => Box::into_raw(Box::new(val.to_owned())),
         _ => std::ptr::null(),
     }
+}
+
+#[no_mangle]
+pub extern "C" fn document_get_keys(ptr: *const Document) -> *const Vec<String> {
+    let doc = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let keys = doc.iter().map(|(key, _)| key.to_string()).collect();
+    Box::into_raw(Box::new(keys))
+}
+
+#[no_mangle]
+pub extern "C" fn document_get_array_keys(ptr: *const Document) -> *const Vec<String> {
+    let doc = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let keys = doc
+        .iter()
+        .filter_map(|(key, item)| match item.is_array() {
+            true => Some(key.to_string()),
+            false => None,
+        })
+        .collect();
+    Box::into_raw(Box::new(keys))
+}
+
+#[no_mangle]
+pub extern "C" fn document_get_table_keys(ptr: *const Document) -> *const Vec<String> {
+    let doc = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let keys = doc
+        .iter()
+        .filter_map(|(key, item)| match item.is_table() {
+            true => Some(key.to_string()),
+            false => None,
+        })
+        .collect();
+    Box::into_raw(Box::new(keys))
+}
+
+#[no_mangle]
+pub extern "C" fn document_get_inline_table_keys(ptr: *const Document) -> *const Vec<String> {
+    let doc = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let keys = doc
+        .iter()
+        .filter_map(|(key, item)| match item.is_inline_table() {
+            true => Some(key.to_string()),
+            false => None,
+        })
+        .collect();
+    Box::into_raw(Box::new(keys))
+}
+
+#[no_mangle]
+pub extern "C" fn document_get_table_array_keys(ptr: *const Document) -> *const Vec<String> {
+    let doc = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let keys = doc
+        .iter()
+        .filter_map(|(key, item)| match item.is_array_of_tables() {
+            true => Some(key.to_string()),
+            false => None,
+        })
+        .collect();
+    Box::into_raw(Box::new(keys))
 }
 
 #[no_mangle]
@@ -231,7 +294,7 @@ pub extern "C" fn item_as_array(ptr: *const Item) -> *const Array {
 }
 
 #[no_mangle]
-pub extern "C" fn item_is_inline_array(ptr: *const Item) -> bool {
+pub extern "C" fn item_is_inline_table(ptr: *const Item) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_inline_table()
 }
@@ -362,7 +425,7 @@ pub extern "C" fn value_as_array(ptr: *const Value) -> *const Array {
 }
 
 #[no_mangle]
-pub extern "C" fn value_is_inline_array(ptr: *const Value) -> bool {
+pub extern "C" fn value_is_inline_table(ptr: *const Value) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     item.is_inline_table()
 }
@@ -439,6 +502,39 @@ pub extern "C" fn table_get(ptr: *const Table, key: *const c_char) -> *const Ite
 }
 
 #[no_mangle]
+pub extern "C" fn table_get_keys(ptr: *const Table) -> *const Vec<String> {
+    let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let keys = item.iter().map(|(key, _)| key.to_string()).collect();
+    Box::into_raw(Box::new(keys))
+}
+
+#[no_mangle]
+pub extern "C" fn table_get_array_keys(ptr: *const Table) -> *const Vec<String> {
+    let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let keys = item
+        .iter()
+        .filter_map(|(key, item)| match item.is_array() {
+            true => Some(key.to_string()),
+            false => None,
+        })
+        .collect();
+    Box::into_raw(Box::new(keys))
+}
+
+#[no_mangle]
+pub extern "C" fn table_get_inline_table_keys(ptr: *const Table) -> *const Vec<String> {
+    let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let keys = item
+        .iter()
+        .filter_map(|(key, item)| match item.is_inline_table() {
+            true => Some(key.to_string()),
+            false => None,
+        })
+        .collect();
+    Box::into_raw(Box::new(keys))
+}
+
+#[no_mangle]
 pub extern "C" fn table_contains_key(ptr: *const Table, key: *const c_char) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let key = rutils::char_ptr_to_str(key);
@@ -501,6 +597,39 @@ pub extern "C" fn inline_table_get(ptr: *const InlineTable, key: *const c_char) 
         Some(val) => Box::into_raw(Box::new(val.to_owned())),
         _ => std::ptr::null(),
     }
+}
+
+#[no_mangle]
+pub extern "C" fn inline_table_get_keys(ptr: *const InlineTable) -> *const Vec<String> {
+    let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let keys = item.iter().map(|(key, _)| key.to_string()).collect();
+    Box::into_raw(Box::new(keys))
+}
+
+#[no_mangle]
+pub extern "C" fn inline_table_get_array_keys(ptr: *const InlineTable) -> *const Vec<String> {
+    let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let keys = item
+        .iter()
+        .filter_map(|(key, item)| match item.is_array() {
+            true => Some(key.to_string()),
+            false => None,
+        })
+        .collect();
+    Box::into_raw(Box::new(keys))
+}
+
+#[no_mangle]
+pub extern "C" fn inline_table_get_inline_table_keys(ptr: *const InlineTable) -> *const Vec<String> {
+    let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let keys = item
+        .iter()
+        .filter_map(|(key, item)| match item.is_inline_table() {
+            true => Some(key.to_string()),
+            false => None,
+        })
+        .collect();
+    Box::into_raw(Box::new(keys))
 }
 
 #[no_mangle]
