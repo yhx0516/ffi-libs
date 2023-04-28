@@ -4,6 +4,66 @@ int64_val = -2147483649
 float_val = 1.2
 double_val = 3.4028235e+38
 
+person = { name = "Tom", sex = "man", favorite = { movie = "none", sport = "swimming"}, list = [
+    {foo = 1},
+    {foo = 2},
+]}
+
+zone = { foo = 1, bar = true }
+
+list = [
+    {foo = 1},
+    {foo = 2},
+]
+
+list2 = [
+    {foo = 1},
+    {foo = 2},
+]
+
 [bundles]
 includes = ["**/Runtime/*.unity"]
 ignores = ["**/Runtime/Subscene/**","**/Editor/**"]
+foo = {bar1 = 1, bar2 = 2}
+foo2 = {bar1 = 1, bar2 = 2}
+list = [
+    {foo = 1},
+    {foo = 2},
+]
+
+[bundles1]
+includes = ["**/Runtime/*.unity"]
+ignores = ["**/Runtime/Subscene/**","**/Editor/**"]
+
+[bundles2]
+includes = ["**/Runtime/*.unity"]
+ignores = ["**/Runtime/Subscene/**","**/Editor/**"]
+
+[[products]]
+name = "Hammer"
+sku = 738594937
+
+[[products]]
+name = "Nail"
+sku = 284758393
+color = "gray"
+
+[[fruits]]
+name = "apple"
+
+[fruits.physical]  # 子表
+color = "red"
+shape = "round"
+
+[[fruits.varieties]]  # 嵌套表数组
+name = "red delicious"
+
+[[fruits.varieties]]
+name = "granny smith"
+
+[[fruits]]
+name = "banana"
+
+[[fruits.varieties]]
+name = "plantain"
+

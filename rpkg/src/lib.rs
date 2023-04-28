@@ -1,5 +1,8 @@
 use std::ffi::c_char;
 
+#[allow(unused)]
+use rutils::ffi::{dispose_strs, strs_get, strs_len};
+
 pub mod pkg;
 // ============================================================
 // Info
@@ -36,24 +39,4 @@ pub extern "C" fn pkg_match_patterns(
 
     let files = pkg::match_patterns(root_path, &patterns);
     Box::into_raw(Box::new(files))
-}
-
-#[no_mangle]
-pub extern "C" fn strs_len(ptr: *const Vec<String>) -> usize {
-    let strs = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    strs.len()
-}
-
-#[no_mangle]
-pub extern "C" fn strs_get(ptr: *const Vec<String>, index: usize) -> *const c_char {
-    let strs = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    match strs.get(index) {
-        Some(s) => rutils::str_to_char_ptr(s),
-        _ => std::ptr::null(),
-    }
-}
-
-#[no_mangle]
-pub fn dispose_strs(ptr: *mut Vec<String>) {
-    unsafe { Box::from_raw(ptr) };
 }
