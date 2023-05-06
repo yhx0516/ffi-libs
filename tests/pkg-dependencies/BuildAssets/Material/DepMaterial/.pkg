@@ -1,0 +1,4 @@
+target = "bundle"
+
+patterns = ["**/*.mat"]
+dependencies = ["/pkg-dependencies/BuildAssets/Shader/.pkg"]
