@@ -32,7 +32,8 @@ pub fn seek_dependencies(root_path: impl AsRef<Path>, file: impl AsRef<Path>) ->
     let mut abs_patterns = Vec::new();
     split_patterns(&patterns, &mut rel_patterns, &mut abs_patterns);
 
-    let mut dep_pkgs = glob_pkgs(file.parent().unwrap(), &rel_patterns);
+    let mut dep_pkgs = Vec::new();
+    dep_pkgs.append(&mut glob_pkgs(file.parent().unwrap(), &rel_patterns));
     dep_pkgs.append(&mut glob_pkgs(&root_path, &abs_patterns));
 
     indegree_map.insert(file.to_path_buf(), 0);
@@ -58,7 +59,8 @@ pub fn seek_dependencies(root_path: impl AsRef<Path>, file: impl AsRef<Path>) ->
         let mut abs_patterns = Vec::new();
         split_patterns(&patterns, &mut rel_patterns, &mut abs_patterns);
 
-        let mut dep_pkgs = glob_pkgs(file.parent().unwrap(), &rel_patterns);
+        let mut dep_pkgs = Vec::new();
+        dep_pkgs.append(&mut glob_pkgs(file.parent().unwrap(), &rel_patterns));
         dep_pkgs.append(&mut glob_pkgs(&root_path, &abs_patterns));
 
         indegree_map.insert(file.clone(), 1);
@@ -121,14 +123,14 @@ fn split_patterns(
         }
 
         match pattern.starts_with("/") {
-            true => abs_patterns.push(pattern.to_owned()),
+            true => abs_patterns.push(pattern[1..].to_owned()),
             false => rel_patterns.push(pattern.to_owned()),
         }
     }
 }
 
-fn glob_pkgs(root_path: impl AsRef<Path>, patterns: &[impl AsRef<str>]) -> Vec<String> {
-    let root_path = root_path.as_ref();
+fn glob_pkgs(base_path: impl AsRef<Path>, patterns: &[impl AsRef<str>]) -> Vec<String> {
+    let base_path = base_path.as_ref();
     let mut include_globs = Vec::new();
     let git_glob = GlobBuilder::new("**/.git")
         .literal_separator(true)
@@ -138,14 +140,8 @@ fn glob_pkgs(root_path: impl AsRef<Path>, patterns: &[impl AsRef<str>]) -> Vec<S
 
     // build include_globs from patterns
     for pattern in patterns {
-        let pattern = pattern.as_ref();
-
-        let pattern = match pattern.starts_with("/") {
-            true => root_path.join(&pattern[1..]).display().to_string(),
-            false => pattern.to_string(),
-        };
-
-        let glob = GlobBuilder::new(&pattern)
+        let pattern = base_path.join(pattern.as_ref()).display().to_string();
+        let glob = GlobBuilder::new(pattern.as_ref())
             .literal_separator(true)
             .build()
             .unwrap()
@@ -154,7 +150,7 @@ fn glob_pkgs(root_path: impl AsRef<Path>, patterns: &[impl AsRef<str>]) -> Vec<S
         include_globs.push(glob);
     }
 
-    let mut walk_iter = WalkDir::new(root_path).into_iter();
+    let mut walk_iter = WalkDir::new(base_path).into_iter();
     let mut include_files = Vec::new();
 
     loop {
@@ -176,7 +172,7 @@ fn glob_pkgs(root_path: impl AsRef<Path>, patterns: &[impl AsRef<str>]) -> Vec<S
         }
 
         // skip invalid pkg file
-        if path.is_file() && (path == root_path.join(".pkg") || !path.ends_with(".pkg")) {
+        if path.is_file() && (path == base_path.join(".pkg") || !path.ends_with(".pkg")) {
             continue;
         }
 
