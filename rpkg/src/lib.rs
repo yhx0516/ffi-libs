@@ -1,8 +1,11 @@
 use std::ffi::c_char;
 
+use dependencies::{seek_dependencies, Dependencies};
+
 #[allow(unused)]
 use rutils::ffi::{dispose_strs, strs_get, strs_len};
 
+pub mod dependencies;
 pub mod pkg;
 // ============================================================
 // Info
@@ -18,7 +21,7 @@ pub extern "C" fn get_version() -> *const c_char {
 }
 
 // ============================================================
-// PKG Matcher
+// PKG Match Patterns
 // ============================================================
 #[no_mangle]
 pub extern "C" fn pkg_match_file(path: *const c_char) -> *const Vec<String> {
@@ -39,4 +42,41 @@ pub extern "C" fn pkg_match_patterns(
 
     let files = pkg::match_patterns(root_path, &patterns);
     Box::into_raw(Box::new(files))
+}
+
+// ============================================================
+// PKG Seek Dependencies
+// ============================================================
+#[no_mangle]
+pub extern "C" fn pkg_seek_dependencies(
+    root_path: *const c_char,
+    file: *const c_char,
+) -> *const Dependencies {
+    let root_path = rutils::char_ptr_to_str(root_path);
+    let file = rutils::char_ptr_to_str(file);
+    let deps = seek_dependencies(root_path, file);
+    Box::into_raw(Box::new(deps))
+}
+
+#[no_mangle]
+pub extern "C" fn dependencies_get_files(ptr: *const Dependencies) -> *const Vec<String> {
+    let deps = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    Box::into_raw(Box::new(deps.files.clone()))
+}
+
+#[no_mangle]
+pub extern "C" fn dependencies_get_invalid_files(ptr: *const Dependencies) -> *const Vec<String> {
+    let deps = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    Box::into_raw(Box::new(deps.invalid_files.clone()))
+}
+
+#[no_mangle]
+pub extern "C" fn dependencies_is_circular(ptr: *const Dependencies) -> bool {
+    let deps = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    deps.is_circular
+}
+
+#[no_mangle]
+pub fn dependencies_dispose(ptr: *mut Dependencies) {
+    unsafe { Box::from_raw(ptr) };
 }

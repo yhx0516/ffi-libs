@@ -1,0 +1,4 @@
+target = "test"
+
+patterns = ["**/*.mat"]
+dependencies = ["pkg-dependencies/BuildAssets/Shader/.dbconfig"]

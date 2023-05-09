@@ -620,7 +620,9 @@ pub extern "C" fn inline_table_get_array_keys(ptr: *const InlineTable) -> *const
 }
 
 #[no_mangle]
-pub extern "C" fn inline_table_get_inline_table_keys(ptr: *const InlineTable) -> *const Vec<String> {
+pub extern "C" fn inline_table_get_inline_table_keys(
+    ptr: *const InlineTable,
+) -> *const Vec<String> {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let keys = item
         .iter()
