@@ -18,7 +18,12 @@ namespace csharp_link_rust
             Console.WriteLine("");
 
             rpkg.PkgMatchTest();
+            Console.WriteLine("");
+
+            rhandlebars.HandlebarsTest();
             Console.ReadLine();
+
+
         } 
     }
 }
