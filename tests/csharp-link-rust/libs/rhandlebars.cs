@@ -20,7 +20,7 @@ namespace csharp_link_rust.libs
         public static extern string get_version();
 
         /// ===============================================
-        /// Document in toml
+        /// Handlebars
         /// ===============================================
         // return Handlebars ptr
         [DllImport("../../../../../target/debug/rhandlebars.dll")]
@@ -42,20 +42,42 @@ namespace csharp_link_rust.libs
         [DllImport("../../../../../target/debug/rhandlebars.dll")]
         public static extern string helper_get_arg_as_str(IntPtr h_ptr, uint idx);
 
+        [DllImport("../../../../../target/debug/rhandlebars.dll")]
+        public static extern string render_template_from_toml(
+               [MarshalAs(UnmanagedType.LPUTF8Str)] string tpl_path,
+               [MarshalAs(UnmanagedType.LPUTF8Str)] string toml_path
+           );
+
         public static void HandlebarsTest()
         {
             Console.WriteLine("[rhandlebars]");
-            Console.WriteLine("  - template string test");
+            RegisterTest();
+            
+            Console.WriteLine();
+            RenderTplFromTomlTest();
+        }
 
-            string tpl_str = File.ReadAllText("../../../../../tests/app-settings.hbs");
+        private static void RenderTplFromTomlTest()
+        {
+            Console.WriteLine("  - render form toml test");
+            string tpl_path = "../../../../../tests/handlebars-tpl/app_android_dev_template.toml";
+            string toml_path = "../../../../../tests/handlebars-tpl/app_android_dev.toml";
+            string res = render_template_from_toml(tpl_path, toml_path);
+            Console.WriteLine("\t" + res.Replace("\n", "\n\t"));
+        }
+
+        private static void RegisterTest()
+        { 
+            Console.WriteLine("  - template string test");
+            string tpl_str = File.ReadAllText("../../../../../tests/handlebars-tpl/block_helper_template.hbs");
             IntPtr hb_ptr = handlebars_new();
-            handlebars_register_helper_callback(hb_ptr,"set_value", SetValue);
+            handlebars_register_helper_callback(hb_ptr, "set_value", SetValue);
             handlebars_register_helper_callback(hb_ptr, "set_time", SetTime);
 
             string res = handlebars_render_template(hb_ptr, tpl_str);
             handlebars_dispose(hb_ptr);
-           
-            Console.WriteLine("\t" + res.Replace("\n","\n\t"));
+
+            Console.WriteLine("\t" + res.Replace("\n", "\n\t"));
         }
        
         private static string SetValue(IntPtr helper_ptr)

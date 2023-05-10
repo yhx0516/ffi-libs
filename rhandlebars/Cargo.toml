@@ -1,6 +1,6 @@
 [package]
 name = "rhandlebars"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -14,3 +14,6 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 handlebars = "4.3.6"
 rutils =  {version ="0.0.1", path="../rutils" }
+toml = "0.7.3"
+serde_json = "1.0.96"
+chrono = "0.4.24"
