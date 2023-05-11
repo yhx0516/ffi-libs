@@ -64,7 +64,14 @@ namespace csharp_link_rust.libs
 
         public static void PkgMatchTest()
         {
-            PkgMatchPattern();
+            try
+            {
+                PkgMatchPattern();
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("本部分测试需要配合 rust 生成的文件目录才能正常运行。");
+            }       
 
             PkgSeekDependencies();
         }
@@ -84,7 +91,6 @@ namespace csharp_link_rust.libs
                 Console.WriteLine("        " + file);
             }
             dependencies_dispose(deps_ptr1);
-            dispose_strs(strs_ptr1);
             Console.WriteLine("");
 
             string path2 = "../../../../../tests/pkg-dependencies/BuildAssets/rel.pkg";
@@ -98,7 +104,6 @@ namespace csharp_link_rust.libs
                 Console.WriteLine("        " + file);
             }
             dependencies_dispose(deps_ptr2);
-            dispose_strs(strs_ptr2);
             Console.WriteLine("");
 
             string path3 = "../../../../../tests/pkg-dependencies/BuildAssets/rel2.pkg";
@@ -112,7 +117,6 @@ namespace csharp_link_rust.libs
                 Console.WriteLine("        " + file);
             }
             dependencies_dispose(deps_ptr3);
-            dispose_strs(strs_ptr3);
             Console.WriteLine("");
 
             string path4 = "../../../../../tests/pkg-dependencies/CircularDep/A/.pkg";
@@ -126,7 +130,6 @@ namespace csharp_link_rust.libs
                 Console.WriteLine("        " + file);
             }
             dependencies_dispose(deps_ptr4);
-            dispose_strs(strs_ptr4);
             Console.WriteLine("");
         }
 

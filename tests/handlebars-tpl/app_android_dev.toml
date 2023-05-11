@@ -1,0 +1,37 @@
+[app]
+appName = "fl"
+company = "SoFunny"
+frameRate = 60
+
+[screen]
+windowed = true
+width = 1280
+height = 720
+allowedAutorotateToPortrait = false
+allowedAutorotateToPortraitUpsideDown = false
+allowedAutorotateToLandscapeRight = true
+allowedAutorotateToLandscapeLeft = true
+
+[build]
+pipeline = "Assets/Build/Configs/pipeline/android_dev.buildconfiguration"
+mcs = "Assets/Build/Configs/mcs/android_dev_mcs.rsp"
+template = "Assets/Build/Configs/template/app_android_dev_template.toml"
+
+[server]
+port = 17777
+relay = "https://relay-funnyland.xmfunny.com"
+etcdIp = 0
+etcdPort = 0
+autoStart = false
+
+[console]
+port = 17778
+
+[download]
+server = "https://dl.sofunny.io/FunnyLand/android/"
+
+[keystore]
+path = "Assets/Build/Config/AndroidKeystore/dev.keystore"
+password = "funnland.dev"
+alias = "funnyland.dev"
+aliasPassword = "funnyland.dev"

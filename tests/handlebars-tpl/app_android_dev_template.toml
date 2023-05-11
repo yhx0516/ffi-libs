@@ -1,0 +1,19 @@
+version = 1
+
+[app]
+displayVersion = "{{$date}}"
+frameRate = {{app.frameRate}}
+consolePort = {{console.port}}
+assetServer = "{{download.server}}"
+
+[screen]
+windowed = {{screen.windowed}}
+width = {{screen.width}}
+height = {{screen.height}}
+
+[server]
+relay = "{{server.relay}}"
+port = {{server.port}}
+etcdIp = {{server.etcdIp}}
+etcdPort = {{server.etcdPort}}
+autoStart = {{server.autoStart}}
