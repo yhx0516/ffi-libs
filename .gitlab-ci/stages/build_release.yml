@@ -1,0 +1,41 @@
+.common:
+  stage: build-release
+  rules:
+    - if: $CI_COMMIT_TAG =~ /.*[0-9]+\.[0-9]+\.[0-9]+$/
+      when: on_success
+    - when: never
+  dependencies: []
+
+build-release-windows:
+  extends: .common
+  variables:
+    VAR_ASSET_DIR: $CI_PROJECT_DIR/windows
+    VAR_ASSET_PATH: $VAR_ASSET_DIR/1.txt
+  script:
+    - echo "build-release-windows"
+    - sh $CI_PROJECT_DIR/.gitlab-ci/commands/build_release.sh
+  artifacts:
+    name: windows
+    paths:
+      - $VAR_ASSET_PATH
+    when: on_success
+    expire_in: 1 weeks
+  tags:
+    - win-release
+
+build-release-mac:
+  extends: .common
+  variables:
+    VAR_ASSET_DIR: $CI_PROJECT_DIR/mac
+    VAR_ASSET_PATH: $VAR_ASSET_DIR/1.txt
+  script:
+    - echo "build-release-mac"
+    - sh $CI_PROJECT_DIR/.gitlab-ci/commands/build_release.sh
+  artifacts:
+    name: mac-asset
+    paths:
+      - $VAR_ASSET_PATH
+    when: on_success
+    expire_in: 1 weeks
+  tags:
+    - mac-release

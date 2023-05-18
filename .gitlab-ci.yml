@@ -1,0 +1,10 @@
+stages: # 申明所有阶段
+  - build-release
+  - releases-assets
+
+variables:
+  BUILD_PACKAGE: rtoml rpkg rhandlebars # 默认构建的包列表 用 " " 分割
+
+include: # 调用本地的 yml 文件
+  - local: .gitlab-ci/stages/build_release.yml
+  - local: .gitlab-ci/stages/releases_assets.yml
