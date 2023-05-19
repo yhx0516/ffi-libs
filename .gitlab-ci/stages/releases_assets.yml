@@ -1,0 +1,13 @@
+releases-assets:
+  stage: releases-assets
+  rules:
+    - if: $CI_COMMIT_TAG =~ /.*[0-9]+\.[0-9]+\.[0-9]+$/
+      when: on_success
+    - when: never
+  variables:
+    GITLAB_TOKEN: YvayfzT7S96dM3MwLCBg # 最好得方式是在各个项目配置全局参数，保证安全性 CI/CD -> Variables
+  script:
+    - echo "releases_assets.yml"
+    - sh $CI_PROJECT_DIR/.gitlab-ci/commands/releases_assets.sh
+  tags:
+    - mac-release
