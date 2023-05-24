@@ -26,6 +26,14 @@ pub fn arr_ptr_to_strs(ptr: *const *const c_char, len: usize) -> Vec<String> {
     rust_strings
 }
 
+pub fn str_dispose(ptr: *const c_char) {
+    if !ptr.is_null() {
+        unsafe {
+            let _ = CString::from_raw(ptr as *mut c_char);
+        }
+    }
+}
+
 // ============================================================
 // Vec<String>
 // ============================================================
@@ -45,6 +53,9 @@ pub extern "C" fn strs_get(ptr: *const Vec<String>, index: usize) -> *const c_ch
 }
 
 #[no_mangle]
-pub fn dispose_strs(ptr: *mut Vec<String>) {
+pub extern "C" fn strs_dispose(ptr: *mut Vec<String>) {
+    if ptr.is_null() {
+        return;
+    }
     unsafe { Box::from_raw(ptr) };
 }

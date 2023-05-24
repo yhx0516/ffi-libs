@@ -27,6 +27,9 @@ pub extern "C" fn handlebars_new() -> *mut Handlebars<'static> {
 
 #[no_mangle]
 pub extern "C" fn handlebars_dispose(handlebars_ptr: *mut Handlebars) {
+    if handlebars_ptr.is_null() {
+        return;
+    }
     unsafe { Box::from_raw(handlebars_ptr) };
 }
 

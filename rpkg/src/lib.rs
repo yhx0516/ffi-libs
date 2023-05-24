@@ -1,9 +1,7 @@
 use std::ffi::c_char;
 
 use dependencies::{seek_dependencies, Dependencies};
-
-#[allow(unused)]
-use rutils::ffi::{dispose_strs, strs_get, strs_len};
+pub use rutils::{str_dispose, strs_dispose, strs_get, strs_len};
 
 pub mod dependencies;
 pub mod pkg;
@@ -78,5 +76,8 @@ pub extern "C" fn dependencies_is_circular(ptr: *const Dependencies) -> bool {
 
 #[no_mangle]
 pub fn dependencies_dispose(ptr: *mut Dependencies) {
+    if ptr.is_null() {
+        return;
+    }
     unsafe { Box::from_raw(ptr) };
 }

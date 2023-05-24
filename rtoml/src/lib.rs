@@ -5,8 +5,7 @@ use std::{
 use toml_edit::{Array, ArrayOfTables, Document, InlineTable, Item, Table, Value};
 
 // NOTE: 作为第三方库可以直接调用
-#[allow(unused)]
-use rutils::ffi::{dispose_strs, strs_get, strs_len};
+pub use rutils::{str_dispose, strs_dispose, strs_get, strs_len};
 
 // ============================================================
 // Info
@@ -133,6 +132,9 @@ pub extern "C" fn document_as_table(ptr: *const Document) -> *const Table {
 
 #[no_mangle]
 pub extern "C" fn document_dispose(ptr: *mut Document) {
+    if ptr.is_null() {
+        return;
+    }
     unsafe { Box::from_raw(ptr) };
 }
 
@@ -311,6 +313,9 @@ pub extern "C" fn item_as_inline_table(ptr: *const Item) -> *const InlineTable {
 
 #[no_mangle]
 pub extern "C" fn item_dispose(ptr: *mut Item) {
+    if ptr.is_null() {
+        return;
+    }
     unsafe { Box::from_raw(ptr) };
 }
 
@@ -442,6 +447,9 @@ pub extern "C" fn value_as_inline_table(ptr: *const Value) -> *const InlineTable
 
 #[no_mangle]
 pub extern "C" fn value_dispose(ptr: *mut Value) {
+    if ptr.is_null() {
+        return;
+    }
     unsafe { Box::from_raw(ptr) };
 }
 
@@ -472,6 +480,9 @@ pub extern "C" fn array_get(ptr: *const Array, index: usize) -> *const Value {
 
 #[no_mangle]
 pub extern "C" fn array_dispose(ptr: *mut Array) {
+    if ptr.is_null() {
+        return;
+    }
     unsafe { Box::from_raw(ptr) };
 }
 
@@ -567,6 +578,9 @@ pub extern "C" fn table_contains_array_of_tables(ptr: *const Table, key: *const 
 
 #[no_mangle]
 pub extern "C" fn table_dispose(ptr: *mut Table) {
+    if ptr.is_null() {
+        return;
+    }
     unsafe { Box::from_raw(ptr) };
 }
 
@@ -646,6 +660,9 @@ pub extern "C" fn inline_table_contains_key(ptr: *const InlineTable, key: *const
 
 #[no_mangle]
 pub extern "C" fn inline_table_dispose(ptr: *mut InlineTable) {
+    if ptr.is_null() {
+        return;
+    }
     unsafe { Box::from_raw(ptr) };
 }
 
@@ -676,5 +693,8 @@ pub extern "C" fn table_array_get(ptr: *const ArrayOfTables, index: usize) -> *c
 
 #[no_mangle]
 pub extern "C" fn table_array_dispose(ptr: *mut ArrayOfTables) {
+    if ptr.is_null() {
+        return;
+    }
     unsafe { Box::from_raw(ptr) };
 }
