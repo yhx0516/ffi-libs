@@ -12,10 +12,7 @@ pub fn render_template_from_toml(
     let mut json_value = serde_json::to_value(toml_value).expect("Failed to convert to JSON");
     if let Some(json_obj) = json_value.as_object_mut() {
         let local_time = Local::now().format("%m-%d:%H:%M:%S").to_string();
-        json_obj.insert(
-            String::from("$date"),
-            serde_json::Value::String(local_time),
-        );
+        json_obj.insert(String::from("$date"), serde_json::Value::String(local_time));
     }
 
     let handlebars = Handlebars::new();
@@ -39,7 +36,8 @@ mod tests {
     fn block_helper_test() {
         // create the handlebars registry
         let mut handlebars = Handlebars::new();
-        let tpl_str = std::fs::read_to_string("../tests/handlebars-tpl/block_helper_template.hbs").unwrap();
+        let tpl_str =
+            std::fs::read_to_string("../tests/handlebars-tpl/block_helper_template.hbs").unwrap();
 
         // register some custom helpers
         handlebars.register_helper("set_time", Box::new(set_time_helper));
