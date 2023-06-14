@@ -1,4 +1,3 @@
-target = "bundle"
-
+[[bundle]]
 patterns = ["*.unity"]
 dependencies = ["/pkg-dependencies/CircularDep/A/.pkg"]

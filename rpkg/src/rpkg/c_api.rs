@@ -1,10 +1,8 @@
 use std::ffi::c_char;
 
-use dependencies::{seek_dependencies, Dependencies};
-pub use rutils::{str_dispose, strs_dispose, strs_get, strs_len};
+use crate::core::dependencies::{seek_dependencies, Dependencies};
+use crate::core::match_patterns;
 
-pub mod dependencies;
-pub mod pkg;
 // ============================================================
 // Info
 // ============================================================
@@ -21,12 +19,12 @@ pub extern "C" fn get_version() -> *const c_char {
 // ============================================================
 // PKG Match Patterns
 // ============================================================
-#[no_mangle]
-pub extern "C" fn pkg_match_file(path: *const c_char) -> *const Vec<String> {
-    let file = rutils::char_ptr_to_str(path);
-    let files = pkg::match_file(&file);
-    Box::into_raw(Box::new(files))
-}
+// #[no_mangle]
+// pub extern "C" fn pkg_match_file(path: *const c_char) -> *const Vec<String> {
+//     let file = rutils::char_ptr_to_str(path);
+//     let files = pkg::match_file(&file);
+//     Box::into_raw(Box::new(files))
+// }
 
 #[no_mangle]
 pub extern "C" fn pkg_match_patterns(
@@ -38,7 +36,7 @@ pub extern "C" fn pkg_match_patterns(
     let patterns = rutils::arr_ptr_to_strs(patterns, patterns_len as usize);
     let patterns: Vec<&str> = patterns.iter().map(|s| s.as_ref()).collect();
 
-    let files = pkg::match_patterns(root_path, &patterns);
+    let files = match_patterns(root_path, &patterns);
     Box::into_raw(Box::new(files))
 }
 
@@ -48,14 +46,18 @@ pub extern "C" fn pkg_match_patterns(
 #[no_mangle]
 pub extern "C" fn pkg_seek_dependencies(
     root_path: *const c_char,
-    file: *const c_char,
+    cur_pkg: *const c_char,
+    patterns: *const *const c_char,
+    patterns_len: usize,
 ) -> *const Dependencies {
     let root_path = rutils::char_ptr_to_str(root_path);
-    let file = rutils::char_ptr_to_str(file);
-    let deps = seek_dependencies(root_path, file);
+    let cur_pkg = rutils::char_ptr_to_str(cur_pkg);
+    let patterns = rutils::arr_ptr_to_strs(patterns, patterns_len as usize);
+    let patterns: Vec<&str> = patterns.iter().map(|s| s.as_ref()).collect();
+
+    let deps = seek_dependencies(root_path, cur_pkg, &patterns);
     Box::into_raw(Box::new(deps))
 }
-
 #[no_mangle]
 pub extern "C" fn dependencies_get_files(ptr: *const Dependencies) -> *const Vec<String> {
     let deps = unsafe { ptr.as_ref().expect("invalid ptr: ") };

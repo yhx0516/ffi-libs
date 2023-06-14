@@ -1,16 +1,16 @@
 [package]
 name = "rpkg"
-version = "0.0.3"
+version = "0.0.4"
 edition = "2021"
 
 [lib]
 name = "rpkg"
-path = "src/lib.rs"
+path = "src/rpkg/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
 [[bin]]
 name = "pkg"
-path = "src/bin/main.rs"
+path = "src/bin/pkg.rs"
 
 [dependencies]
 globset = "0.4.10"

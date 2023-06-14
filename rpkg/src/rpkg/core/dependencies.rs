@@ -1,12 +1,9 @@
-use std::{
-    collections::HashMap,
-    path::{Path, PathBuf},
-};
-
 use globset::GlobBuilder;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-use crate::pkg::load_toml_pkg;
+use super::pkg;
 
 #[derive(Default, Debug)]
 pub struct Dependencies {
@@ -15,15 +12,20 @@ pub struct Dependencies {
     pub is_circular: bool,
 }
 
-pub fn seek_dependencies(root_path: impl AsRef<Path>, file: impl AsRef<Path>) -> Dependencies {
-    let file = file.as_ref();
+pub fn seek_dependencies(
+    root_path: impl AsRef<Path>,
+    cur_pkg: impl AsRef<Path>,
+    patterns: &[impl AsRef<str>],
+) -> Dependencies {
+    let cur_pkg = cur_pkg.as_ref();
     let mut deps = Dependencies::default();
-    let Some(patterns) = get_dep_patterns(file) else {
-        deps.invalid_files.push(file.display().to_string());
+
+    if pkg::parse(cur_pkg).is_none() {
+        deps.invalid_files.push(cur_pkg.display().to_string());
         return deps;
     };
 
-    deps.files.push(file.display().to_string());
+    deps.files.push(cur_pkg.display().to_string());
 
     let mut indegree_map = HashMap::new();
     let mut dep_map = HashMap::new();
@@ -33,11 +35,11 @@ pub fn seek_dependencies(root_path: impl AsRef<Path>, file: impl AsRef<Path>) ->
     split_patterns(&patterns, &mut rel_patterns, &mut abs_patterns);
 
     let mut dep_pkgs = Vec::new();
-    dep_pkgs.append(&mut glob_pkgs(file.parent().unwrap(), &rel_patterns));
+    dep_pkgs.append(&mut glob_pkgs(cur_pkg.parent().unwrap(), &rel_patterns));
     dep_pkgs.append(&mut glob_pkgs(&root_path, &abs_patterns));
 
-    indegree_map.insert(file.to_path_buf(), 0);
-    dep_map.insert(file.to_path_buf(), dep_pkgs.clone());
+    indegree_map.insert(cur_pkg.to_path_buf(), 0);
+    dep_map.insert(cur_pkg.to_path_buf(), dep_pkgs.clone());
 
     // calculate indegree and seek dependencies
     let mut queue = dep_pkgs;
@@ -45,7 +47,7 @@ pub fn seek_dependencies(root_path: impl AsRef<Path>, file: impl AsRef<Path>) ->
         let path = queue.pop().unwrap();
         let file = PathBuf::from(&path);
 
-        let Some(patterns) = get_dep_patterns(&file) else {
+        let Some(patterns) = pkg::get_dep_patterns_from_file(&file) else {
             deps.invalid_files.push(path);
             continue;
         };
@@ -97,26 +99,16 @@ pub fn seek_dependencies(root_path: impl AsRef<Path>, file: impl AsRef<Path>) ->
     deps
 }
 
-fn get_dep_patterns(file: impl AsRef<Path>) -> Option<Vec<String>> {
-    let Some(pkg) = load_toml_pkg(file) else {
-        return  None;
-    };
-
-    match pkg.dependencies {
-        Some(r) => Some(r),
-        None => Some(Vec::new()),
-    }
-}
-
 /// split patterns into rel_patterns and abs_patterns.
 ///   - rel_patterns base on '.pkg' file's parent directory;
 ///   - abs_patterns base on specify root path.
 fn split_patterns(
-    patterns: &Vec<String>,
+    patterns: &[impl AsRef<str>],
     rel_patterns: &mut Vec<String>,
     abs_patterns: &mut Vec<String>,
 ) {
     for pattern in patterns {
+        let pattern = pattern.as_ref();
         // NOTE: not support ignore pattern like "!**.pkg" and skip it
         if pattern.starts_with("!") {
             continue;
@@ -130,6 +122,10 @@ fn split_patterns(
 }
 
 fn glob_pkgs(base_path: impl AsRef<Path>, patterns: &[impl AsRef<str>]) -> Vec<String> {
+    if patterns.as_ref().is_empty() {
+        return Vec::new();
+    }
+
     let base_path = base_path.as_ref();
     let mut include_globs = Vec::new();
     let git_glob = GlobBuilder::new("**/.git")
@@ -141,6 +137,7 @@ fn glob_pkgs(base_path: impl AsRef<Path>, patterns: &[impl AsRef<str>]) -> Vec<S
     // build include_globs from patterns
     for pattern in patterns {
         let pattern = base_path.join(pattern.as_ref()).display().to_string();
+
         let glob = GlobBuilder::new(pattern.as_ref())
             .literal_separator(true)
             .build()
@@ -185,20 +182,25 @@ fn glob_pkgs(base_path: impl AsRef<Path>, patterns: &[impl AsRef<str>]) -> Vec<S
 
     // sort files
     include_files.sort();
-
     include_files
 }
 
 mod tests {
+
     #[allow(unused_imports)]
     use super::seek_dependencies;
 
     #[test]
     fn circular_dependencies_test() {
         let root_path = "../tests";
+        let cur_pkg = "../tests/pkg-dependencies/BuildAssets/Prefab/.pkg";
+
         // global dependencies
-        let path = "../tests/pkg-dependencies/BuildAssets/Prefab/.pkg";
-        let mut deps = seek_dependencies(root_path, path);
+        let pattterns = [
+            "/pkg-dependencies/BuildAssets/Material/.pkg",
+            "/pkg-dependencies/BuildAssets/Material/DepMaterial/.pkg",
+        ];
+        let mut deps = seek_dependencies(root_path, cur_pkg, &pattterns);
         assert_eq!(false, deps.is_circular);
 
         deps.files.sort();
@@ -211,8 +213,9 @@ mod tests {
         assert_eq!(expect_deps, deps.files);
 
         // relative dependencies
-        let path = "../tests/pkg-dependencies/BuildAssets/rel.pkg";
-        let mut deps = seek_dependencies(root_path, path);
+        let pattterns = ["**/.pkg"];
+        let cur_pkg = "../tests/pkg-dependencies/BuildAssets/rel.pkg";
+        let mut deps = seek_dependencies(root_path, cur_pkg, &pattterns);
         assert_eq!(false, deps.is_circular);
         deps.files.sort();
         let expect_deps = vec![
@@ -227,8 +230,9 @@ mod tests {
         assert_eq!(expect_deps, deps.files);
 
         // relative dependencies
-        let path = "../tests/pkg-dependencies/BuildAssets/rel2.pkg";
-        let mut deps = seek_dependencies(root_path, path);
+        let pattterns = ["**/PKGTest/.pkg"];
+        let cur_pkg = "../tests/pkg-dependencies/BuildAssets/rel2.pkg";
+        let mut deps = seek_dependencies(root_path, cur_pkg, &pattterns);
         assert_eq!(false, deps.is_circular);
         deps.files.sort();
         let expect_deps = vec![
@@ -241,8 +245,9 @@ mod tests {
         assert_eq!(expect_deps, deps.files);
 
         // circular dependencies
-        let path = "../tests/pkg-dependencies/CircularDep/A/.pkg";
-        let deps = seek_dependencies(root_path, path);
+        let pattterns = ["/pkg-dependencies/CircularDep/B/.pkg"];
+        let cur_pkg = "../tests/pkg-dependencies/CircularDep/A/.pkg";
+        let deps = seek_dependencies(root_path, cur_pkg, &pattterns);
         assert_eq!(true, deps.is_circular);
     }
 }
