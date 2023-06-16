@@ -1,5 +1,4 @@
 use clap::Parser;
-use rpkg::pkg;
 
 #[derive(Parser)]
 #[command(
@@ -14,10 +13,9 @@ pub struct Args {
 }
 
 fn main() {
-    let args = Args::parse();
-    let query_pkg = &args.path;
+    // let args = Args::parse();
+    // let query_pkg = &args.path;
 
-    for asset in pkg::match_file(query_pkg) {
-        println!("{asset}");
-    }
+    // NOTE: 变更 .pkg 格式后原匹配功能暂时废弃
+    todo!();
 }

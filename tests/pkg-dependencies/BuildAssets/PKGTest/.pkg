@@ -1,5 +1,4 @@
-target = "bundle"
-
+[[bundle]]
 patterns = [
    "**/*.prefab",
    "!**/Subscene/**"

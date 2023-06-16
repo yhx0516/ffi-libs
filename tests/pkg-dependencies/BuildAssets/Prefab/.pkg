@@ -1,5 +1,4 @@
-target  = "bundle"
-
+[[bundle]]
 patterns = ["**/*.prefab"]
 dependencies = [
     "/pkg-dependencies/BuildAssets/Material/.pkg", 

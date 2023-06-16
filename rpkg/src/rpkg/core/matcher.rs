@@ -1,40 +1,6 @@
 use globset::GlobBuilder;
-use serde::Deserialize;
-use std::{fs, path::Path};
+use std::path::Path;
 use walkdir::WalkDir;
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct TomlPKG {
-    pub patterns: Option<Vec<String>>,
-    pub dependencies: Option<Vec<String>>,
-}
-
-pub(crate) fn load_toml_pkg(file: impl AsRef<Path>) -> Option<TomlPKG> {
-    let res = fs::read_to_string(file.as_ref());
-    let Ok(content) = res else {
-        eprintln!("{:?}",res.unwrap_err());   
-        return None;
-    };
-
-    let res = toml::from_str(&content);
-    let Ok(pkg) = res else {
-        eprintln!("{:?}",res.unwrap_err());   
-        return None;
-    };
-    Some(pkg)
-}
-
-pub fn match_file(file: impl AsRef<Path>) -> Vec<String> {
-    let file = file.as_ref();
-    let Some(pkg) = load_toml_pkg(file) else {
-        return  Vec::new();
-    };
-
-    match pkg.patterns {
-        Some(patterns) => match_patterns(file.parent().unwrap(), &patterns),
-        _ => Vec::new(),
-    }
-}
 
 pub fn match_patterns(root_path: impl AsRef<Path>, patterns: &[impl AsRef<str>]) -> Vec<String> {
     let root_path = root_path.as_ref();
