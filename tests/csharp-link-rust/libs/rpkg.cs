@@ -26,6 +26,13 @@ namespace csharp_link_rust.libs
                 uint patterns_len
             );
 
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr pkg_scan_assets_from_file(
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string file,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path
+            );
+
         [DllImport("../../../../../target/debug/rpkg.dll")]
         public static extern uint strs_len(IntPtr ptr);
 

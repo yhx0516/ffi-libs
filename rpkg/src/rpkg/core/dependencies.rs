@@ -185,9 +185,9 @@ fn glob_pkgs(base_path: impl AsRef<Path>, patterns: &[impl AsRef<str>]) -> Vec<S
     include_files
 }
 
+#[cfg(test)]
 mod tests {
 
-    #[allow(unused_imports)]
     use super::seek_dependencies;
 
     #[test]
