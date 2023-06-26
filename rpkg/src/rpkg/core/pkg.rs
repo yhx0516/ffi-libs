@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::{fs, path::Path};
 
-use super::build_target::{TomlBundle, TomlDylib, TomlFile, TomlSubscene, TomlZip};
+use super::build_target::*;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct TomlPKG {
@@ -36,6 +36,47 @@ impl TomlPKG {
         }
         deps
     }
+
+    pub fn scan_assets(
+        &self,
+        root_path: impl AsRef<Path>,
+        cur_path: impl AsRef<Path>,
+    ) -> Vec<String> {
+        let mut assets = Vec::new();
+
+        if let Some(targets) = &self.bundles {
+            for target in targets {
+                assets.append(&mut target.scan_assets(&root_path, &cur_path));
+            }
+        }
+
+        if let Some(targets) = &self.subscenes {
+            for target in targets {
+                assets.append(&mut target.scan_assets(&root_path, &cur_path));
+            }
+        }
+
+        if let Some(targets) = &self.files {
+            for target in targets {
+                assets.append(&mut target.scan_assets(&root_path, &cur_path));
+            }
+        }
+
+        if let Some(targets) = &self.dylibs {
+            for target in targets {
+                assets.append(&mut target.scan_assets(&root_path, &cur_path));
+            }
+        }
+
+        if let Some(targets) = &self.zips {
+            for target in targets {
+                assets.append(&mut target.scan_assets(&root_path, &cur_path));
+            }
+        }
+
+        assets.sort();
+        assets
+    }
 }
 
 pub(crate) fn parse(file: impl AsRef<Path>) -> Option<TomlPKG> {
@@ -57,3 +98,13 @@ pub fn get_dep_patterns_from_file(file: impl AsRef<Path>) -> Option<Vec<String>>
         None => None,
     }
 }
+
+pub fn scan_assets_from_file(file: impl AsRef<Path>, root_path: impl AsRef<Path>) -> Vec<String> {
+    let Some(pkg) = parse(&file) else {
+        return Vec::new();
+    };
+    let cur_path = file.as_ref().parent().unwrap();
+    pkg.scan_assets(root_path, cur_path)
+}
+
+// NOTE: unit test will run in unity project

@@ -1,7 +1,7 @@
 use std::ffi::c_char;
 
 use crate::core::dependencies::{seek_dependencies, Dependencies};
-use crate::core::match_patterns;
+use crate::core::{match_patterns, pkg};
 
 // ============================================================
 // Info
@@ -19,12 +19,6 @@ pub extern "C" fn get_version() -> *const c_char {
 // ============================================================
 // PKG Match Patterns
 // ============================================================
-// #[no_mangle]
-// pub extern "C" fn pkg_match_file(path: *const c_char) -> *const Vec<String> {
-//     let file = rutils::char_ptr_to_str(path);
-//     let files = pkg::match_file(&file);
-//     Box::into_raw(Box::new(files))
-// }
 
 #[no_mangle]
 pub extern "C" fn pkg_match_patterns(
@@ -37,6 +31,17 @@ pub extern "C" fn pkg_match_patterns(
     let patterns: Vec<&str> = patterns.iter().map(|s| s.as_ref()).collect();
 
     let files = match_patterns(root_path, &patterns);
+    Box::into_raw(Box::new(files))
+}
+
+#[no_mangle]
+pub extern "C" fn pkg_scan_assets_from_file(
+    file: *const c_char,
+    root_path: *const c_char,
+) -> *const Vec<String> {
+    let file = rutils::char_ptr_to_str(file);
+    let root_path = rutils::char_ptr_to_str(root_path);
+    let files = pkg::scan_assets_from_file(file, root_path);
     Box::into_raw(Box::new(files))
 }
 
