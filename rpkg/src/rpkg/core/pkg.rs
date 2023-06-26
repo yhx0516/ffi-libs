@@ -108,18 +108,3 @@ pub fn scan_assets_from_file(file: impl AsRef<Path>, root_path: impl AsRef<Path>
 }
 
 // NOTE: unit test will run in unity project
-#[cfg(test)]
-mod tests {
-    use super::scan_assets_from_file;
-
-    #[test]
-    fn scan_asset_lists_test() {
-        let file = r#"F:\git-repos-test\simple-tps-build\Assets\.pkg"#;
-        let root_path = r#"F:\git-repos-test\simple-tps-build\Assets"#;
-        let asset_list = scan_assets_from_file(file, root_path);
-
-        for i in asset_list {
-            println!("{}", i);
-        }
-    }
-}

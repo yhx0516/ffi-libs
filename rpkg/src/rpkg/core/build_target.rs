@@ -192,19 +192,12 @@ impl BuildTarget for TomlDylib {
         _: &Option<impl AsRef<Path>>,
         asset_path: impl AsRef<Path>,
     ) -> String {
-        let asset_path = Path::new(asset_path.as_ref());
-        let asset_name = asset_path.file_stem().unwrap();
+        let asset_path = Path::new(asset_path.as_ref())
+            .with_extension("dll")
+            .display()
+            .to_string();
 
-        let asset_parent = match asset_path.parent() {
-            Some(p) => p.display().to_string(),
-            None => String::new(),
-        };
-
-        let url_prefix = {
-            let prefix = format!("{}://{}", ASSET_PROTOCAL, asset_parent.trim_matches('/'));
-            prefix.to_lowercase().trim_end_matches('/').to_string()
-        };
-
-        format!("{}/{}.dll", url_prefix, asset_name.to_str().unwrap())
+        let url = format!("{}://{}", ASSET_PROTOCAL, asset_path.trim_matches('/'));
+        url.to_lowercase()
     }
 }
