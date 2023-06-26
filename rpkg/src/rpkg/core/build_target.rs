@@ -50,6 +50,31 @@ pub trait BuildTarget {
         true
     }
 
+    // scan assets and return asset urls by build target
+    // root_path is usually {unity-project-dir}/Assets
+    //
+    // examples
+    // bundle or subscene target (from root_path)
+    //   - asset_src: "{unity-project-dir}/Assets/foobar.prefab"
+    //   - pkg_path: "assets.bundle"
+    //   - url: "asset://assets.bundle/foobar.prefab"
+    //
+    // bundle or subscene target (not from root_path)
+    //   - asset_src: "{unity-project-dir}/Assets/Arts/Character/Clips/Chr_player_actor/CLR_fall2idle.anim"
+    //   - pkg_path: "arts/character/clips.bundle"
+    //   - url: "asset://arts/character/clips.bundle/chr_player_actor/clr_fall2idle.anim"
+    //
+    // file target
+    //   - asset_src: "{unity-project-dir}/Assets/Gameplay/Inputs/InputAction.txt"
+    //   - pkg_path: None
+    //   - url: "asset://gameplay/inputs/inputaction.txt"
+    //
+    // dylib target
+    //   - asset_src: "{unity-project-dir}/Assets/Scripts/Core/Runtime/Framework.Core.Runtime.asmdef"
+    //   - pkg_path: None
+    //   - url: "asset://scripts/core/runtime/framework.core.runtime.dll"
+    //
+    // zip(todo)
     fn scan_assets(&self, root_path: impl AsRef<Path>, cur_path: impl AsRef<Path>) -> Vec<String> {
         let root_path = root_path.as_ref();
         let cur_path = cur_path.as_ref();
@@ -59,17 +84,7 @@ pub trait BuildTarget {
             None => cur_path.to_path_buf(),
         };
 
-        // root_path is usually {unity-project-dir}/Assets
-        //
-        // target is bundle or subscene, and root_path == scan_path":
-        //   - "asset://assets.bundle/foobar.prefab"
-        // target is bundle or subscene:
-        //   - "asset://arts/character/clips.bundle/chr_player_actor/clr_fall2idle.anim"
-        // target is file:
-        //   - "asset://gameplay/inputs/inputaction.txt"
-        // target is dylib:
-        //   - "asset://scripts/core/runtime/Framework.Core.Runtime.dll"
-        let with_bundle = match (self.is_pkg(), root_path == scan_path) {
+        let pkg_path = match (self.is_pkg(), root_path == scan_path) {
             (true, true) => {
                 let path = Path::new("assets");
                 let path = path.with_extension(ASSET_PKG_EXTENSION);
@@ -92,12 +107,12 @@ pub trait BuildTarget {
         let root_path = root_path.display().to_string().replace("\\", "/");
 
         for file in &match_patterns(&scan_path, patterns) {
-            let asset_path = match with_bundle {
+            let asset_path = match pkg_path {
                 Some(_) => file.strip_prefix(&scan_path).unwrap(),
                 None => file.strip_prefix(&root_path).unwrap(),
             };
 
-            let asset = self.build_asset_url(&with_bundle, asset_path);
+            let asset = self.build_asset_url(&pkg_path, asset_path);
             assets.push(asset);
         }
 
@@ -106,20 +121,20 @@ pub trait BuildTarget {
 
     fn build_asset_url(
         &self,
-        with_bundle: &Option<impl AsRef<Path>>,
+        pkg_path: &Option<impl AsRef<Path>>,
         asset_path: impl AsRef<Path>,
     ) -> String {
         let url = {
             let asset_path = asset_path.as_ref().display().to_string().replace("\\", "/");
             let asset_path = asset_path.trim_matches('/');
 
-            match with_bundle {
+            match pkg_path {
                 Some(p) => {
-                    let bundle_path = p.as_ref().display().to_string().replace("\\", "/");
+                    let path = p.as_ref().display().to_string().replace("\\", "/");
                     format!(
                         "{}://{}/{}",
                         ASSET_PROTOCAL,
-                        bundle_path.trim_matches('/'),
+                        path.trim_matches('/'),
                         asset_path
                     )
                 }
