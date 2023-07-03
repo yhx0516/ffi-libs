@@ -2,7 +2,12 @@ use globset::GlobBuilder;
 use std::path::Path;
 use walkdir::WalkDir;
 
-pub fn match_patterns(root_path: impl AsRef<Path>, patterns: &[impl AsRef<str>]) -> Vec<String> {
+// if include_pkg is true, result will include ".pkg" file
+pub fn match_patterns(
+    root_path: impl AsRef<Path>,
+    patterns: &[impl AsRef<str>],
+    inlcude_pkg: bool,
+) -> Vec<String> {
     let root_path = root_path.as_ref();
     let mut include_globs = Vec::new();
     let mut exclude_globs = Vec::new();
@@ -22,6 +27,7 @@ pub fn match_patterns(root_path: impl AsRef<Path>, patterns: &[impl AsRef<str>])
                 .build()
                 .unwrap()
                 .compile_matcher();
+            println!("{:?}", pattern);
             exclude_globs.push(glob);
         } else {
             let pattern = root_path.join(&pattern).display().to_string();
@@ -52,8 +58,13 @@ pub fn match_patterns(root_path: impl AsRef<Path>, patterns: &[impl AsRef<str>])
         let path = entry.path();
 
         // skip sub directory (.pkg)
-        if path.is_dir() && path != root_path && path.join(".pkg").is_file() {
+        if !inlcude_pkg && path.is_dir() && path != root_path && path.join(".pkg").is_file() {
             walk_iter.skip_current_dir();
+            continue;
+        }
+
+        // skip pkg file
+        if !inlcude_pkg && path.ends_with(".pkg") {
             continue;
         }
 
@@ -64,7 +75,9 @@ pub fn match_patterns(root_path: impl AsRef<Path>, patterns: &[impl AsRef<str>])
         }
 
         // exclude file
+
         if exclude_globs.iter().any(|m| m.is_match(path)) {
+            println!("{:?}", path);
             continue;
         }
 
@@ -121,7 +134,7 @@ mod tests {
         }
 
         let patterns = ["*.asset"];
-        let files = match_patterns(foo1_path, &patterns);
+        let files = match_patterns(foo1_path, &patterns, false);
         let expect_files = [
             "../target/tmp/pkg_assets/foo1/0.asset",
             "../target/tmp/pkg_assets/foo1/1.asset",
@@ -155,7 +168,7 @@ mod tests {
         }
 
         let patterns = ["bar/*.txt", "!bar/*3.txt"];
-        let files = match_patterns(foo2_path, &patterns);
+        let files = match_patterns(foo2_path, &patterns, false);
         let expect_files = ["../target/tmp/pkg_assets/foo2/bar/2.txt"];
         let expect_files: Vec<String> = expect_files.iter().map(|s| s.to_string()).collect();
         assert_eq!(files, expect_files);
@@ -193,7 +206,7 @@ mod tests {
         }
 
         let patterns = ["*.txt", "**/*.txt"];
-        let files = match_patterns(foo3_path, &patterns);
+        let files = match_patterns(foo3_path, &patterns, false);
         let expect_files = [
             "../target/tmp/pkg_assets/foo3/2.txt",
             "../target/tmp/pkg_assets/foo3/3.txt",
@@ -213,5 +226,21 @@ mod tests {
             println!("\t{}", file);
         }
         println!();
+    }
+
+    #[test]
+    fn pkg_match_pkg_files_test() {
+        let root_path = Path::new(r"../tests/pkg-dependencies/BuildAssets");
+        let patterns = ["**/.pkg", "!**/DepMaterial/**/.pkg"];
+        let files = match_patterns(root_path, &patterns, true);
+        let expect_files = [
+            "../tests/pkg-dependencies/BuildAssets/Material/.pkg",
+            "../tests/pkg-dependencies/BuildAssets/Material/SubMaterial/.pkg",
+            "../tests/pkg-dependencies/BuildAssets/PKGTest/.pkg",
+            "../tests/pkg-dependencies/BuildAssets/Prefab/.pkg",
+            "../tests/pkg-dependencies/BuildAssets/Shader/.pkg",
+        ];
+        let expect_files: Vec<String> = expect_files.iter().map(|s| s.to_string()).collect();
+        assert_eq!(files, expect_files);
     }
 }

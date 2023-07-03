@@ -23,7 +23,8 @@ namespace csharp_link_rust.libs
         public static extern IntPtr pkg_match_patterns(
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
                 string[] patterns,
-                uint patterns_len
+                uint patterns_len,
+                bool include_pkg
             );
 
         // return Vec<String> ptr
@@ -159,7 +160,7 @@ namespace csharp_link_rust.libs
             Console.WriteLine("  - pkg match patterns test");
             string root_path1 = "../../../../../target/tmp/pkg_assets/foo1";
             string[] patterns1 = { "*.asset" };
-            System.IntPtr strs_ptr1 = pkg_match_patterns(root_path1, patterns1, (UInt32)patterns1.Length);
+            System.IntPtr strs_ptr1 = pkg_match_patterns(root_path1, patterns1, (UInt32)patterns1.Length, false);
             Console.WriteLine("      [\"*.asset\"]: ");
             foreach (string file in InnerPrintStrs(strs_ptr1))
             {
@@ -169,7 +170,7 @@ namespace csharp_link_rust.libs
 
             string root_path2 = "../../../../../target/tmp/pkg_assets/foo2";
             string[] patterns2 = { "*.txt", "!bar/*2.txt" };
-            System.IntPtr strs_ptr2 = pkg_match_patterns(root_path2, patterns2, (UInt32)patterns2.Length);
+            System.IntPtr strs_ptr2 = pkg_match_patterns(root_path2, patterns2, (UInt32)patterns2.Length, false);
             Console.WriteLine("      [\"*.txt\", \"!bar/*2.txt\"]: ");
             foreach (string file in InnerPrintStrs(strs_ptr2))
             {
@@ -179,7 +180,7 @@ namespace csharp_link_rust.libs
 
             string root_path3 = "../../../../../target/tmp/pkg_assets/foo3";
             string[] patterns3 = { "*.txt", "**/*.txt" };
-            System.IntPtr strs_ptr3 = pkg_match_patterns(root_path3, patterns3, (UInt32)patterns3.Length);
+            System.IntPtr strs_ptr3 = pkg_match_patterns(root_path3, patterns3, (UInt32)patterns3.Length, false);
             Console.WriteLine("      [\"*.txt\", \"**/*.txt\"]: ");
             foreach (string file in InnerPrintStrs(strs_ptr3))
             {

@@ -25,12 +25,13 @@ pub extern "C" fn pkg_match_patterns(
     root_path: *const c_char,
     patterns: *const *const c_char,
     patterns_len: usize,
+    include_pkg: bool,
 ) -> *const Vec<String> {
     let root_path = rutils::char_ptr_to_str(root_path);
     let patterns = rutils::arr_ptr_to_strs(patterns, patterns_len as usize);
     let patterns: Vec<&str> = patterns.iter().map(|s| s.as_ref()).collect();
 
-    let files = match_patterns(root_path, &patterns);
+    let files = match_patterns(root_path, &patterns, include_pkg);
     Box::into_raw(Box::new(files))
 }
 

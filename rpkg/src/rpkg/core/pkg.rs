@@ -79,7 +79,7 @@ impl TomlPKG {
     }
 }
 
-pub(crate) fn parse(file: impl AsRef<Path>) -> Option<TomlPKG> {
+pub fn parse(file: impl AsRef<Path>) -> Option<TomlPKG> {
     let Ok(content) = fs::read_to_string(file.as_ref()) else {
         eprintln!("read {} failed",file.as_ref().display());   
         return None;
