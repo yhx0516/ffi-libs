@@ -106,7 +106,7 @@ pub trait BuildTarget {
         let scan_path = scan_path.display().to_string().replace("\\", "/");
         let root_path = root_path.display().to_string().replace("\\", "/");
 
-        for file in &match_patterns(&scan_path, patterns) {
+        for file in &match_patterns(&scan_path, patterns, false) {
             let asset_path = match pkg_path {
                 Some(_) => file.strip_prefix(&scan_path).unwrap(),
                 None => file.strip_prefix(&root_path).unwrap(),

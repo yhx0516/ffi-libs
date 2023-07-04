@@ -1,6 +1,6 @@
 [[bundle]]
 patterns = ["**/*.prefab"]
 dependencies = [
-    "/pkg-dependencies/BuildAssets/Material/.pkg", 
+    "/pkg-dependencies/BuildAssets/Material/.pkg",
     "/pkg-dependencies/BuildAssets/Material/DepMaterial/.pkg"
 ]

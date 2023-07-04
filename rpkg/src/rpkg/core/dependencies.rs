@@ -250,4 +250,12 @@ mod tests {
         let deps = seek_dependencies(root_path, cur_pkg, &pattterns);
         assert_eq!(true, deps.is_circular);
     }
+
+    #[test]
+    fn a1() {
+        let a = std::path::Path::new("./");
+        let b = std::path::Path::new("./tests/..");
+
+        assert_eq!(a.canonicalize().unwrap(), b.canonicalize().unwrap());
+    }
 }
