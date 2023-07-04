@@ -1,7 +1,13 @@
-pub mod dependencies;
-pub mod pkg;
+mod build_map;
+mod dependencies;
+mod scan;
 
-mod build_target;
-mod matcher;
+pub use build_map::BuildMap;
 
-pub use matcher::match_patterns;
+pub use dependencies::resolve_build_deps;
+pub use dependencies::Dependencies;
+
+pub use scan::scan_files;
+pub use scan::scan_files_block_manifest;
+pub use scan::scan_files_block_pkg;
+pub use scan::scan_files_block_pkg_manifest;

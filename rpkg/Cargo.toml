@@ -19,4 +19,6 @@ toml = "0.7.3"
 serde = { version = "1.0.159", features = ["derive"] }
 rutils = { version ="0.0.1", path="../rutils" }
 clap = { version = "4.0.8", features = ["derive", "cargo"] }
+anyhow = "1.0.71"
+
 

@@ -1,0 +1,6 @@
+[[bundle]]
+patterns = ["**/*.prefab"]
+dependencies = [
+    "../Material",
+    "../Material/DepMaterial"
+]

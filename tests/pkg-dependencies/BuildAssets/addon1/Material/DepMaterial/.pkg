@@ -1,0 +1,3 @@
+[[bundle]]
+patterns = ["**/*.mat"]
+dependencies = ["/BuildAssets/addon1/Shader"]
