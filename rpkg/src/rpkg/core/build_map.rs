@@ -3,9 +3,12 @@ use std::fmt::Display;
 use std::path::Path;
 
 use anyhow::anyhow;
+use anyhow::Result;
+
 use rutils::canonicalize_path;
 use rutils::norm_path;
 
+use crate::core::Assets;
 use crate::core::Dependencies;
 use crate::pkg;
 use crate::BuildTarget;
@@ -16,12 +19,23 @@ use crate::scan_files_block_pkg_manifest;
 
 #[derive(Default)]
 pub struct BuildMap {
+    /// project path
     root_path: Option<String>,
-    pub bundles: BTreeMap<String, Box<dyn BuildTarget>>,
-    pub subscenes: BTreeMap<String, Box<dyn BuildTarget>>,
-    pub files: BTreeMap<String, Box<dyn BuildTarget>>,
-    pub dylibs: BTreeMap<String, Box<dyn BuildTarget>>,
-    pub zips: BTreeMap<String, Box<dyn BuildTarget>>,
+
+    /// bundle map
+    bundles: BTreeMap<String, Box<dyn BuildTarget>>,
+
+    /// subscene map
+    subscenes: BTreeMap<String, Box<dyn BuildTarget>>,
+
+    /// file map
+    files: BTreeMap<String, Box<dyn BuildTarget>>,
+
+    /// dlib map
+    dylibs: BTreeMap<String, Box<dyn BuildTarget>>,
+
+    /// zip map
+    zips: BTreeMap<String, Box<dyn BuildTarget>>,
 }
 
 impl BuildMap {
@@ -33,7 +47,7 @@ impl BuildMap {
         &mut self,
         root_path: impl AsRef<Path>,
         pkg_paths: Vec<impl AsRef<Path>>,
-    ) -> anyhow::Result<()> {
+    ) -> Result<()> {
         let root_path = root_path.as_ref();
         self.root_path = Some(norm_path(canonicalize_path(&root_path)?));
 
@@ -73,96 +87,122 @@ impl BuildMap {
         Ok(())
     }
 
-    fn get_root_path(&self) -> anyhow::Result<&String> {
+    pub fn get_root_path(&self) -> Result<&String> {
         self.root_path
             .as_ref()
             .map_or(Err(anyhow!("not found root path in build map")), |v| Ok(v))
     }
 
-    pub fn resolve_bundle_deps(
-        &self,
-        target_path: impl AsRef<str>,
-    ) -> anyhow::Result<Dependencies> {
+    pub fn get_root_path_mut(&mut self) -> Result<&mut String> {
+        self.root_path
+            .as_mut()
+            .map_or(Err(anyhow!("not found root path in build map")), |v| Ok(v))
+    }
+
+    pub fn resolve_bundle_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
         let root_path = self.get_root_path()?;
         resolve_build_deps(root_path, &norm_path(target_path.as_ref()), &self.bundles)
     }
 
-    pub fn resolve_subscene_deps(
-        &self,
-        target_path: impl AsRef<str>,
-    ) -> anyhow::Result<Dependencies> {
+    pub fn resolve_subscene_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
         let root_path = self.get_root_path()?;
         resolve_build_deps(root_path, &norm_path(target_path.as_ref()), &self.subscenes)
     }
 
-    pub fn resolve_dylib_deps(&self, target_path: impl AsRef<str>) -> anyhow::Result<Dependencies> {
+    pub fn resolve_dylib_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
         let root_path = self.get_root_path()?;
         resolve_build_deps(root_path, &norm_path(target_path.as_ref()), &self.dylibs)
     }
 
-    pub fn resolve_file_deps(&self, target_path: impl AsRef<str>) -> anyhow::Result<Dependencies> {
+    pub fn resolve_file_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
         let root_path = self.get_root_path()?;
         resolve_build_deps(root_path, &norm_path(target_path.as_ref()), &self.files)
     }
 
-    pub fn resolve_zip_deps(&self, target_path: impl AsRef<str>) -> anyhow::Result<Dependencies> {
+    pub fn resolve_zip_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
         let root_path = self.get_root_path()?;
         resolve_build_deps(root_path, &norm_path(target_path.as_ref()), &self.zips)
     }
 
-    pub fn scan_bundle_assets(&self, target_path: impl AsRef<str>) -> anyhow::Result<Vec<String>> {
-        let target_path = target_path.as_ref();
+    pub fn scan_bundle_assets(
+        &self,
+        mount_path: impl AsRef<str>,
+        target_path: impl AsRef<str>,
+    ) -> Result<Assets> {
         let root_path = self.get_root_path()?;
-        inner_scan_assets(root_path, target_path, &self.bundles)
+        inner_scan_assets(root_path, mount_path, target_path, &self.bundles)
     }
 
     pub fn scan_subscene_assets(
         &self,
+        mount_path: impl AsRef<str>,
         target_path: impl AsRef<str>,
-    ) -> anyhow::Result<Vec<String>> {
-        let target_path = target_path.as_ref();
+    ) -> Result<Assets> {
         let root_path = self.get_root_path()?;
-        inner_scan_assets(root_path, target_path, &self.subscenes)
+        inner_scan_assets(root_path, mount_path, target_path, &self.subscenes)
     }
 
-    pub fn scan_dylib_assets(&self, target_path: impl AsRef<str>) -> anyhow::Result<Vec<String>> {
-        let target_path = target_path.as_ref();
+    pub fn scan_dylib_assets(
+        &self,
+        mount_path: impl AsRef<str>,
+        target_path: impl AsRef<str>,
+    ) -> Result<Assets> {
         let root_path = self.get_root_path()?;
-        inner_scan_assets(root_path, target_path, &self.dylibs)
+        inner_scan_assets(root_path, mount_path, target_path, &self.dylibs)
     }
 
-    pub fn scan_file_assets(&self, target_path: impl AsRef<str>) -> anyhow::Result<Vec<String>> {
-        let target_path = target_path.as_ref();
+    pub fn scan_file_assets(
+        &self,
+        mount_path: impl AsRef<str>,
+        target_path: impl AsRef<str>,
+    ) -> Result<Assets> {
         let root_path = self.get_root_path()?;
-        inner_scan_assets(root_path, target_path, &self.files)
+        inner_scan_assets(root_path, mount_path, target_path, &self.files)
     }
 
-    pub fn scan_zip_assets(&self, target_path: impl AsRef<str>) -> anyhow::Result<Vec<String>> {
-        let target_path = target_path.as_ref();
+    pub fn scan_zip_assets(
+        &self,
+        mount_path: impl AsRef<str>,
+        target_path: impl AsRef<str>,
+    ) -> Result<Assets> {
         let root_path = self.get_root_path()?;
-        inner_scan_assets(root_path, target_path, &self.zips)
+        inner_scan_assets(root_path, mount_path, target_path, &self.zips)
     }
 }
 
 fn inner_scan_assets(
     root_path: impl AsRef<str>,
+    mount_path: impl AsRef<str>,
     target_path: impl AsRef<str>,
     target_map: &BTreeMap<String, Box<dyn BuildTarget>>,
-) -> anyhow::Result<Vec<String>> {
+) -> Result<Assets> {
     let root_path = root_path.as_ref();
-    let target_path = target_path.as_ref();
+    let mount_path = norm_path(canonicalize_path(mount_path.as_ref())?);
+    let target_path = norm_path(target_path.as_ref());
 
-    let Some(target) = target_map.get(target_path) else {
-        return Err(anyhow!("not found target: {}",target_path));
+    let Some(target) = target_map.get(&target_path) else {
+        return Err(anyhow!("not found target: {}",&target_path));
     };
 
     let Some(patterns) = target.get_patterns() else {
-        return Err(anyhow!("not found patters in {}",target_path));
+        return Err(anyhow!("not found patters in {}",&target_path));
     };
 
-    let path = Path::new(root_path).join(target_path);
-    let res = scan_files_block_pkg_manifest(path, patterns);
-    Ok(res)
+    let path = Path::new(root_path).join(&target_path);
+    let mut assets = Assets::new();
+
+    for item in scan_files_block_pkg_manifest(path, patterns) {
+        let Some(rel_path) = item.strip_prefix(root_path) else {
+            return Err(anyhow!("{} is not the prefix of {}",root_path, &target_path));
+        };
+
+        let target_path = format!("{}/{}", root_path, target_path);
+        let url = target.build_asset_url(&mount_path, &target_path, &item);
+
+        assets.push_asset(rel_path.to_string(), url)
+    }
+
+    Ok(assets)
 }
 
 impl Display for BuildMap {
@@ -225,8 +265,10 @@ mod tests {
         }
         println!();
 
-        let bundle = "BuildAssets/addon1/Prefab";
-        let to_build = match build_map.resolve_bundle_deps(bundle) {
+        let mount_path = "../tests/pkg-dependencies/BuildAssets/addon1";
+        let target_path = "BuildAssets/addon1/Prefab";
+
+        let to_build = match build_map.resolve_bundle_deps(target_path) {
             Err(e) => panic!("{}", e.to_string()),
             Ok(r) => r,
         };
@@ -234,13 +276,11 @@ mod tests {
         println!("to_build:");
         for target in &to_build.build_targets {
             println!("  {} assets:", target);
-            let assets = match build_map.scan_bundle_assets(target) {
+            let assets = match build_map.scan_bundle_assets(mount_path, target) {
                 Ok(r) => r,
                 Err(e) => panic!("{}", e.to_string()),
             };
-            for item in &assets {
-                println!("    {}", item);
-            }
+            println!("{}", assets);
         }
     }
 }

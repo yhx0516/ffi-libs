@@ -1,8 +1,10 @@
 use std::ffi::c_char;
 
-use crate::core::{resolve_build_deps, BuildMap, Dependencies};
+use crate::core::{Assets, BuildMap, Dependencies};
 use crate::scan_files;
-use crate::{pkg, scan_files_block_manifest, scan_files_block_pkg, scan_files_block_pkg_manifest};
+use crate::scan_files_block_manifest;
+use crate::scan_files_block_pkg;
+use crate::scan_files_block_pkg_manifest;
 
 // ============================================================
 // Info
@@ -20,7 +22,6 @@ pub extern "C" fn get_version() -> *const c_char {
 // ============================================================
 // Scan api
 // ============================================================
-
 #[no_mangle]
 pub extern "C" fn rpkg_scan_files(
     root_path: *const c_char,
@@ -206,12 +207,14 @@ pub extern "C" fn bm_resolve_zip_deps(
 #[no_mangle]
 pub extern "C" fn bm_scan_bundle_assets(
     ptr: *mut BuildMap,
+    mount_path: *const c_char,
     target_path: *const c_char,
-) -> *const Vec<String> {
+) -> *const Assets {
     let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let mount_path = rutils::char_ptr_to_str(mount_path);
     let target_path = rutils::char_ptr_to_str(target_path);
 
-    match build_map.scan_bundle_assets(target_path) {
+    match build_map.scan_bundle_assets(mount_path, target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
             eprintln!("{}", e.to_string());
@@ -223,12 +226,14 @@ pub extern "C" fn bm_scan_bundle_assets(
 #[no_mangle]
 pub extern "C" fn bm_scan_subscene_assets(
     ptr: *mut BuildMap,
+    mount_path: *const c_char,
     target_path: *const c_char,
-) -> *const Vec<String> {
+) -> *const Assets {
     let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let mount_path = rutils::char_ptr_to_str(mount_path);
     let target_path = rutils::char_ptr_to_str(target_path);
 
-    match build_map.scan_subscene_assets(target_path) {
+    match build_map.scan_subscene_assets(mount_path, target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
             eprintln!("{}", e.to_string());
@@ -240,12 +245,14 @@ pub extern "C" fn bm_scan_subscene_assets(
 #[no_mangle]
 pub extern "C" fn bm_scan_dylib_assets(
     ptr: *mut BuildMap,
+    mount_path: *const c_char,
     target_path: *const c_char,
-) -> *const Vec<String> {
+) -> *const Assets {
     let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let mount_path = rutils::char_ptr_to_str(mount_path);
     let target_path = rutils::char_ptr_to_str(target_path);
 
-    match build_map.scan_dylib_assets(target_path) {
+    match build_map.scan_dylib_assets(mount_path, target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
             eprintln!("{}", e.to_string());
@@ -255,14 +262,16 @@ pub extern "C" fn bm_scan_dylib_assets(
 }
 
 #[no_mangle]
-pub extern "C" fn bm_file_subscene_assets(
+pub extern "C" fn bm_scan_file_assets(
     ptr: *mut BuildMap,
+    mount_path: *const c_char,
     target_path: *const c_char,
-) -> *const Vec<String> {
+) -> *const Assets {
     let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let mount_path = rutils::char_ptr_to_str(mount_path);
     let target_path = rutils::char_ptr_to_str(target_path);
 
-    match build_map.scan_file_assets(target_path) {
+    match build_map.scan_file_assets(mount_path, target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
             eprintln!("{}", e.to_string());
@@ -274,13 +283,27 @@ pub extern "C" fn bm_file_subscene_assets(
 #[no_mangle]
 pub extern "C" fn bm_scan_zip_assets(
     ptr: *mut BuildMap,
+    mount_path: *const c_char,
     target_path: *const c_char,
-) -> *const Vec<String> {
+) -> *const Assets {
     let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let mount_path = rutils::char_ptr_to_str(mount_path);
     let target_path = rutils::char_ptr_to_str(target_path);
 
-    match build_map.scan_zip_assets(target_path) {
+    match build_map.scan_zip_assets(mount_path, target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
+        Err(e) => {
+            eprintln!("{}", e.to_string());
+            std::ptr::null()
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn bm_get_root_path(ptr: *const BuildMap) -> *const c_char {
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    match build_map.get_root_path() {
+        Ok(v) => rutils::str_to_char_ptr(v),
         Err(e) => {
             eprintln!("{}", e.to_string());
             std::ptr::null()
@@ -297,15 +320,14 @@ pub extern "C" fn bm_debug_info(ptr: *const BuildMap) -> *const c_char {
 // ============================================================
 // Dependencies api
 // ============================================================
-
 #[no_mangle]
-pub extern "C" fn dependencies_get_files(ptr: *const Dependencies) -> *const Vec<String> {
+pub extern "C" fn dependencies_get_targets(ptr: *const Dependencies) -> *const Vec<String> {
     let deps = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     Box::into_raw(Box::new(deps.build_targets.clone()))
 }
 
 #[no_mangle]
-pub extern "C" fn dependencies_get_invalid_files(ptr: *const Dependencies) -> *const Vec<String> {
+pub extern "C" fn dependencies_get_invalid_targets(ptr: *const Dependencies) -> *const Vec<String> {
     let deps = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     Box::into_raw(Box::new(deps.invalid_build_targets.clone()))
 }
@@ -322,4 +344,29 @@ pub extern "C" fn dependencies_dispose(ptr: *mut Dependencies) {
         return;
     }
     unsafe { Box::from_raw(ptr) };
+}
+
+// ============================================================
+// Assets api
+// ============================================================
+#[no_mangle]
+pub extern "C" fn assets_dispose(ptr: *mut Assets) {
+    if ptr.is_null() {
+        return;
+    }
+    unsafe { Box::from_raw(ptr) };
+}
+
+#[no_mangle]
+pub extern "C" fn assets_get_paths(ptr: *const Assets) -> *const Vec<String> {
+    let assets = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let paths: Vec<String> = assets.get_paths().iter().map(ToString::to_string).collect();
+    Box::into_raw(Box::new(paths))
+}
+
+#[no_mangle]
+pub extern "C" fn assets_get_urls(ptr: *const Assets) -> *const Vec<String> {
+    let assets = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let paths: Vec<String> = assets.get_urls().iter().map(ToString::to_string).collect();
+    Box::into_raw(Box::new(paths))
 }

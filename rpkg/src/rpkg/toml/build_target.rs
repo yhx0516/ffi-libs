@@ -1,6 +1,4 @@
-use std::{path::Path, string};
-
-use crate::core::scan_files;
+use std::path::Path;
 
 mod bundle;
 mod dylib;
@@ -25,9 +23,7 @@ pub trait BuildTarget {
 
     fn get_deps(&self) -> Option<&Vec<String>>;
 
-    fn is_pkg(&self) -> bool {
-        true
-    }
+    fn is_pkg(&self) -> bool;
 
     fn display(&self) -> String {
         let mut output = String::new();
@@ -35,6 +31,39 @@ pub trait BuildTarget {
         output.push_str(&format!("patterns = {:?}, ", self.get_patterns()));
         output.push_str(&format!("dependencies = {:?}, ", self.get_deps()));
         output
+    }
+
+    fn build_asset_url(&self, mount_path: &str, target_path: &str, asset_path: &str) -> String {
+        let pkg_path = match (self.is_pkg(), mount_path == target_path) {
+            (true, true) => {
+                let path = Path::new("assets").with_extension(ASSET_PKG_EXTENSION);
+                Some(path)
+            }
+            (true, false) => {
+                let path = target_path.strip_prefix(mount_path).unwrap();
+                let path = Path::new(path).with_extension(ASSET_PKG_EXTENSION);
+                Some(path)
+            }
+            _ => None,
+        };
+
+        let rel_asset_path = match pkg_path {
+            Some(_) => asset_path.strip_prefix(target_path).unwrap(),
+            None => asset_path.strip_prefix(mount_path).unwrap(),
+        };
+
+        let url = match pkg_path {
+            Some(p) => {
+                format!(
+                    "{}://{}/{}",
+                    ASSET_PROTOCAL,
+                    norm_path(p),
+                    norm_path(rel_asset_path)
+                )
+            }
+            None => format!("{}://{}", ASSET_PROTOCAL, asset_path),
+        };
+        url.to_lowercase()
     }
 }
 
@@ -90,100 +119,4 @@ fn norm_dep_path(
 
     let path = canonicalize_path(root_path.join(cur_path).join(dep_path))?;
     Ok(norm_path(path.strip_prefix(root_path)?))
-}
-
-pub trait IntoBuildTarget {
-    // scan assets and return asset urls by build target
-    // root_path is usually {unity-project-dir}/Assets
-    //
-    // examples
-    // bundle or subscene target (from root_path)
-    //   - asset_src: "{unity-project-dir}/Assets/foobar.prefab"
-    //   - pkg_path: "assets.bundle"
-    //   - url: "asset://assets.bundle/foobar.prefab"
-    //
-    // bundle or subscene target (not from root_path)
-    //   - asset_src: "{unity-project-dir}/Assets/Arts/Character/Clips/Chr_player_actor/CLR_fall2idle.anim"
-    //   - pkg_path: "arts/character/clips.bundle"
-    //   - url: "asset://arts/character/clips.bundle/chr_player_actor/clr_fall2idle.anim"
-    //
-    // file target
-    //   - asset_src: "{unity-project-dir}/Assets/Gameplay/Inputs/InputAction.txt"
-    //   - pkg_path: None
-    //   - url: "asset://gameplay/inputs/inputaction.txt"
-    //
-    // dylib target
-    //   - asset_src: "{unity-project-dir}/Assets/Scripts/Core/Runtime/Framework.Core.Runtime.asmdef"
-    //   - pkg_path: None
-    //   - url: "asset://scripts/core/runtime/framework.core.runtime.dll"
-    //
-    // zip(todo)
-    // fn scan_assets(&self, root_path: impl AsRef<Path>, cur_path: impl AsRef<Path>) -> Vec<String> {
-    //     let root_path = root_path.as_ref();
-    //     let cur_path = cur_path.as_ref();
-
-    //     let scan_path = match &self.get_path() {
-    //         Some(p) => root_path.join(p),
-    //         None => cur_path.to_path_buf(),
-    //     };
-
-    //     let pkg_path = match (self.is_pkg(), root_path == scan_path) {
-    //         (true, true) => {
-    //             let path = Path::new("assets");
-    //             let path = path.with_extension(ASSET_PKG_EXTENSION);
-    //             Some(path)
-    //         }
-    //         (true, false) => {
-    //             let path = scan_path.strip_prefix(root_path).unwrap();
-    //             let path = path.with_extension(ASSET_PKG_EXTENSION);
-    //             Some(path)
-    //         }
-    //         _ => None,
-    //     };
-
-    //     let Some(patterns) = &self.get_patterns() else {
-    //         return Vec::new();
-    //     };
-
-    //     let mut assets = Vec::new();
-    //     let scan_path = scan_path.display().to_string().replace("\\", "/");
-    //     let root_path = root_path.display().to_string().replace("\\", "/");
-
-    //     for file in &scan_files(&scan_path, patterns) {
-    //         let asset_path = match pkg_path {
-    //             Some(_) => file.strip_prefix(&scan_path).unwrap(),
-    //             None => file.strip_prefix(&root_path).unwrap(),
-    //         };
-
-    //         let asset = self.build_asset_url(&pkg_path, asset_path);
-    //         assets.push(asset);
-    //     }
-
-    //     assets
-    // }
-
-    // fn build_asset_url(
-    //     &self,
-    //     pkg_path: &Option<impl AsRef<Path>>,
-    //     asset_path: impl AsRef<Path>,
-    // ) -> String {
-    //     let url = {
-    //         let asset_path = asset_path.as_ref().display().to_string().replace("\\", "/");
-    //         let asset_path = asset_path.trim_matches('/');
-
-    //         match pkg_path {
-    //             Some(p) => {
-    //                 let path = p.as_ref().display().to_string().replace("\\", "/");
-    //                 format!(
-    //                     "{}://{}/{}",
-    //                     ASSET_PROTOCAL,
-    //                     path.trim_matches('/'),
-    //                     asset_path
-    //                 )
-    //             }
-    //             None => format!("{}://{}", ASSET_PROTOCAL, asset_path),
-    //         }
-    //     };
-    //     url.to_lowercase()
-    // }
 }

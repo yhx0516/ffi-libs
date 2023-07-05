@@ -25,7 +25,7 @@ pub fn resolve_build_deps(
 
     let mut res = Dependencies::default();
     res.build_targets.push(target_path.to_string());
-    println!("resolve dep pro1: {:?}", target_path);
+
     let deps = resolve_dep_path(root_path, target_path, target.get_deps())?;
 
     let mut indegree_map = HashMap::new();

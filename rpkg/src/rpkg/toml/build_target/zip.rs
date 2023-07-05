@@ -21,4 +21,8 @@ impl BuildTarget for TomlZip {
     fn get_deps(&self) -> Option<&Vec<String>> {
         self.dependencies.as_ref()
     }
+
+    fn is_pkg(&self) -> bool {
+        true
+    }
 }

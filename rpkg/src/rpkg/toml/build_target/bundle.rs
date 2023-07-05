@@ -17,7 +17,12 @@ impl BuildTarget for TomlBundle {
     fn get_patterns(&self) -> Option<&Vec<String>> {
         self.patterns.as_ref()
     }
+
     fn get_deps(&self) -> Option<&Vec<String>> {
         self.dependencies.as_ref()
+    }
+
+    fn is_pkg(&self) -> bool {
+        true
     }
 }

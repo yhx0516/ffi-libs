@@ -1,7 +1,9 @@
+mod assets;
 mod build_map;
 mod dependencies;
 mod scan;
 
+pub use assets::Assets;
 pub use build_map::BuildMap;
 
 pub use dependencies::resolve_build_deps;

@@ -83,25 +83,48 @@ namespace csharp_link_rust.libs
         [DllImport("../../../../../target/debug/rpkg.dll")]
         public static extern IntPtr bm_resolve_zip_deps(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
 
-        // return Vec<String> ptr
+        // return Assets ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr bm_scan_bundle_assets(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
+        public static extern IntPtr bm_scan_bundle_assets(
+                IntPtr ptr,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string mount_path,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path
+            );
 
-        // return Vec<String> ptr
+        // return Assets ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr bm_scan_subscene_assets(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
+        public static extern IntPtr bm_scan_subscene_assets(
+                IntPtr ptr,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string mount_path,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path
+            );
 
-        // return Vec<String> ptr
+        // return Assets ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr bm_scan_dylib_assets(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
+        public static extern IntPtr bm_scan_dylib_assets(
+                IntPtr ptr,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string mount_path,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path
+            );
 
-        // return Vec<String> ptr
+        // return Assets ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr bm_file_subscene_assets(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
+        public static extern IntPtr bm_scan_file_assets(
+                IntPtr ptr,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string mount_path,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path
+            );
 
-        // return Vec<String> ptr
+        // return Assets ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr bm_scan_zip_assets(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
+        public static extern IntPtr bm_scan_zip_assets(
+                IntPtr ptr,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string mount_path,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path
+            );
+
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern string bm_get_root_path(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rpkg.dll")]
         public static extern string bm_debug_info(IntPtr ptr);
@@ -109,20 +132,33 @@ namespace csharp_link_rust.libs
         // ============================================================
         // Dependencies api
         // ============================================================
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr dependencies_get_targets(IntPtr ptr);
 
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr dependencies_get_files(IntPtr ptr);
-
-        // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr dependencies_get_invalid_files(IntPtr ptr);
+        public static extern IntPtr dependencies_get_invalid_targets(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rpkg.dll")]
         public static extern bool dependencies_is_circular(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rpkg.dll")]
         public static extern void dependencies_dispose(IntPtr ptr);
+
+        // ============================================================
+        // Assets api
+        // ============================================================
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern void assets_dispose(IntPtr ptr);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr assets_get_paths(IntPtr ptr);
+
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr assets_get_urls(IntPtr ptr);
+
 
         // ============================================================
         // Vec<String> api
@@ -189,24 +225,31 @@ namespace csharp_link_rust.libs
 
             // 获取 pkg 文件里的某个 bundle
             string bundle_path = "BuildAssets/addon1/Prefab";
+            string mount_path = "../../../../../tests/pkg-dependencies/BuildAssets/addon1";
             Console.WriteLine(bundle_path + " deps");
 
             // 获取这个 bundle 的依赖（含自身）
             IntPtr deps_ptr = bm_resolve_bundle_deps(build_map_ptr, bundle_path);
-            IntPtr to_build_ptr = dependencies_get_files(deps_ptr);
+            IntPtr to_build_ptr = dependencies_get_targets(deps_ptr);
             string[] to_build = Ptr2StringList(to_build_ptr);
             foreach (string target in to_build)
             {
-                Console.WriteLine("  " + target + "assets:");
+                Console.WriteLine("  " + target + " assets:");
 
                 // 获取这个 bundle 关联的具体资源
-                IntPtr aseets_ptr = bm_scan_bundle_assets(build_map_ptr, target);
-                string[] assets = Ptr2StringList(aseets_ptr);
-                foreach (string item in assets)
+                IntPtr assets_ptr = bm_scan_bundle_assets(build_map_ptr, mount_path, target);
+                IntPtr asset_paths_ptr = assets_get_paths(assets_ptr);
+                IntPtr asset_urls_ptr = assets_get_urls(assets_ptr);
+                string[] asset_paths = Ptr2StringList(assets_ptr);
+                string[] asset_urls = Ptr2StringList(assets_ptr);
+                for (int i = 0; i < asset_paths.Length; i++)
                 {
-                    Console.WriteLine("    " + item);
+                    Console.WriteLine("    path: " + asset_paths[i] + ", url: " + asset_urls[i]);
                 }
+                assets_dispose(assets_ptr);             
             }
+            dependencies_dispose(deps_ptr);
+            bm_dispose(build_map_ptr);
         }
 
         private static string[] Ptr2StringList(System.IntPtr strs_ptr)

@@ -1,3 +1,4 @@
+use rutils::norm_path;
 use serde::Deserialize;
 use std::path::Path;
 
@@ -24,17 +25,15 @@ impl BuildTarget for TomlDylib {
         self.dependencies.as_ref()
     }
 
-    // fn build_asset_url(
-    //     &self,
-    //     _: &Option<impl AsRef<Path>>,
-    //     asset_path: impl AsRef<Path>,
-    // ) -> String {
-    //     let asset_path = Path::new(asset_path.as_ref())
-    //         .with_extension("dll")
-    //         .display()
-    //         .to_string();
+    fn is_pkg(&self) -> bool {
+        false
+    }
 
-    //     let url = format!("{}://{}", ASSET_PROTOCAL, asset_path.trim_matches('/'));
-    //     url.to_lowercase()
-    // }
+    fn build_asset_url(&self, mount_path: &str, _: &str, asset_path: &str) -> String {
+        let asset_path = Path::new(asset_path).with_extension("dll");
+        let rel_asset_path = asset_path.strip_prefix(mount_path).unwrap();
+
+        let url = format!("{}://{}", ASSET_PROTOCAL, norm_path(rel_asset_path));
+        url.to_lowercase()
+    }
 }
