@@ -240,8 +240,8 @@ namespace csharp_link_rust.libs
                 IntPtr assets_ptr = bm_scan_bundle_assets(build_map_ptr, mount_path, target);
                 IntPtr asset_paths_ptr = assets_get_paths(assets_ptr);
                 IntPtr asset_urls_ptr = assets_get_urls(assets_ptr);
-                string[] asset_paths = Ptr2StringList(assets_ptr);
-                string[] asset_urls = Ptr2StringList(assets_ptr);
+                string[] asset_paths = Ptr2StringList(asset_paths_ptr);
+                string[] asset_urls = Ptr2StringList(asset_urls_ptr);
                 for (int i = 0; i < asset_paths.Length; i++)
                 {
                     Console.WriteLine("    path: " + asset_paths[i] + ", url: " + asset_urls[i]);

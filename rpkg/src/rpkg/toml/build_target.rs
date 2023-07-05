@@ -1,3 +1,4 @@
+use rutils::{canonicalize_path, norm_path};
 use std::path::Path;
 
 mod bundle;
@@ -9,7 +10,7 @@ mod zip;
 pub use bundle::TomlBundle;
 pub use dylib::TomlDylib;
 pub use file::TomlFile;
-use rutils::{canonicalize_path, norm_path};
+
 pub use subscene::TomlSubscene;
 pub use zip::TomlZip;
 

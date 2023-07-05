@@ -15,11 +15,11 @@ impl Assets {
     }
 
     pub fn get_paths(&self) -> Vec<&String> {
-        self.0.iter().map(|v| &v.0).collect()
+        self.0.iter().map(|(path, _)| path).collect()
     }
 
     pub fn get_urls(&self) -> Vec<&String> {
-        self.0.iter().map(|v| &v.1).collect()
+        self.0.iter().map(|(_, url)| url).collect()
     }
 }
 
