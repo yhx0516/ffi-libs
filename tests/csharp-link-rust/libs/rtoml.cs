@@ -290,7 +290,7 @@ namespace csharp_link_rust.libs
 
 
         [DllImport("../../../../../target/debug/rtoml.dll")]
-        public static extern void dispose_strs(IntPtr ptr);
+        public static extern void strs_dispose(IntPtr ptr);
 
         // parse toml test
         public static void ParseTomlTest()
@@ -341,7 +341,7 @@ namespace csharp_link_rust.libs
                 string str = strs_get(doc_keys_ptr, i);
                 Console.WriteLine("        " + str);
             }
-            dispose_strs(doc_keys_ptr);
+            strs_dispose(doc_keys_ptr);
             Console.WriteLine("");
 
             // get doc array keys
@@ -353,7 +353,7 @@ namespace csharp_link_rust.libs
                 string str = strs_get(doc_array_keys_ptr, i);
                 Console.WriteLine("        " + str);
             }
-            dispose_strs(doc_array_keys_ptr);
+            strs_dispose(doc_array_keys_ptr);
             Console.WriteLine("");
 
             // get doc table keys
@@ -365,7 +365,7 @@ namespace csharp_link_rust.libs
                 string str = strs_get(doc_table_keys_ptr, i);
                 Console.WriteLine("        " + str);
             }
-            dispose_strs(doc_table_keys_ptr);
+            strs_dispose(doc_table_keys_ptr);
             Console.WriteLine("");
 
             // get doc inline table keys
@@ -377,7 +377,7 @@ namespace csharp_link_rust.libs
                 string str = strs_get(doc_inline_table_keys_ptr, i);
                 Console.WriteLine("        " + str);
             }
-            dispose_strs(doc_inline_table_keys_ptr);
+            strs_dispose(doc_inline_table_keys_ptr);
             Console.WriteLine("");
 
             // get doc table array keys
@@ -389,7 +389,7 @@ namespace csharp_link_rust.libs
                 string str = strs_get(doc_table_array_keys_ptr, i);
                 Console.WriteLine("        " + str);
             }
-            dispose_strs(doc_table_array_keys_ptr);
+            strs_dispose(doc_table_array_keys_ptr);
             Console.WriteLine("");
 
             // parse table
@@ -407,7 +407,7 @@ namespace csharp_link_rust.libs
                 string str = strs_get(table_keys_ptr, i);
                 Console.WriteLine("        " + str);
             }
-            dispose_strs(table_keys_ptr);
+            strs_dispose(table_keys_ptr);
             Console.WriteLine("");
 
             // get table array keys 
@@ -419,7 +419,7 @@ namespace csharp_link_rust.libs
                 string str = strs_get(table_array_keys_ptr, i);
                 Console.WriteLine("        " + str);
             }
-            dispose_strs(table_array_keys_ptr);
+            strs_dispose(table_array_keys_ptr);
             Console.WriteLine("");
 
             // get inline table keys 
@@ -431,7 +431,7 @@ namespace csharp_link_rust.libs
                 string str = strs_get(table_inline_table_keys_ptr, i);
                 Console.WriteLine("        " + str);
             }
-            dispose_strs(table_inline_table_keys_ptr);
+            strs_dispose(table_inline_table_keys_ptr);
             Console.WriteLine("");
 
             System.IntPtr includes_item = table_get(bundles_table, "includes");
@@ -489,7 +489,7 @@ namespace csharp_link_rust.libs
                 string str = strs_get(inline_table_keys_ptr, i);
                 Console.WriteLine("        " + str);
             }
-            dispose_strs(inline_table_keys_ptr);
+            strs_dispose(inline_table_keys_ptr);
             Console.WriteLine("");
 
             // get table array keys 
@@ -501,7 +501,7 @@ namespace csharp_link_rust.libs
                 string str = strs_get(inline_table_array_keys_ptr, i);
                 Console.WriteLine("        " + str);
             }
-            dispose_strs(inline_table_array_keys_ptr);
+            strs_dispose(inline_table_array_keys_ptr);
             Console.WriteLine("");
 
             // get inline table keys 
@@ -513,7 +513,7 @@ namespace csharp_link_rust.libs
                 string str = strs_get(inline_table_inline_table_keys_ptr, i);
                 Console.WriteLine("        " + str);
             }
-            dispose_strs(inline_table_inline_table_keys_ptr);
+            strs_dispose(inline_table_inline_table_keys_ptr);
             Console.WriteLine("");
 
             inline_table_dispose(person_inline_table);

@@ -103,6 +103,9 @@ namespace csharp_link_rust.libs
         [DllImport("../../../../../target/debug/rpkg.dll")]
         public static extern IntPtr bm_scan_zip_assets(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
 
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern string bm_debug_info(IntPtr ptr);
+
         // ============================================================
         // Dependencies api
         // ============================================================
@@ -132,129 +135,81 @@ namespace csharp_link_rust.libs
         public static extern string strs_get(IntPtr ptr, uint index);
 
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern void dispose_strs(IntPtr ptr);
+        public static extern void strs_dispose(IntPtr ptr);
 
         public static void PkgMatchTest()
         {
-            try
-            {
-                PkgMatchPattern();
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("本部分测试需要配合 rust 生成的文件目录才能正常运行。");
-            }       
+            UnityBuildTest();
 
-            PkgSeekDependencies();
         }
 
-        private static void PkgSeekDependencies()
-        {
-            Console.WriteLine("  - pkg seek dependencies");
-            string root_path = "../../../../../tests";
-            string path1 = "../../../../../tests/pkg-dependencies/BuildAssets/Prefab/.pkg";
-            string [] pattterns1 = {
-                    "/pkg-dependencies/BuildAssets/Material/.pkg",
-                    "/pkg-dependencies/BuildAssets/Material/DepMaterial/.pkg",
-            };
-            IntPtr deps_ptr1 = pkg_seek_dependencies(root_path, path1, pattterns1, (UInt32)pattterns1.Length);
-            System.IntPtr strs_ptr1 = dependencies_get_files(deps_ptr1);
-            Console.WriteLine("      [" + path1 + "]");
-            Console.WriteLine("      is_circular: " + dependencies_is_circular(deps_ptr1));
-            Console.WriteLine("      res:");
-            foreach (string file in InnerPrintStrs(strs_ptr1))
-            {
-                Console.WriteLine("        " + file);
-            }
-            dependencies_dispose(deps_ptr1);
-            Console.WriteLine("");
-
-            string path2 = "../../../../../tests/pkg-dependencies/BuildAssets/rel.pkg";
-            string[] pattterns2 = { "**/.pkg" };
-            IntPtr deps_ptr2 = pkg_seek_dependencies(root_path, path2, pattterns2, (UInt32)pattterns2.Length);
-            System.IntPtr strs_ptr2 = dependencies_get_files(deps_ptr2);
-            Console.WriteLine("      [" + path2 + "]");
-            Console.WriteLine("      is_circular: " + dependencies_is_circular(deps_ptr2));
-            Console.WriteLine("      res:");
-            foreach (string file in InnerPrintStrs(strs_ptr2))
-            {
-                Console.WriteLine("        " + file);
-            }
-            dependencies_dispose(deps_ptr2);
-            Console.WriteLine("");
-
-            string path3 = "../../../../../tests/pkg-dependencies/BuildAssets/rel2.pkg";
-            string[] pattterns3 = { "**/PKGTest/.pkg" };
-            IntPtr deps_ptr3 = pkg_seek_dependencies(root_path, path3, pattterns3, (UInt32)pattterns3.Length);
-            System.IntPtr strs_ptr3 = dependencies_get_files(deps_ptr3);
-            Console.WriteLine("      [" + path3 + "]");
-            Console.WriteLine("      is_circular: " + dependencies_is_circular(deps_ptr3));
-            Console.WriteLine("      res:");
-            foreach (string file in InnerPrintStrs(strs_ptr3))
-            {
-                Console.WriteLine("        " + file);
-            }
-            dependencies_dispose(deps_ptr3);
-            Console.WriteLine("");
-
-            string path4 = "../../../../../tests/pkg-dependencies/CircularDep/A/.pkg";
-            string[] pattterns4 = { "/pkg-dependencies/CircularDep/B/.pkg" };
-            IntPtr deps_ptr4 = pkg_seek_dependencies(root_path, path4, pattterns4, (UInt32)pattterns4.Length);
-            System.IntPtr strs_ptr4 = dependencies_get_files(deps_ptr4);
-            Console.WriteLine("      [" + path4 + "]");
-            Console.WriteLine("      is_circular: " + dependencies_is_circular(deps_ptr4));
-            Console.WriteLine("      res:");
-            foreach (string file in InnerPrintStrs(strs_ptr4))
-            {
-                Console.WriteLine("        " + file);
-            }
-            dependencies_dispose(deps_ptr4);
-            Console.WriteLine("");
-        }
-
-
-
-        // NOTE: 基于 rust pkg_match_files_test() 生成的文件树结构进行测试
-        private static void PkgMatchPattern()
+        private static void UnityBuildTest()
         {
             Console.WriteLine("[rpkg]");
-            Console.WriteLine("  - pkg match version");
-            Console.WriteLine("      version: " + get_version());
+            Console.WriteLine("  version: " + get_version());
             Console.WriteLine("");
 
-            Console.WriteLine("  - pkg match patterns test");
-            string root_path1 = "../../../../../target/tmp/pkg_assets/foo1";
-            string[] patterns1 = { "*.asset" };
-            System.IntPtr strs_ptr1 = pkg_match_patterns(root_path1, patterns1, (UInt32)patterns1.Length, false);
-            Console.WriteLine("      [\"*.asset\"]: ");
-            foreach (string file in InnerPrintStrs(strs_ptr1))
+            // 搜索所有 pkg 文件
+            string asset_path = "../../../../../tests/pkg-dependencies/BuildAssets";
+            string[] pkg_patterns = { "**/.pkg" };
+            IntPtr pkgs_ptr = rpkg_scan_files(asset_path, pkg_patterns, (UInt32)pkg_patterns.Length);
+            Console.WriteLine("total pkgs:");
+
+            string[] total_pkgs = Ptr2StringList(pkgs_ptr);
+            foreach (string item in total_pkgs)
             {
-                Console.WriteLine("        " + file);
+                Console.WriteLine("  " + item);
             }
             Console.WriteLine("");
 
-            string root_path2 = "../../../../../target/tmp/pkg_assets/foo2";
-            string[] patterns2 = { "*.txt", "!bar/*2.txt" };
-            System.IntPtr strs_ptr2 = pkg_match_patterns(root_path2, patterns2, (UInt32)patterns2.Length, false);
-            Console.WriteLine("      [\"*.txt\", \"!bar/*2.txt\"]: ");
-            foreach (string file in InnerPrintStrs(strs_ptr2))
+            // 初始化 BuildMap
+            string root_path = "../../../../../tests/pkg-dependencies";
+            IntPtr build_map_ptr = bm_init(root_path, total_pkgs, (UInt32)total_pkgs.Length);
+            Console.WriteLine("build map: ");
+            Console.WriteLine(bm_debug_info(build_map_ptr));
+
+            // manifest.toml 解析获取 members
+            Console.WriteLine("addons and pkgs:");
+            string[] members = { "./", "addon1", "addon2" };
+
+            // 获取 addon 下的 pkg 文件
+            foreach (string member in members)
             {
-                Console.WriteLine("        " + file);
+                string addon_path = asset_path +"/"+ member;
+                IntPtr addon_pkgs_ptr = rpkg_scan_files_block_manifest(addon_path, pkg_patterns, (UInt32)pkg_patterns.Length);
+                Console.WriteLine("  addon " + member + " pkgs (" + addon_path + "):");
+
+                string[] addon_pkgs = Ptr2StringList(addon_pkgs_ptr);
+                foreach (string item in addon_pkgs)
+                {
+                    Console.WriteLine("    " + item);
+                }
             }
             Console.WriteLine("");
 
-            string root_path3 = "../../../../../target/tmp/pkg_assets/foo3";
-            string[] patterns3 = { "*.txt", "**/*.txt" };
-            System.IntPtr strs_ptr3 = pkg_match_patterns(root_path3, patterns3, (UInt32)patterns3.Length, false);
-            Console.WriteLine("      [\"*.txt\", \"**/*.txt\"]: ");
-            foreach (string file in InnerPrintStrs(strs_ptr3))
+            // 获取 pkg 文件里的某个 bundle
+            string bundle_path = "BuildAssets/addon1/Prefab";
+            Console.WriteLine(bundle_path + " deps");
+
+            // 获取这个 bundle 的依赖（含自身）
+            IntPtr deps_ptr = bm_resolve_bundle_deps(build_map_ptr, bundle_path);
+            IntPtr to_build_ptr = dependencies_get_files(deps_ptr);
+            string[] to_build = Ptr2StringList(to_build_ptr);
+            foreach (string target in to_build)
             {
-                Console.WriteLine("        " + file);
+                Console.WriteLine("  " + target + "assets:");
+
+                // 获取这个 bundle 关联的具体资源
+                IntPtr aseets_ptr = bm_scan_bundle_assets(build_map_ptr, target);
+                string[] assets = Ptr2StringList(aseets_ptr);
+                foreach (string item in assets)
+                {
+                    Console.WriteLine("    " + item);
+                }
             }
-            Console.WriteLine("");
         }
 
-        private static string[] InnerPrintStrs(System.IntPtr strs_ptr)
+        private static string[] Ptr2StringList(System.IntPtr strs_ptr)
         {
             if (strs_ptr != System.IntPtr.Zero)
             {
@@ -267,10 +222,10 @@ namespace csharp_link_rust.libs
                         files[i] = strs_get(strs_ptr, i);
                     }
 
-                    dispose_strs(strs_ptr);
+                    strs_dispose(strs_ptr);
                     return files;
                 }
-                dispose_strs(strs_ptr);
+                strs_dispose(strs_ptr);
             }
             return new string[0];
         }
