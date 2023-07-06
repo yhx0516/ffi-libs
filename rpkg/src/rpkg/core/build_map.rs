@@ -273,7 +273,7 @@ mod tests {
             Ok(r) => r,
         };
 
-        assert_eq!(to_build.is_circular,false);
+        assert_eq!(to_build.is_circular, false);
 
         println!("to_build:");
         for target in &to_build.build_targets {
@@ -286,9 +286,8 @@ mod tests {
         }
     }
 
-
     #[test]
-    fn circular_dep_test(){
+    fn circular_dep_test() {
         let asset_path = "../tests/pkg-dependencies/CircularDep";
         let patterns = ["**/.pkg"];
         let pkgs = scan_files(asset_path, &patterns);
@@ -299,6 +298,6 @@ mod tests {
 
         let target_path = "CircularDep/A";
         let deps = build_map.resolve_bundle_deps(target_path).unwrap();
-        assert_eq!(deps.is_circular,true);
+        assert_eq!(deps.is_circular, true);
     }
 }

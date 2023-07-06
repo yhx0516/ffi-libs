@@ -35,13 +35,19 @@ pub trait BuildTarget {
     }
 
     fn build_asset_url(&self, mount_path: &str, target_path: &str, asset_path: &str) -> String {
+        // NOTE: 出现要 build 的资源不在指定的 mount_path 下，则直接返回空字符串
+        let Some(pkg_path) =  target_path.strip_prefix(mount_path) else {
+            println!("mount path {} is not the prefix of {}",mount_path,target_path);
+            return String::new();
+        };
+
         let pkg_path = match (self.is_pkg(), mount_path == target_path) {
             (true, true) => {
                 let path = Path::new("assets").with_extension(ASSET_PKG_EXTENSION);
                 Some(path)
             }
             (true, false) => {
-                let path = target_path.strip_prefix(mount_path).unwrap();
+                let path = pkg_path;
                 let path = Path::new(path).with_extension(ASSET_PKG_EXTENSION);
                 Some(path)
             }
