@@ -199,7 +199,7 @@ fn inner_scan_assets(
         let target_path = format!("{}/{}", root_path, target_path);
         let url = target.build_asset_url(&mount_path, &target_path, &item);
 
-        assets.push_asset(rel_path.to_string(), url)
+        assets.push_asset(norm_path(rel_path), url)
     }
 
     Ok(assets)
@@ -273,6 +273,8 @@ mod tests {
             Ok(r) => r,
         };
 
+        assert_eq!(to_build.is_circular,false);
+
         println!("to_build:");
         for target in &to_build.build_targets {
             println!("  {} assets:", target);
@@ -282,5 +284,21 @@ mod tests {
             };
             println!("{}", assets);
         }
+    }
+
+
+    #[test]
+    fn circular_dep_test(){
+        let asset_path = "../tests/pkg-dependencies/CircularDep";
+        let patterns = ["**/.pkg"];
+        let pkgs = scan_files(asset_path, &patterns);
+
+        let mut build_map = BuildMap::new();
+        let root_path = r"../tests/pkg-dependencies/";
+        build_map.init(root_path, pkgs).unwrap();
+
+        let target_path = "CircularDep/A";
+        let deps = build_map.resolve_bundle_deps(target_path).unwrap();
+        assert_eq!(deps.is_circular,true);
     }
 }
