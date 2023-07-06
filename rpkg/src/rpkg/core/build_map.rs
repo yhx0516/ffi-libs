@@ -265,9 +265,10 @@ mod tests {
         }
         println!();
 
+
+        // bundle
         let mount_path = "../tests/pkg-dependencies/BuildAssets/addon1";
         let target_path = "BuildAssets/addon1/Prefab";
-
         let to_build = match build_map.resolve_bundle_deps(target_path) {
             Err(e) => panic!("{}", e.to_string()),
             Ok(r) => r,
@@ -279,6 +280,26 @@ mod tests {
         for target in &to_build.build_targets {
             println!("  {} assets:", target);
             let assets = match build_map.scan_bundle_assets(mount_path, target) {
+                Ok(r) => r,
+                Err(e) => panic!("{}", e.to_string()),
+            };
+            println!("{}", assets);
+        }
+
+        // file
+        let mount_path = "../tests/pkg-dependencies/BuildAssets/addon2";
+        let target_path = "BuildAssets/addon2";
+        let to_build = match build_map.resolve_file_deps(target_path) {
+            Err(e) => panic!("{}", e.to_string()),
+            Ok(r) => r,
+        };
+
+        assert_eq!(to_build.is_circular, false);
+
+        println!("to_build:");
+        for target in &to_build.build_targets {
+            println!("  {} assets:", target);
+            let assets = match build_map.scan_file_assets(mount_path, target) {
                 Ok(r) => r,
                 Err(e) => panic!("{}", e.to_string()),
             };

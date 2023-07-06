@@ -68,7 +68,7 @@ pub trait BuildTarget {
                     norm_path(rel_asset_path)
                 )
             }
-            None => format!("{}://{}", ASSET_PROTOCAL, asset_path),
+            None => format!("{}://{}", ASSET_PROTOCAL, norm_path(rel_asset_path)),
         };
         url.to_lowercase()
     }
