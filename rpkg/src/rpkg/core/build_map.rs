@@ -23,7 +23,7 @@ pub struct BuildMap {
     /// project path
     root_path: String,
 
-    ///
+    /// bundle-url map
     bundle_urls: BTreeMap<String, String>,
 
     /// bundle map
@@ -73,8 +73,12 @@ impl BuildMap {
                     .entry(target_path.clone())
                     .or_insert(Box::new(target));
 
-                let target_url = build_target_url(&root_path, &mount_path, &target_path)?;
-                self.bundle_urls.entry(target_path).or_insert(target_url);
+                // update bundle_url map
+                {
+                    let target_url = build_target_url(&root_path, &mount_path, &target_path)?;
+                    let target_path = target_path.to_lowercase();
+                    self.bundle_urls.entry(target_path).or_insert(target_url);
+                }
             }
 
             for target in pkg.subscenes.unwrap_or(Vec::new()) {
@@ -83,8 +87,12 @@ impl BuildMap {
                     .entry(target_path.clone())
                     .or_insert(Box::new(target));
 
-                let target_url = build_target_url(&root_path, &mount_path, &target_path)?;
-                self.bundle_urls.entry(target_path).or_insert(target_url);
+                // update bundle_url map
+                {
+                    let target_url = build_target_url(&root_path, &mount_path, &target_path)?;
+                    let target_path = target_path.to_lowercase();
+                    self.bundle_urls.entry(target_path).or_insert(target_url);
+                }
             }
 
             for target in pkg.files.unwrap_or(Vec::new()) {
@@ -107,8 +115,8 @@ impl BuildMap {
     }
 
     pub fn find_bundle_url(&self, bundle_path: impl AsRef<str>) -> Result<String> {
-        let bundle_path = bundle_path.as_ref();
-        match self.bundle_urls.get(bundle_path) {
+        let bundle_path = bundle_path.as_ref().to_lowercase();
+        match self.bundle_urls.get(&bundle_path) {
             Some(v) => Ok(v.to_owned()),
             None => Err(anyhow!("not found {} in map", bundle_path)),
         }

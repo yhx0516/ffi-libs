@@ -106,7 +106,7 @@ pub fn build_target_url(
     };
 
     let url = format!("{}://{}.{}", ASSET_PROTOCAL, rel_path, ASSET_PKG_EXTENSION);
-    Ok(url)
+    Ok(url.to_lowercase())
 }
 
 pub fn resolve_dep_path(
