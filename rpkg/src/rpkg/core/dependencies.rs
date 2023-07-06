@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use anyhow::Result;
 use std::collections::{BTreeMap, HashMap};
 
 use crate::toml::build_target::resolve_dep_path;
@@ -7,7 +8,6 @@ use crate::BuildTarget;
 #[derive(Default, Debug)]
 pub struct Dependencies {
     pub build_targets: Vec<String>,
-    pub invalid_build_targets: Vec<String>,
     pub is_circular: bool,
 }
 
@@ -15,7 +15,7 @@ pub fn resolve_build_deps(
     root_path: impl AsRef<str>,
     target_path: impl AsRef<str>,
     target_map: &BTreeMap<String, Box<dyn BuildTarget>>,
-) -> anyhow::Result<Dependencies> {
+) -> Result<Dependencies> {
     let target_path = target_path.as_ref();
     let root_path = root_path.as_ref();
 

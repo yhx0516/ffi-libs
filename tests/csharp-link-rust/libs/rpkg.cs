@@ -143,10 +143,6 @@ namespace csharp_link_rust.libs
         [DllImport("../../../../../target/debug/rpkg.dll")]
         public static extern IntPtr dependencies_get_targets(IntPtr ptr);
 
-        // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr dependencies_get_invalid_targets(IntPtr ptr);
-
         [DllImport("../../../../../target/debug/rpkg.dll")]
         public static extern bool dependencies_is_circular(IntPtr ptr);
 
@@ -181,7 +177,7 @@ namespace csharp_link_rust.libs
         public static extern void strs_dispose(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern string error_buffer_info();
+        public static extern string try_log_once();
 
 
         public static void PkgMatchTest()
@@ -279,7 +275,7 @@ namespace csharp_link_rust.libs
                 if (string.IsNullOrEmpty(url))
                 {
                     Console.WriteLine("error:");
-                    Console.WriteLine(error_buffer_info());
+                    Console.WriteLine(try_log_once());
                 }
             }
 

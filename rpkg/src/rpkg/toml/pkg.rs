@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use anyhow::Result;
 use serde::Deserialize;
 use std::{fs, path::Path};
 
@@ -39,7 +40,7 @@ impl TomlPKG {
     }
 }
 
-pub fn parse(file: impl AsRef<Path>) -> anyhow::Result<TomlPKG> {
+pub fn parse(file: impl AsRef<Path>) -> Result<TomlPKG> {
     let Ok(content) = fs::read_to_string(file.as_ref()) else {
         return Err(anyhow!("read {} failed",file.as_ref().display()));
     };

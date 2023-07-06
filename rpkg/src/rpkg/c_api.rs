@@ -9,29 +9,29 @@ use crate::scan_files_block_pkg_manifest;
 use once_cell::sync::OnceCell;
 
 // ============================================================
-// ErrorBuff api 缓存错误
+// OnceLog api 一次性日志，便于外部接入时调试
 // ============================================================
-static ERR_BUFFERR_INS: OnceCell<ErrorBuff> = OnceCell::new();
+static ERR_BUFFERR_INS: OnceCell<OnceLog> = OnceCell::new();
 
 #[derive(Debug)]
-struct ErrorBuff {
+struct OnceLog {
     buffer: String,
 }
 
-impl ErrorBuff {
-    pub fn once_new(str: impl AsRef<str>) {
-        let ins = ErrorBuff {
+impl OnceLog {
+    pub fn new(str: impl AsRef<str>) {
+        let ins = OnceLog {
             buffer: str.as_ref().to_string(),
         };
         if ERR_BUFFERR_INS.set(ins).is_err() {
-            eprintln!("set ErrorBuff instance multiple time")
+            eprintln!("set OnceLog instance multiple times")
         }
     }
 
-    pub fn get_error_info() -> String {
+    pub fn output() -> String {
         match ERR_BUFFERR_INS.get() {
             Some(ins) => ins.get_buff().to_owned(),
-            None => String::from("no error"),
+            None => String::from("no error in rpkg"),
         }
     }
 
@@ -41,8 +41,8 @@ impl ErrorBuff {
 }
 
 #[no_mangle]
-pub extern "C" fn error_buffer_info() -> *const c_char {
-    let info = ErrorBuff::get_error_info();
+pub extern "C" fn try_log_once() -> *const c_char {
+    let info = OnceLog::output();
     rutils::str_to_char_ptr(info)
 }
 
@@ -128,7 +128,7 @@ pub extern "C" fn bm_new(root_path: *const c_char) -> *const BuildMap {
     match BuildMap::new(root_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            ErrorBuff::once_new(e.to_string());
+            OnceLog::new(e.to_string());
             return std::ptr::null();
         }
     }
@@ -149,7 +149,7 @@ pub extern "C" fn bm_insert(
     match build_map.insert(mount_path, pkg_paths) {
         Ok(_) => true,
         Err(e) => {
-            ErrorBuff::once_new(e.to_string());
+            OnceLog::new(e.to_string());
             eprintln!("{}", e.to_string());
             return false;
         }
@@ -175,7 +175,7 @@ pub extern "C" fn bm_resolve_bundle_deps(
     match build_map.resolve_bundle_deps(target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            ErrorBuff::once_new(e.to_string());
+            OnceLog::new(e.to_string());
             std::ptr::null()
         }
     }
@@ -192,7 +192,7 @@ pub extern "C" fn bm_resolve_subscene_deps(
     match build_map.resolve_subscene_deps(target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            ErrorBuff::once_new(e.to_string());
+            OnceLog::new(e.to_string());
             std::ptr::null()
         }
     }
@@ -209,7 +209,7 @@ pub extern "C" fn bm_resolve_dylib_deps(
     match build_map.resolve_dylib_deps(target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            ErrorBuff::once_new(e.to_string());
+            OnceLog::new(e.to_string());
             std::ptr::null()
         }
     }
@@ -226,7 +226,7 @@ pub extern "C" fn bm_resolve_file_deps(
     match build_map.resolve_file_deps(target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            ErrorBuff::once_new(e.to_string());
+            OnceLog::new(e.to_string());
             std::ptr::null()
         }
     }
@@ -243,7 +243,7 @@ pub extern "C" fn bm_resolve_zip_deps(
     match build_map.resolve_zip_deps(target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            ErrorBuff::once_new(e.to_string());
+            OnceLog::new(e.to_string());
             std::ptr::null()
         }
     }
@@ -262,7 +262,7 @@ pub extern "C" fn bm_scan_bundle_assets(
     match build_map.scan_bundle_assets(mount_path, target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            ErrorBuff::once_new(e.to_string());
+            OnceLog::new(e.to_string());
             std::ptr::null()
         }
     }
@@ -281,7 +281,7 @@ pub extern "C" fn bm_scan_subscene_assets(
     match build_map.scan_subscene_assets(mount_path, target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            ErrorBuff::once_new(e.to_string());
+            OnceLog::new(e.to_string());
             std::ptr::null()
         }
     }
@@ -300,7 +300,7 @@ pub extern "C" fn bm_scan_dylib_assets(
     match build_map.scan_dylib_assets(mount_path, target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            ErrorBuff::once_new(e.to_string());
+            OnceLog::new(e.to_string());
             std::ptr::null()
         }
     }
@@ -319,7 +319,7 @@ pub extern "C" fn bm_scan_file_assets(
     match build_map.scan_file_assets(mount_path, target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            ErrorBuff::once_new(e.to_string());
+            OnceLog::new(e.to_string());
             std::ptr::null()
         }
     }
@@ -338,7 +338,7 @@ pub extern "C" fn bm_scan_zip_assets(
     match build_map.scan_zip_assets(mount_path, target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            ErrorBuff::once_new(e.to_string());
+            OnceLog::new(e.to_string());
             std::ptr::null()
         }
     }
@@ -354,7 +354,7 @@ pub extern "C" fn bm_find_bundle_url(
     match build_map.find_bundle_url(bundle_path) {
         Ok(v) => rutils::str_to_char_ptr(v),
         Err(e) => {
-            ErrorBuff::once_new(e.to_string());
+            OnceLog::new(e.to_string());
             std::ptr::null()
         }
     }
@@ -380,12 +380,6 @@ pub extern "C" fn bm_debug_info(ptr: *const BuildMap) -> *const c_char {
 pub extern "C" fn dependencies_get_targets(ptr: *const Dependencies) -> *const Vec<String> {
     let deps = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     Box::into_raw(Box::new(deps.build_targets.clone()))
-}
-
-#[no_mangle]
-pub extern "C" fn dependencies_get_invalid_targets(ptr: *const Dependencies) -> *const Vec<String> {
-    let deps = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    Box::into_raw(Box::new(deps.invalid_build_targets.clone()))
 }
 
 #[no_mangle]

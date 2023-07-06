@@ -1,5 +1,6 @@
 use rutils::{canonicalize_path, norm_path};
 use std::path::Path;
+use anyhow::Result;
 
 mod bundle;
 mod dylib;
@@ -78,7 +79,7 @@ pub fn resolve_target_path(
     root_path: impl AsRef<Path>,
     cur_path: impl AsRef<Path>,
     target_path: Option<&String>,
-) -> anyhow::Result<String> {
+) -> Result<String> {
     let root_path = root_path.as_ref();
     let cur_path = cur_path.as_ref();
 
@@ -95,7 +96,7 @@ pub fn build_target_url(
     root_path: impl AsRef<Path>,
     mount_path: impl AsRef<Path>,
     target_path: impl AsRef<Path>,
-) -> anyhow::Result<String> {
+) -> Result<String> {
     let root_path = root_path.as_ref();
     let mount_path = mount_path.as_ref();
     let target_path = root_path.join(target_path.as_ref());
@@ -113,7 +114,7 @@ pub fn resolve_dep_path(
     root_path: impl AsRef<Path>,
     cur_path: impl AsRef<Path>,
     deps: Option<&Vec<String>>,
-) -> anyhow::Result<Vec<String>> {
+) -> Result<Vec<String>> {
     let Some(deps) = deps else {
         return Ok(Vec::new());
     };
@@ -133,7 +134,7 @@ fn norm_dep_path(
     root_path: impl AsRef<Path>,
     cur_path: impl AsRef<Path>,
     dep_path: impl AsRef<Path>,
-) -> anyhow::Result<String> {
+) ->  Result<String> {
     let root_path = root_path.as_ref();
     let cur_path = cur_path.as_ref();
     let dep_path = dep_path.as_ref();
