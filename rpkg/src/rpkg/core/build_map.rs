@@ -106,11 +106,11 @@ impl BuildMap {
         Ok(())
     }
 
-    pub fn find_bundle_url(&self,bundle_path: impl AsRef<str>)->Result<String>{
-        let bundle_path= bundle_path.as_ref();
-        match self.bundle_urls.get(bundle_path){
-            Some(v)=>Ok(v.to_owned()),
-            None=>Err(anyhow!("not found {} in map",bundle_path))
+    pub fn find_bundle_url(&self, bundle_path: impl AsRef<str>) -> Result<String> {
+        let bundle_path = bundle_path.as_ref();
+        match self.bundle_urls.get(bundle_path) {
+            Some(v) => Ok(v.to_owned()),
+            None => Err(anyhow!("not found {} in map", bundle_path)),
         }
     }
 
@@ -224,7 +224,7 @@ impl Display for BuildMap {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut output = String::new();
 
-        let bundle_url_to_string = |target_map: &BTreeMap<String, String>| {
+        let url_to_str = |target_map: &BTreeMap<String, String>| {
             let mut output = String::new();
             for (key, val) in target_map {
                 output.push_str(&format!("  {}  {}\n", key, val));
@@ -232,7 +232,7 @@ impl Display for BuildMap {
             output
         };
 
-        let target_map_to_string = |target_map: &BTreeMap<String, Box<dyn BuildTarget>>| {
+        let target_to_str = |target_map: &BTreeMap<String, Box<dyn BuildTarget>>| {
             let mut output = String::new();
             for (key, val) in target_map {
                 output.push_str(&format!("  {}  {}\n", key, val.display()));
@@ -241,12 +241,12 @@ impl Display for BuildMap {
         };
 
         output.push_str(&format!("root_path:\n  {:?}\n", self.root_path));
-        output.push_str(&format!("bundle_urls:\n{}", bundle_url_to_string(&self.bundle_urls)));
-        output.push_str(&format!("bundles:\n{}", target_map_to_string(&self.bundles)));
-        output.push_str(&format!("subscenes:\n{}", target_map_to_string(&self.subscenes)));
-        output.push_str(&format!("dylibs:\n{}", target_map_to_string(&self.dylibs)));
-        output.push_str(&format!("files:\n{}", target_map_to_string(&self.files)));
-        output.push_str(&format!("zips:\n{}", target_map_to_string(&self.zips)));
+        output.push_str(&format!("bundle_urls:\n{}", url_to_str(&self.bundle_urls)));
+        output.push_str(&format!("bundles:\n{}", target_to_str(&self.bundles)));
+        output.push_str(&format!("subscenes:\n{}", target_to_str(&self.subscenes)));
+        output.push_str(&format!("dylibs:\n{}", target_to_str(&self.dylibs)));
+        output.push_str(&format!("files:\n{}", target_to_str(&self.files)));
+        output.push_str(&format!("zips:\n{}", target_to_str(&self.zips)));
         f.write_str(&output)
     }
 }

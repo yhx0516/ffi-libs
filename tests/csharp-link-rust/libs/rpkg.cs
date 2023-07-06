@@ -180,13 +180,15 @@ namespace csharp_link_rust.libs
         [DllImport("../../../../../target/debug/rpkg.dll")]
         public static extern void strs_dispose(IntPtr ptr);
 
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern string error_buffer_info();
+
+
         public static void PkgMatchTest()
         {
             UnityBuildTest();
 
         }
-
-
 
         private static void UnityBuildTest()
         {
@@ -210,7 +212,7 @@ namespace csharp_link_rust.libs
             // 初始化 BuildMap
             string root_path = "../../../../../tests/pkg-dependencies";
             IntPtr build_map_ptr = bm_new(root_path);
-                
+
             // manifest.toml 解析获取 members
             Console.WriteLine("addons and pkgs:");
             string[] members = { "./", "addon1", "addon2" };
@@ -229,10 +231,11 @@ namespace csharp_link_rust.libs
                 }
 
                 // 插入 member 及其 pkgs 至 build_map
-                bool is_insert_succ = bm_insert(build_map_ptr, addon_path, total_pkgs, (UInt32)total_pkgs.Length);
+                bool is_insert_succ = bm_insert(build_map_ptr, addon_path, addon_pkgs, (UInt32)addon_pkgs.Length);
                 if (!is_insert_succ)
                 {
                     Console.WriteLine("build map insert failed: " + addon_path);
+                    break;
                 }
             }
             Console.WriteLine("");
@@ -244,7 +247,8 @@ namespace csharp_link_rust.libs
             // 获取 pkg 文件里的某个 bundle
             string bundle_path = "BuildAssets/addon1/Prefab";
             string mount_path = "../../../../../tests/pkg-dependencies/BuildAssets/addon1";
-            Console.WriteLine(bundle_path + " deps");
+            string bundle_url = bm_find_bundle_url(build_map_ptr, bundle_path);
+            Console.WriteLine(bundle_path + "(" + bundle_url + ")" + " deps");
 
             // 获取这个 bundle 的依赖（含自身）
             IntPtr deps_ptr = bm_resolve_bundle_deps(build_map_ptr, bundle_path);
@@ -264,8 +268,21 @@ namespace csharp_link_rust.libs
                 {
                     Console.WriteLine("    path: " + asset_paths[i] + ", url: " + asset_urls[i]);
                 }
-                assets_dispose(assets_ptr);             
+                assets_dispose(assets_ptr);
             }
+            Console.WriteLine("");
+
+            // 获取错误 bundle 并提示信息
+            {
+                string err_bundle_path = "BuildAssets/addon1/Prefab/A";
+                string url = bm_find_bundle_url(build_map_ptr, err_bundle_path);
+                if (string.IsNullOrEmpty(url))
+                {
+                    Console.WriteLine("error:");
+                    Console.WriteLine(error_buffer_info());
+                }
+            }
+
             dependencies_dispose(deps_ptr);
             bm_dispose(build_map_ptr);
         }

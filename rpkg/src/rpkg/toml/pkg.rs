@@ -37,47 +37,6 @@ impl TomlPKG {
         }
         deps
     }
-
-    // pub fn scan_assets(
-    //     &self,
-    //     root_path: impl AsRef<Path>,
-    //     cur_path: impl AsRef<Path>,
-    // ) -> Vec<String> {
-    //     let mut assets = Vec::new();
-
-    //     if let Some(targets) = &self.bundles {
-    //         for target in targets {
-    //             assets.append(&mut target.scan_assets(&root_path, &cur_path));
-    //         }
-    //     }
-
-    //     if let Some(targets) = &self.subscenes {
-    //         for target in targets {
-    //             assets.append(&mut target.scan_assets(&root_path, &cur_path));
-    //         }
-    //     }
-
-    //     if let Some(targets) = &self.files {
-    //         for target in targets {
-    //             assets.append(&mut target.scan_assets(&root_path, &cur_path));
-    //         }
-    //     }
-
-    //     if let Some(targets) = &self.dylibs {
-    //         for target in targets {
-    //             assets.append(&mut target.scan_assets(&root_path, &cur_path));
-    //         }
-    //     }
-
-    //     if let Some(targets) = &self.zips {
-    //         for target in targets {
-    //             assets.append(&mut target.scan_assets(&root_path, &cur_path));
-    //         }
-    //     }
-
-    //     assets.sort();
-    //     assets
-    // }
 }
 
 pub fn parse(file: impl AsRef<Path>) -> anyhow::Result<TomlPKG> {
@@ -91,18 +50,3 @@ pub fn parse(file: impl AsRef<Path>) -> anyhow::Result<TomlPKG> {
 
     Ok(pkg)
 }
-
-// pub fn get_dep_patterns_from_file(file: impl AsRef<Path>) -> anyhow::Result<Vec<String>> {
-//     let deps = parse(file)?.get_deps();
-//     Ok(deps)
-// }
-
-// pub fn scan_assets_from_file(file: impl AsRef<Path>, root_path: impl AsRef<Path>) -> Vec<String> {
-//     let Ok(pkg) = parse(&file) else {
-//         return Vec::new();
-//     };
-//     let cur_path = file.as_ref().parent().unwrap();
-//     pkg.scan_assets(root_path, cur_path)
-// }
-
-// NOTE: unit test will run in unity project
