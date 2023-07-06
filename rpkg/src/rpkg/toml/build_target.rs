@@ -79,7 +79,7 @@ pub fn resolve_target_path(
     cur_path: impl AsRef<Path>,
     target_path: Option<&String>,
 ) -> anyhow::Result<String> {
-    let root_path = canonicalize_path(root_path.as_ref())?;
+    let root_path = root_path.as_ref();
     let cur_path = cur_path.as_ref();
 
     let path = match target_path {
@@ -89,6 +89,24 @@ pub fn resolve_target_path(
 
     let res = norm_path(path.strip_prefix(root_path)?);
     Ok(res)
+}
+
+pub fn build_target_url(
+    root_path: impl AsRef<Path>,
+    mount_path: impl AsRef<Path>,
+    target_path: impl AsRef<Path>,
+) -> anyhow::Result<String> {
+    let root_path = root_path.as_ref();
+    let mount_path = mount_path.as_ref();
+    let target_path = root_path.join(target_path.as_ref());
+
+    let rel_path = match mount_path == target_path {
+        true => String::from("assets"),
+        false => norm_path(target_path.strip_prefix(mount_path)?),
+    };
+
+    let url = format!("{}://{}.{}", ASSET_PROTOCAL, rel_path, ASSET_PKG_EXTENSION);
+    Ok(url)
 }
 
 pub fn resolve_dep_path(

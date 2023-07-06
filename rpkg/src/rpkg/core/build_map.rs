@@ -13,6 +13,7 @@ use crate::core::Dependencies;
 use crate::pkg;
 use crate::BuildTarget;
 
+use crate::build_target_url;
 use crate::core::resolve_build_deps;
 use crate::resolve_target_path;
 use crate::scan_files_block_pkg_manifest;
@@ -20,7 +21,10 @@ use crate::scan_files_block_pkg_manifest;
 #[derive(Default)]
 pub struct BuildMap {
     /// project path
-    root_path: Option<String>,
+    root_path: String,
+
+    ///
+    bundle_urls: BTreeMap<String, String>,
 
     /// bundle map
     bundles: BTreeMap<String, Box<dyn BuildTarget>>,
@@ -39,17 +43,24 @@ pub struct BuildMap {
 }
 
 impl BuildMap {
-    pub fn new() -> BuildMap {
-        BuildMap::default()
+    pub fn new(root_path: impl AsRef<Path>) -> Result<BuildMap> {
+        let mut build_map = BuildMap::default();
+        build_map.root_path = norm_path(canonicalize_path(root_path.as_ref())?);
+        Ok(build_map)
     }
 
-    pub fn init(
+    pub fn get_root_path(&self) -> &String {
+        &self.root_path
+    }
+
+    // insert build-target from pkgs
+    pub fn insert(
         &mut self,
-        root_path: impl AsRef<Path>,
+        mount_path: impl AsRef<str>,
         pkg_paths: Vec<impl AsRef<Path>>,
     ) -> Result<()> {
-        let root_path = root_path.as_ref();
-        self.root_path = Some(norm_path(canonicalize_path(&root_path)?));
+        let root_path = self.get_root_path().clone();
+        let mount_path = canonicalize_path(mount_path.as_ref())?;
 
         for pkg_path in pkg_paths {
             let pkg_path = pkg_path.as_ref();
@@ -58,14 +69,22 @@ impl BuildMap {
 
             for target in pkg.bundles.unwrap_or(Vec::new()) {
                 let target_path = resolve_target_path(&root_path, cur_path, target.path.as_ref())?;
-                self.bundles.entry(target_path).or_insert(Box::new(target));
+                self.bundles
+                    .entry(target_path.clone())
+                    .or_insert(Box::new(target));
+
+                let target_url = build_target_url(&root_path, &mount_path, &target_path)?;
+                self.bundle_urls.entry(target_path).or_insert(target_url);
             }
 
             for target in pkg.subscenes.unwrap_or(Vec::new()) {
                 let target_path = resolve_target_path(&root_path, cur_path, target.path.as_ref())?;
                 self.subscenes
-                    .entry(target_path)
+                    .entry(target_path.clone())
                     .or_insert(Box::new(target));
+
+                let target_url = build_target_url(&root_path, &mount_path, &target_path)?;
+                self.bundle_urls.entry(target_path).or_insert(target_url);
             }
 
             for target in pkg.files.unwrap_or(Vec::new()) {
@@ -87,40 +106,36 @@ impl BuildMap {
         Ok(())
     }
 
-    pub fn get_root_path(&self) -> Result<&String> {
-        self.root_path
-            .as_ref()
-            .map_or(Err(anyhow!("not found root path in build map")), |v| Ok(v))
-    }
-
-    pub fn get_root_path_mut(&mut self) -> Result<&mut String> {
-        self.root_path
-            .as_mut()
-            .map_or(Err(anyhow!("not found root path in build map")), |v| Ok(v))
+    pub fn find_bundle_url(&self,bundle_path: impl AsRef<str>)->Result<String>{
+        let bundle_path= bundle_path.as_ref();
+        match self.bundle_urls.get(bundle_path){
+            Some(v)=>Ok(v.to_owned()),
+            None=>Err(anyhow!("not found {} in map",bundle_path))
+        }
     }
 
     pub fn resolve_bundle_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
-        let root_path = self.get_root_path()?;
+        let root_path = self.get_root_path();
         resolve_build_deps(root_path, &norm_path(target_path.as_ref()), &self.bundles)
     }
 
     pub fn resolve_subscene_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
-        let root_path = self.get_root_path()?;
+        let root_path = self.get_root_path();
         resolve_build_deps(root_path, &norm_path(target_path.as_ref()), &self.subscenes)
     }
 
     pub fn resolve_dylib_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
-        let root_path = self.get_root_path()?;
+        let root_path = self.get_root_path();
         resolve_build_deps(root_path, &norm_path(target_path.as_ref()), &self.dylibs)
     }
 
     pub fn resolve_file_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
-        let root_path = self.get_root_path()?;
+        let root_path = self.get_root_path();
         resolve_build_deps(root_path, &norm_path(target_path.as_ref()), &self.files)
     }
 
     pub fn resolve_zip_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
-        let root_path = self.get_root_path()?;
+        let root_path = self.get_root_path();
         resolve_build_deps(root_path, &norm_path(target_path.as_ref()), &self.zips)
     }
 
@@ -129,7 +144,7 @@ impl BuildMap {
         mount_path: impl AsRef<str>,
         target_path: impl AsRef<str>,
     ) -> Result<Assets> {
-        let root_path = self.get_root_path()?;
+        let root_path = self.get_root_path();
         inner_scan_assets(root_path, mount_path, target_path, &self.bundles)
     }
 
@@ -138,7 +153,7 @@ impl BuildMap {
         mount_path: impl AsRef<str>,
         target_path: impl AsRef<str>,
     ) -> Result<Assets> {
-        let root_path = self.get_root_path()?;
+        let root_path = self.get_root_path();
         inner_scan_assets(root_path, mount_path, target_path, &self.subscenes)
     }
 
@@ -147,7 +162,7 @@ impl BuildMap {
         mount_path: impl AsRef<str>,
         target_path: impl AsRef<str>,
     ) -> Result<Assets> {
-        let root_path = self.get_root_path()?;
+        let root_path = self.get_root_path();
         inner_scan_assets(root_path, mount_path, target_path, &self.dylibs)
     }
 
@@ -156,7 +171,7 @@ impl BuildMap {
         mount_path: impl AsRef<str>,
         target_path: impl AsRef<str>,
     ) -> Result<Assets> {
-        let root_path = self.get_root_path()?;
+        let root_path = self.get_root_path();
         inner_scan_assets(root_path, mount_path, target_path, &self.files)
     }
 
@@ -165,7 +180,7 @@ impl BuildMap {
         mount_path: impl AsRef<str>,
         target_path: impl AsRef<str>,
     ) -> Result<Assets> {
-        let root_path = self.get_root_path()?;
+        let root_path = self.get_root_path();
         inner_scan_assets(root_path, mount_path, target_path, &self.zips)
     }
 }
@@ -209,20 +224,29 @@ impl Display for BuildMap {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut output = String::new();
 
-        let to_string = |target_map: &BTreeMap<String, Box<dyn BuildTarget>>| {
+        let bundle_url_to_string = |target_map: &BTreeMap<String, String>| {
             let mut output = String::new();
             for (key, val) in target_map {
-                output.push_str(&format!("  {}  {}\r\n", key, val.display()));
+                output.push_str(&format!("  {}  {}\n", key, val));
+            }
+            output
+        };
+
+        let target_map_to_string = |target_map: &BTreeMap<String, Box<dyn BuildTarget>>| {
+            let mut output = String::new();
+            for (key, val) in target_map {
+                output.push_str(&format!("  {}  {}\n", key, val.display()));
             }
             output
         };
 
         output.push_str(&format!("root_path:\n  {:?}\n", self.root_path));
-        output.push_str(&format!("bundles:\n{}", to_string(&self.bundles)));
-        output.push_str(&format!("subscenes:\n{}", to_string(&self.subscenes)));
-        output.push_str(&format!("dylibs:\n{}", to_string(&self.dylibs)));
-        output.push_str(&format!("files:\n{}", to_string(&self.files)));
-        output.push_str(&format!("zips:\n{}", to_string(&self.zips)));
+        output.push_str(&format!("bundle_urls:\n{}", bundle_url_to_string(&self.bundle_urls)));
+        output.push_str(&format!("bundles:\n{}", target_map_to_string(&self.bundles)));
+        output.push_str(&format!("subscenes:\n{}", target_map_to_string(&self.subscenes)));
+        output.push_str(&format!("dylibs:\n{}", target_map_to_string(&self.dylibs)));
+        output.push_str(&format!("files:\n{}", target_map_to_string(&self.files)));
+        output.push_str(&format!("zips:\n{}", target_map_to_string(&self.zips)));
         f.write_str(&output)
     }
 }
@@ -237,6 +261,7 @@ mod tests {
 
     #[test]
     fn build_map_test() {
+        // 扫描测试
         let asset_path = "../tests/pkg-dependencies/BuildAssets";
         let patterns = ["**/.pkg"];
         let pkgs = scan_files(asset_path, &patterns);
@@ -246,12 +271,12 @@ mod tests {
         }
         println!();
 
-        let mut build_map = BuildMap::new();
+        // BuildMap 测试
         let root_path = r"../tests/pkg-dependencies/";
-        if let Err(e) = build_map.init(root_path, pkgs) {
-            panic!("{}", e.to_string());
-        }
-        println!("{}\n", build_map.to_string());
+        let mut build_map = match BuildMap::new(root_path) {
+            Ok(v) => v,
+            Err(e) => panic!("{}", e.to_string()),
+        };
 
         let members = ["./", "addon1", "addon2"];
         println!("addons and pkgs:");
@@ -262,9 +287,13 @@ mod tests {
             for item in &addon_pkgs {
                 println!("    {}", item);
             }
+
+            if let Err(e) = build_map.insert(root_path, addon_pkgs) {
+                panic!("{}", e.to_string());
+            }
         }
         println!();
-
+        println!("{}\n", build_map.to_string());
 
         // bundle
         let mount_path = "../tests/pkg-dependencies/BuildAssets/addon1";
@@ -309,13 +338,14 @@ mod tests {
 
     #[test]
     fn circular_dep_test() {
+        let root_path = r"../tests/pkg-dependencies/";
         let asset_path = "../tests/pkg-dependencies/CircularDep";
         let patterns = ["**/.pkg"];
         let pkgs = scan_files(asset_path, &patterns);
 
-        let mut build_map = BuildMap::new();
-        let root_path = r"../tests/pkg-dependencies/";
-        build_map.init(root_path, pkgs).unwrap();
+        let mut build_map = BuildMap::new(root_path).unwrap();
+
+        build_map.insert(asset_path, pkgs).unwrap();
 
         let target_path = "CircularDep/A";
         let deps = build_map.resolve_bundle_deps(target_path).unwrap();

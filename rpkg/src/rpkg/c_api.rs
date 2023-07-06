@@ -94,21 +94,37 @@ pub extern "C" fn rpkg_scan_assets_from_file(
 // BuildMap api
 // ============================================================
 #[no_mangle]
-pub extern "C" fn bm_init(
-    root_path: *const c_char,
+pub extern "C" fn bm_new(root_path: *const c_char) -> *const BuildMap {
+    let root_path = rutils::char_ptr_to_str(root_path);
+
+    match BuildMap::new(root_path) {
+        Ok(v) => Box::into_raw(Box::new(v)),
+        Err(e) => {
+            eprintln!("{}", e.to_string());
+            return std::ptr::null();
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn bm_insert(
+    ptr: *mut BuildMap,
+    mount_path: *const c_char,
     pkg_paths: *const *const c_char,
     pkg_paths_len: usize,
-) -> *const BuildMap {
-    let root_path = rutils::char_ptr_to_str(root_path);
+) -> bool {
+    let build_map = unsafe { ptr.as_mut().expect("invalid ptr: ") };
+    let mount_path = rutils::char_ptr_to_str(mount_path);
     let pkg_paths = rutils::arr_ptr_to_strs(pkg_paths, pkg_paths_len as usize);
     let pkg_paths: Vec<&str> = pkg_paths.iter().map(|s| s.as_ref()).collect();
 
-    let mut build_map = BuildMap::new();
-    if let Err(e) = build_map.init(root_path, pkg_paths) {
-        eprintln!("{}", e.to_string());
-        return std::ptr::null();
+    match build_map.insert(mount_path, pkg_paths) {
+        Ok(_) => true,
+        Err(e) => {
+            eprintln!("{}", e.to_string());
+            return false;
+        }
     }
-    Box::into_raw(Box::new(build_map))
 }
 
 #[no_mangle]
@@ -300,15 +316,23 @@ pub extern "C" fn bm_scan_zip_assets(
 }
 
 #[no_mangle]
-pub extern "C" fn bm_get_root_path(ptr: *const BuildMap) -> *const c_char {
+pub extern "C" fn bm_find_bundle_url(ptr: *const BuildMap,bundle_path: *const c_char,) -> *const c_char {
     let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    match build_map.get_root_path() {
+    let bundle_path = rutils::char_ptr_to_str(bundle_path);
+    match build_map.find_bundle_url(bundle_path) {
         Ok(v) => rutils::str_to_char_ptr(v),
         Err(e) => {
             eprintln!("{}", e.to_string());
             std::ptr::null()
         }
     }
+}
+
+#[no_mangle]
+pub extern "C" fn bm_get_root_path(ptr: *const BuildMap) -> *const c_char {
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let root_path = build_map.get_root_path();
+    rutils::str_to_char_ptr(root_path)
 }
 
 #[no_mangle]

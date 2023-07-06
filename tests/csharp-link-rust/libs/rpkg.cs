@@ -54,8 +54,12 @@ namespace csharp_link_rust.libs
         // ============================================================
         // return BuildMap ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr bm_init(
-                [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
+        public static extern IntPtr bm_new([MarshalAs(UnmanagedType.LPUTF8Str)] string root_path);
+
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern bool bm_insert(
+                IntPtr ptr,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string mount_path,
                 string[] patterns,
                 uint patterns_len
             );
@@ -127,6 +131,9 @@ namespace csharp_link_rust.libs
         public static extern string bm_get_root_path(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern string bm_find_bundle_url(IntPtr ptr, string bundle_path);
+
+        [DllImport("../../../../../target/debug/rpkg.dll")]
         public static extern string bm_debug_info(IntPtr ptr);
 
         // ============================================================
@@ -179,13 +186,15 @@ namespace csharp_link_rust.libs
 
         }
 
+
+
         private static void UnityBuildTest()
         {
             Console.WriteLine("[rpkg]");
             Console.WriteLine("  version: " + get_version());
             Console.WriteLine("");
 
-            // 搜索所有 pkg 文件
+            // 搜索所有 pkg 文件(不是 build map 的步骤)
             string asset_path = "../../../../../tests/pkg-dependencies/BuildAssets";
             string[] pkg_patterns = { "**/.pkg" };
             IntPtr pkgs_ptr = rpkg_scan_files(asset_path, pkg_patterns, (UInt32)pkg_patterns.Length);
@@ -200,10 +209,8 @@ namespace csharp_link_rust.libs
 
             // 初始化 BuildMap
             string root_path = "../../../../../tests/pkg-dependencies";
-            IntPtr build_map_ptr = bm_init(root_path, total_pkgs, (UInt32)total_pkgs.Length);
-            Console.WriteLine("build map: ");
-            Console.WriteLine(bm_debug_info(build_map_ptr));
-
+            IntPtr build_map_ptr = bm_new(root_path);
+                
             // manifest.toml 解析获取 members
             Console.WriteLine("addons and pkgs:");
             string[] members = { "./", "addon1", "addon2" };
@@ -220,8 +227,19 @@ namespace csharp_link_rust.libs
                 {
                     Console.WriteLine("    " + item);
                 }
+
+                // 插入 member 及其 pkgs 至 build_map
+                bool is_insert_succ = bm_insert(build_map_ptr, addon_path, total_pkgs, (UInt32)total_pkgs.Length);
+                if (!is_insert_succ)
+                {
+                    Console.WriteLine("build map insert failed: " + addon_path);
+                }
             }
             Console.WriteLine("");
+            Console.WriteLine("build map: ");
+            Console.WriteLine(bm_debug_info(build_map_ptr));
+            Console.WriteLine("");
+
 
             // 获取 pkg 文件里的某个 bundle
             string bundle_path = "BuildAssets/addon1/Prefab";
