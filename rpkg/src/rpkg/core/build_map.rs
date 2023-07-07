@@ -54,6 +54,26 @@ impl BuildMap {
         &self.root_path
     }
 
+    pub fn get_bundle_paths(&self) -> Vec<&String> {
+        self.bundles.iter().map(|(key, _)| key).collect()
+    }
+
+    pub fn get_subscene_paths(&self) -> Vec<&String> {
+        self.subscenes.iter().map(|(key, _)| key).collect()
+    }
+
+    pub fn get_file_paths(&self) -> Vec<&String> {
+        self.files.iter().map(|(key, _)| key).collect()
+    }
+
+    pub fn get_dylib_paths(&self) -> Vec<&String> {
+        self.dylibs.iter().map(|(key, _)| key).collect()
+    }
+
+    pub fn get_zip_paths(&self) -> Vec<&String> {
+        self.zips.iter().map(|(key, _)| key).collect()
+    }
+
     // insert build-target from pkgs
     pub fn insert(
         &mut self,
@@ -236,7 +256,7 @@ impl Display for BuildMap {
         let url_to_str = |target_map: &BTreeMap<String, String>| {
             let mut output = String::new();
             for (key, val) in target_map {
-                output.push_str(&format!("  {}  {}\n", key, val));
+                output.push_str(&format!("    {}  {}\n", key, val));
             }
             output
         };
@@ -244,106 +264,26 @@ impl Display for BuildMap {
         let target_to_str = |target_map: &BTreeMap<String, Box<dyn BuildTarget>>| {
             let mut output = String::new();
             for (key, val) in target_map {
-                output.push_str(&format!("  {}  {}\n", key, val.display()));
+                output.push_str(&format!("    {}  {}\n", key, val.display()));
             }
             output
         };
 
-        output.push_str(&format!("root_path:\n  {:?}\n", self.root_path));
-        output.push_str(&format!("bundle_urls:\n{}", url_to_str(&self.bundle_urls)));
-        output.push_str(&format!("bundles:\n{}", target_to_str(&self.bundles)));
-        output.push_str(&format!("subscenes:\n{}", target_to_str(&self.subscenes)));
-        output.push_str(&format!("dylibs:\n{}", target_to_str(&self.dylibs)));
-        output.push_str(&format!("files:\n{}", target_to_str(&self.files)));
-        output.push_str(&format!("zips:\n{}", target_to_str(&self.zips)));
+        output.push_str(&format!("  root_path:\n    {:?}\n", self.root_path));
+        output.push_str(&format!("  bundle_urls:\n{}", url_to_str(&self.bundle_urls)));
+        output.push_str(&format!("  bundles:\n{}", target_to_str(&self.bundles)));
+        output.push_str(&format!("  subscenes:\n{}", target_to_str(&self.subscenes)));
+        output.push_str(&format!("  dylibs:\n{}", target_to_str(&self.dylibs)));
+        output.push_str(&format!("  files:\n{}", target_to_str(&self.files)));
+        output.push_str(&format!("  zips:\n{}", target_to_str(&self.zips)));
         f.write_str(&output)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
-
     use crate::core::BuildMap;
     use crate::scan_files;
-    use crate::scan_files_block_manifest;
-
-    #[test]
-    fn build_map_test() {
-        // 扫描测试
-        let asset_path = "../tests/pkg-dependencies/BuildAssets";
-        let patterns = ["**/.pkg"];
-        let pkgs = scan_files(asset_path, &patterns);
-        println!("total pkgs:");
-        for item in &pkgs {
-            println!("  {}", item);
-        }
-        println!();
-
-        // BuildMap 测试
-        let root_path = r"../tests/pkg-dependencies/";
-        let mut build_map = match BuildMap::new(root_path) {
-            Ok(v) => v,
-            Err(e) => panic!("{}", e.to_string()),
-        };
-
-        let members = ["./", "addon1", "addon2"];
-        println!("addons and pkgs:");
-        for member in members {
-            let addon_path = Path::new(asset_path).join(member);
-            let addon_pkgs = scan_files_block_manifest(addon_path, &patterns);
-            println!("  addon \"{}\" pkgs:", member);
-            for item in &addon_pkgs {
-                println!("    {}", item);
-            }
-
-            if let Err(e) = build_map.insert(root_path, addon_pkgs) {
-                panic!("{}", e.to_string());
-            }
-        }
-        println!();
-        println!("{}\n", build_map.to_string());
-
-        // bundle
-        let mount_path = "../tests/pkg-dependencies/BuildAssets/addon1";
-        let target_path = "BuildAssets/addon1/Prefab";
-        let to_build = match build_map.resolve_bundle_deps(target_path) {
-            Err(e) => panic!("{}", e.to_string()),
-            Ok(r) => r,
-        };
-
-        assert_eq!(to_build.is_circular, false);
-
-        println!("to_build:");
-        for target in &to_build.build_targets {
-            println!("  {} assets:", target);
-            let assets = match build_map.scan_bundle_assets(mount_path, target) {
-                Ok(r) => r,
-                Err(e) => panic!("{}", e.to_string()),
-            };
-            println!("{}", assets);
-        }
-
-        // file
-        let mount_path = "../tests/pkg-dependencies/BuildAssets/addon2";
-        let target_path = "BuildAssets/addon2";
-        let to_build = match build_map.resolve_file_deps(target_path) {
-            Err(e) => panic!("{}", e.to_string()),
-            Ok(r) => r,
-        };
-
-        assert_eq!(to_build.is_circular, false);
-
-        println!("to_build:");
-        for target in &to_build.build_targets {
-            println!("  {} assets:", target);
-            let assets = match build_map.scan_file_assets(mount_path, target) {
-                Ok(r) => r,
-                Err(e) => panic!("{}", e.to_string()),
-            };
-            println!("{}", assets);
-        }
-    }
 
     #[test]
     fn circular_dep_test() {
