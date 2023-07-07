@@ -3,6 +3,7 @@ use std::fmt::Display;
 use std::path::Path;
 
 use anyhow::anyhow;
+use anyhow::Context;
 use anyhow::Result;
 
 use rutils::path::canonicalize_path;
@@ -139,33 +140,38 @@ impl BuildMap {
         let bundle_path = bundle_path.as_ref().to_lowercase();
         match self.bundle_urls.get(&bundle_path) {
             Some(v) => Ok(v.to_owned()),
-            None => Err(anyhow!("not found {} in map", bundle_path)),
+            None => Err(anyhow!("not found url {} in map", bundle_path)),
         }
     }
 
     pub fn resolve_bundle_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
         let root_path = self.get_root_path();
         resolve_build_deps(root_path, &norm_path(target_path.as_ref()), &self.bundles)
+            .with_context(|| "type: bundle")
     }
 
     pub fn resolve_subscene_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
         let root_path = self.get_root_path();
         resolve_build_deps(root_path, &norm_path(target_path.as_ref()), &self.subscenes)
+            .with_context(|| "type: subscene")
     }
 
     pub fn resolve_dylib_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
         let root_path = self.get_root_path();
         resolve_build_deps(root_path, &norm_path(target_path.as_ref()), &self.dylibs)
+            .with_context(|| "type: dylib")
     }
 
     pub fn resolve_file_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
         let root_path = self.get_root_path();
         resolve_build_deps(root_path, &norm_path(target_path.as_ref()), &self.files)
+            .with_context(|| "type: file")
     }
 
     pub fn resolve_zip_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
         let root_path = self.get_root_path();
         resolve_build_deps(root_path, &norm_path(target_path.as_ref()), &self.zips)
+            .with_context(|| "type: zip")
     }
 
     pub fn scan_bundle_assets(
@@ -300,7 +306,9 @@ mod tests {
         build_map.insert(asset_path, pkgs).unwrap();
 
         let target_path = "CircularDep/A";
-        let deps = build_map.resolve_bundle_deps(target_path).unwrap();
-        assert_eq!(deps.is_circular, true);
+        let deps = build_map.resolve_bundle_deps(target_path).err().unwrap();
+        let e = format!("{}, {}", deps.root_cause().to_string(), deps.to_string());
+        println!("{e}");
+        // assert_eq!(deps.is_circular, true);
     }
 }

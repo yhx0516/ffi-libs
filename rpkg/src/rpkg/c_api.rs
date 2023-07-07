@@ -9,7 +9,7 @@ use crate::scan_files_block_pkg;
 use crate::scan_files_block_pkg_manifest;
 
 // ============================================================
-// OnceLog api 一次性日志，便于外部接入时调试
+// OnceLog 一次性日志，便于外部接入时调试
 // ============================================================
 static ERR_BUFFERR_INS: OnceCell<OnceLog> = OnceCell::new();
 
@@ -150,7 +150,6 @@ pub extern "C" fn bm_insert(
         Ok(_) => true,
         Err(e) => {
             OnceLog::new(e.to_string());
-            eprintln!("{}", e.to_string());
             return false;
         }
     }
@@ -175,7 +174,8 @@ pub extern "C" fn bm_resolve_bundle_deps(
     match build_map.resolve_bundle_deps(target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            OnceLog::new(e.to_string());
+            let str = format!("{}, {}", e.root_cause().to_string(), e.to_string());
+            OnceLog::new(str);
             std::ptr::null()
         }
     }
@@ -192,7 +192,8 @@ pub extern "C" fn bm_resolve_subscene_deps(
     match build_map.resolve_subscene_deps(target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            OnceLog::new(e.to_string());
+            let str = format!("{}, {}", e.root_cause().to_string(), e.to_string());
+            OnceLog::new(str);
             std::ptr::null()
         }
     }
@@ -209,7 +210,8 @@ pub extern "C" fn bm_resolve_dylib_deps(
     match build_map.resolve_dylib_deps(target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            OnceLog::new(e.to_string());
+            let str = format!("{}, {}", e.root_cause().to_string(), e.to_string());
+            OnceLog::new(str);
             std::ptr::null()
         }
     }
@@ -226,7 +228,8 @@ pub extern "C" fn bm_resolve_file_deps(
     match build_map.resolve_file_deps(target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            OnceLog::new(e.to_string());
+            let str = format!("{}, {}", e.root_cause().to_string(), e.to_string());
+            OnceLog::new(str);
             std::ptr::null()
         }
     }
@@ -243,7 +246,8 @@ pub extern "C" fn bm_resolve_zip_deps(
     match build_map.resolve_zip_deps(target_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            OnceLog::new(e.to_string());
+            let str = format!("{}, {}", e.root_cause().to_string(), e.to_string());
+            OnceLog::new(str);
             std::ptr::null()
         }
     }
