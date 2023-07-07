@@ -15,14 +15,10 @@ pub fn canonicalize_path(path: impl AsRef<Path>) -> io::Result<PathBuf> {
 
 pub fn norm_path(path: impl AsRef<Path>) -> String {
     let str = path.as_ref().display().to_string();
-    str.replace("\\", "/").trim_matches('/').to_string()
+    str.replace("\\", "/").trim_end_matches('/').to_string()
 }
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn norm_real_path_test() {
-        let path = std::path::Path::new("/assets/a/../");
-        println!("{:?}", path.canonicalize())
-    }
+pub fn norm_path_extreme(path: impl AsRef<Path>) -> String {
+    let str = path.as_ref().display().to_string();
+    str.replace("\\", "/").trim_matches('/').to_string()
 }

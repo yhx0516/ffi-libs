@@ -1,6 +1,6 @@
-use rutils::{canonicalize_path, norm_path};
-use std::path::Path;
 use anyhow::Result;
+use rutils::{canonicalize_path, norm_path_extreme};
+use std::path::Path;
 
 mod bundle;
 mod dylib;
@@ -65,11 +65,11 @@ pub trait BuildTarget {
                 format!(
                     "{}://{}/{}",
                     ASSET_PROTOCAL,
-                    norm_path(p),
-                    norm_path(rel_asset_path)
+                    norm_path_extreme(p),
+                    norm_path_extreme(rel_asset_path)
                 )
             }
-            None => format!("{}://{}", ASSET_PROTOCAL, norm_path(rel_asset_path)),
+            None => format!("{}://{}", ASSET_PROTOCAL, norm_path_extreme(rel_asset_path)),
         };
         url.to_lowercase()
     }
@@ -88,7 +88,9 @@ pub fn resolve_target_path(
         None => canonicalize_path(cur_path)?,
     };
 
-    let res = norm_path(path.strip_prefix(root_path)?);
+    let res = norm_path_extreme(path.strip_prefix(root_path)?)
+        .trim_start_matches('/')
+        .to_string();
     Ok(res)
 }
 
@@ -103,7 +105,7 @@ pub fn build_target_url(
 
     let rel_path = match mount_path == target_path {
         true => String::from("assets"),
-        false => norm_path(target_path.strip_prefix(mount_path)?),
+        false => norm_path_extreme(target_path.strip_prefix(mount_path)?),
     };
 
     let url = format!("{}://{}.{}", ASSET_PROTOCAL, rel_path, ASSET_PKG_EXTENSION);
@@ -134,15 +136,15 @@ fn norm_dep_path(
     root_path: impl AsRef<Path>,
     cur_path: impl AsRef<Path>,
     dep_path: impl AsRef<Path>,
-) ->  Result<String> {
+) -> Result<String> {
     let root_path = root_path.as_ref();
     let cur_path = cur_path.as_ref();
     let dep_path = dep_path.as_ref();
 
     if dep_path.starts_with("/") {
-        return Ok(norm_path(dep_path));
+        return Ok(norm_path_extreme(dep_path));
     }
 
     let path = canonicalize_path(root_path.join(cur_path).join(dep_path))?;
-    Ok(norm_path(path.strip_prefix(root_path)?))
+    Ok(norm_path_extreme(path.strip_prefix(root_path)?))
 }

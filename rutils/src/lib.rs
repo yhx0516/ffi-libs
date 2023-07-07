@@ -11,3 +11,4 @@ pub use ffi::strs_len;
 
 pub use path::canonicalize_path;
 pub use path::norm_path;
+pub use path::norm_path_extreme;

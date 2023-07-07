@@ -7,6 +7,7 @@ use anyhow::Result;
 
 use rutils::canonicalize_path;
 use rutils::norm_path;
+use rutils::norm_path_extreme;
 
 use crate::core::Assets;
 use crate::core::Dependencies;
@@ -222,7 +223,7 @@ fn inner_scan_assets(
         let target_path = format!("{}/{}", root_path, target_path);
         let url = target.build_asset_url(&mount_path, &target_path, &item);
 
-        assets.push_asset(norm_path(rel_path), url)
+        assets.push_asset(norm_path_extreme(rel_path), url)
     }
 
     Ok(assets)
