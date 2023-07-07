@@ -31,7 +31,7 @@ fn main() {
     println!("{}\n", build_map.to_string());
 
     // 获取所有 bundles
-    // 同理 subscene、file、dylib、zi'pzip
+    // 同理 subscene、file、dylib、zip
     println!("bundles and scan assets:");
     for bundle_path in build_map.get_bundle_paths(){
         println!("  {} assets:",bundle_path);
