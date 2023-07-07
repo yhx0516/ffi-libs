@@ -1,4 +1,5 @@
 use handlebars::{to_json, Context, Handlebars, Helper, Output, RenderContext};
+use rutils::ffi;
 use std::ffi::c_char;
 
 mod render;
@@ -13,7 +14,7 @@ pub extern "C" fn get_version() -> *const c_char {
         std::env!("CARGO_PKG_NAME"),
         std::env!("CARGO_PKG_VERSION")
     );
-    rutils::str_to_char_ptr(&version)
+    ffi::str_to_char_ptr(&version)
 }
 
 // ============================================================
@@ -42,7 +43,7 @@ pub extern "C" fn handlebars_register_helper_callback(
     // 将传入的 helper_callback 封装为 Rust 的闭包，并注册为 Handlebars 的 helper
     unsafe {
         let handlebars = handlebars_ptr.as_mut().expect("invalid ptr: ");
-        let helper_name = rutils::char_ptr_to_str(helper_name);
+        let helper_name = ffi::char_ptr_to_str(helper_name);
 
         if let Some(callback) = helper_callback {
             let func = move |h: &Helper,
@@ -50,7 +51,7 @@ pub extern "C" fn handlebars_register_helper_callback(
                              _: &Context,
                              _: &mut RenderContext,
                              out: &mut dyn Output| {
-                let out_str = rutils::char_ptr_to_str(callback(h as *const Helper));
+                let out_str = ffi::char_ptr_to_str(callback(h as *const Helper));
                 out.write(&out_str)?;
                 Ok(())
             };
@@ -66,11 +67,11 @@ pub extern "C" fn handlebars_render_template(
     tpl_str: *const c_char,
 ) -> *const c_char {
     let handlebars = unsafe { handlebars_ptr.as_mut().expect("invalid ptr: ") };
-    let tpl_str = rutils::char_ptr_to_str(tpl_str);
+    let tpl_str = ffi::char_ptr_to_str(tpl_str);
 
     match handlebars.render_template(&tpl_str, &to_json("")) {
-        Ok(r) => rutils::str_to_char_ptr(&r),
-        _ => rutils::str_to_char_ptr(""),
+        Ok(r) => ffi::str_to_char_ptr(&r),
+        _ => ffi::str_to_char_ptr(""),
     }
 }
 
@@ -82,7 +83,7 @@ pub extern "C" fn helper_get_arg_as_str(helper_ptr: *const Helper, idx: usize) -
         .and_then(|v| v.value().as_str())
         .unwrap_or("");
 
-    rutils::str_to_char_ptr(res)
+    ffi::str_to_char_ptr(res)
 }
 
 #[no_mangle]
@@ -90,9 +91,9 @@ pub extern "C" fn render_template_from_toml(
     tpl_path: *const c_char,
     toml_path: *const c_char,
 ) -> *const c_char {
-    let tpl_path = rutils::char_ptr_to_str(tpl_path);
-    let toml_path = rutils::char_ptr_to_str(toml_path);
+    let tpl_path = ffi::char_ptr_to_str(tpl_path);
+    let toml_path = ffi::char_ptr_to_str(toml_path);
 
     let res = render::render_template_from_toml(tpl_path, toml_path);
-    rutils::str_to_char_ptr(res)
+    ffi::str_to_char_ptr(res)
 }

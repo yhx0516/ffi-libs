@@ -1,11 +1,10 @@
-use std::{
-    ffi::{c_char, CStr},
-    fs,
-};
+use std::ffi::{c_char, CStr};
+use std::fs;
 use toml_edit::{Array, ArrayOfTables, Document, InlineTable, Item, Table, Value};
 
 // NOTE: 作为第三方库可以直接调用
-pub use rutils::{str_dispose, strs_dispose, strs_get, strs_len};
+pub use rutils::c_api::*;
+pub use rutils::ffi;
 
 // ============================================================
 // Info
@@ -17,7 +16,7 @@ pub extern "C" fn get_version() -> *const c_char {
         std::env!("CARGO_PKG_NAME"),
         std::env!("CARGO_PKG_VERSION")
     );
-    rutils::str_to_char_ptr(&version)
+    ffi::str_to_char_ptr(&version)
 }
 
 // ============================================================
@@ -25,7 +24,7 @@ pub extern "C" fn get_version() -> *const c_char {
 // ============================================================
 #[no_mangle]
 pub extern "C" fn document_parse_file(path: *const c_char) -> *const Document {
-    let path = rutils::char_ptr_to_str(path);
+    let path = ffi::char_ptr_to_str(path);
 
     let Ok(content) = fs::read_to_string(&path) else {
         eprintln!("read file failed: {:?}",path);
@@ -40,7 +39,7 @@ pub extern "C" fn document_parse_file(path: *const c_char) -> *const Document {
 
 #[no_mangle]
 pub extern "C" fn document_parse_content(content: *const c_char) -> *const Document {
-    let content = rutils::char_ptr_to_str(content);
+    let content = ffi::char_ptr_to_str(content);
 
     match content.parse::<Document>() {
         Ok(val) => Box::into_raw(Box::new(val)),
@@ -51,7 +50,7 @@ pub extern "C" fn document_parse_content(content: *const c_char) -> *const Docum
 #[no_mangle]
 pub extern "C" fn document_get(ptr: *const Document, key: *const c_char) -> *const Item {
     let doc = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    let key = rutils::char_ptr_to_str(key);
+    let key = ffi::char_ptr_to_str(key);
 
     match doc.get(&key) {
         Some(val) => Box::into_raw(Box::new(val.to_owned())),
@@ -274,7 +273,7 @@ pub extern "C" fn item_as_str(ptr: *const Item) -> *const c_char {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_str() {
-        Some(val) => rutils::str_to_char_ptr(val),
+        Some(val) => ffi::str_to_char_ptr(val),
         _ => std::ptr::null(),
     }
 }
@@ -326,7 +325,7 @@ pub extern "C" fn item_dispose(ptr: *mut Item) {
 pub extern "C" fn value_type_name(ptr: *const Value) -> *const c_char {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let val = item.type_name();
-    rutils::str_to_char_ptr(val)
+    ffi::str_to_char_ptr(val)
 }
 
 #[no_mangle]
@@ -408,7 +407,7 @@ pub extern "C" fn value_as_str(ptr: *const Value) -> *const c_char {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
 
     match item.as_str() {
-        Some(val) => rutils::str_to_char_ptr(val),
+        Some(val) => ffi::str_to_char_ptr(val),
         _ => std::ptr::null(),
     }
 }
@@ -504,7 +503,7 @@ pub extern "C" fn table_len(ptr: *const Table) -> usize {
 #[no_mangle]
 pub extern "C" fn table_get(ptr: *const Table, key: *const c_char) -> *const Item {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    let key = rutils::char_ptr_to_str(key);
+    let key = ffi::char_ptr_to_str(key);
 
     match item.get(&key) {
         Some(val) => Box::into_raw(Box::new(val.to_owned())),
@@ -548,21 +547,21 @@ pub extern "C" fn table_get_inline_table_keys(ptr: *const Table) -> *const Vec<S
 #[no_mangle]
 pub extern "C" fn table_contains_key(ptr: *const Table, key: *const c_char) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    let key = rutils::char_ptr_to_str(key);
+    let key = ffi::char_ptr_to_str(key);
     item.contains_key(&key)
 }
 
 #[no_mangle]
 pub extern "C" fn table_contains_table(ptr: *const Table, key: *const c_char) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    let key = rutils::char_ptr_to_str(key);
+    let key = ffi::char_ptr_to_str(key);
     item.contains_table(&key)
 }
 
 #[no_mangle]
 pub extern "C" fn table_contains_value(ptr: *const Table, key: *const c_char) -> bool {
     let item = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    let key = rutils::char_ptr_to_str(key);
+    let key = ffi::char_ptr_to_str(key);
     item.contains_value(&key)
 }
 

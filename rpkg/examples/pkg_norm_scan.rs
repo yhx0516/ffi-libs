@@ -1,8 +1,5 @@
-
-
-use rpkg::{scan_files};
+use rpkg::scan_files;
 use rpkg::BuildMap;
-
 
 fn main() {
     let root_path = r"./tests/pkg-dependencies/";
@@ -33,8 +30,8 @@ fn main() {
     // 获取所有 bundles
     // 同理 subscene、file、dylib、zip
     println!("bundles and scan assets:");
-    for bundle_path in build_map.get_bundle_paths(){
-        println!("  {} assets:",bundle_path);
+    for bundle_path in build_map.get_bundle_paths() {
+        println!("  {} assets:", bundle_path);
 
         let assets = match build_map.scan_bundle_assets(asset_path, bundle_path) {
             Ok(r) => r,

@@ -5,17 +5,17 @@ use std::path::Path;
 use anyhow::anyhow;
 use anyhow::Result;
 
-use rutils::canonicalize_path;
-use rutils::norm_path;
-use rutils::norm_path_extreme;
+use rutils::path::canonicalize_path;
+use rutils::path::norm_path;
+use rutils::path::norm_path_extreme;
 
+use crate::core::resolve_build_deps;
 use crate::core::Assets;
 use crate::core::Dependencies;
 use crate::pkg;
 use crate::BuildTarget;
 
 use crate::build_target_url;
-use crate::core::resolve_build_deps;
 use crate::resolve_target_path;
 use crate::scan_files_block_pkg_manifest;
 
@@ -270,7 +270,10 @@ impl Display for BuildMap {
         };
 
         output.push_str(&format!("  root_path:\n    {:?}\n", self.root_path));
-        output.push_str(&format!("  bundle_urls:\n{}", url_to_str(&self.bundle_urls)));
+        output.push_str(&format!(
+            "  bundle_urls:\n{}",
+            url_to_str(&self.bundle_urls)
+        ));
         output.push_str(&format!("  bundles:\n{}", target_to_str(&self.bundles)));
         output.push_str(&format!("  subscenes:\n{}", target_to_str(&self.subscenes)));
         output.push_str(&format!("  dylibs:\n{}", target_to_str(&self.dylibs)));

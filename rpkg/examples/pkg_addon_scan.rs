@@ -1,7 +1,7 @@
-use std::path::Path;
 use rpkg::scan_files_block_manifest;
 use rpkg::BuildMap;
-use rutils::norm_path;
+use rutils::path::norm_path;
+use std::path::Path;
 
 fn main() {
     let root_path = r"./tests/pkg-dependencies/";

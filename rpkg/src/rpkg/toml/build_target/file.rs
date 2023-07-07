@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use super::BuildTarget;
+use crate::BuildTarget;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct TomlFile {

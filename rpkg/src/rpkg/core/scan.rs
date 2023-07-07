@@ -1,5 +1,5 @@
 use globset::{GlobBuilder, GlobMatcher};
-use rutils::{canonicalize_path, norm_path};
+use rutils::path::{canonicalize_path, norm_path};
 use std::path::Path;
 use walkdir::WalkDir;
 

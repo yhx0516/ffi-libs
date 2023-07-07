@@ -1,5 +1,6 @@
 use anyhow::Result;
-use rutils::{canonicalize_path, norm_path_extreme};
+use rutils::path::canonicalize_path;
+use rutils::path::norm_path_extreme;
 use std::path::Path;
 
 mod bundle;
@@ -11,7 +12,6 @@ mod zip;
 pub use bundle::TomlBundle;
 pub use dylib::TomlDylib;
 pub use file::TomlFile;
-
 pub use subscene::TomlSubscene;
 pub use zip::TomlZip;
 

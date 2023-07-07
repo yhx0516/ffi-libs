@@ -1,8 +1,9 @@
-use rutils::norm_path_extreme;
+use rutils::path::norm_path_extreme;
 use serde::Deserialize;
 use std::path::Path;
 
-use super::BuildTarget;
+use crate::BuildTarget;
+
 use super::ASSET_PROTOCAL;
 
 #[derive(Deserialize, Debug, Clone)]

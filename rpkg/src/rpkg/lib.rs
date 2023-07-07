@@ -1,4 +1,4 @@
-pub use rutils::{str_dispose, strs_dispose, strs_get, strs_len};
+pub use rutils::c_api::*;
 
 mod c_api;
 mod core;
