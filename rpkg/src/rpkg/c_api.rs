@@ -4,9 +4,9 @@ use std::ffi::c_char;
 
 use crate::core::{BuildMap, Dependencies};
 use crate::scan_files;
-use crate::scan_files_block_manifest;
-use crate::scan_files_block_pkg;
-use crate::scan_files_block_pkg_manifest;
+use crate::scan_files_block_by_manifest;
+use crate::scan_files_block_by_pkg;
+use crate::scan_files_block_by_pkg_manifest;
 
 // ============================================================
 // OnceLog 一次性日志，便于外部接入时调试
@@ -77,7 +77,7 @@ pub extern "C" fn rpkg_scan_files(
 }
 
 #[no_mangle]
-pub extern "C" fn rpkg_scan_files_block_pkg(
+pub extern "C" fn rpkg_scan_files_block_by_pkg(
     root_path: *const c_char,
     patterns: *const *const c_char,
     patterns_len: usize,
@@ -86,12 +86,12 @@ pub extern "C" fn rpkg_scan_files_block_pkg(
     let patterns = ffi::arr_ptr_to_strs(patterns, patterns_len as usize);
     let patterns: Vec<&str> = patterns.iter().map(|s| s.as_ref()).collect();
 
-    let files = scan_files_block_pkg(root_path, &patterns);
+    let files = scan_files_block_by_pkg(root_path, &patterns);
     Box::into_raw(Box::new(files))
 }
 
 #[no_mangle]
-pub extern "C" fn rpkg_scan_files_block_manifest(
+pub extern "C" fn rpkg_scan_files_block_by_manifest(
     root_path: *const c_char,
     patterns: *const *const c_char,
     patterns_len: usize,
@@ -100,12 +100,12 @@ pub extern "C" fn rpkg_scan_files_block_manifest(
     let patterns = ffi::arr_ptr_to_strs(patterns, patterns_len as usize);
     let patterns: Vec<&str> = patterns.iter().map(|s| s.as_ref()).collect();
 
-    let files = scan_files_block_manifest(root_path, &patterns);
+    let files = scan_files_block_by_manifest(root_path, &patterns);
     Box::into_raw(Box::new(files))
 }
 
 #[no_mangle]
-pub extern "C" fn rpkg_scan_files_block_pkg_manifest(
+pub extern "C" fn rpkg_scan_files_block_by_pkg_manifest(
     root_path: *const c_char,
     patterns: *const *const c_char,
     patterns_len: usize,
@@ -114,7 +114,7 @@ pub extern "C" fn rpkg_scan_files_block_pkg_manifest(
     let patterns = ffi::arr_ptr_to_strs(patterns, patterns_len as usize);
     let patterns: Vec<&str> = patterns.iter().map(|s| s.as_ref()).collect();
 
-    let files = scan_files_block_pkg_manifest(root_path, &patterns);
+    let files = scan_files_block_by_pkg_manifest(root_path, &patterns);
     Box::into_raw(Box::new(files))
 }
 
@@ -588,7 +588,7 @@ pub extern "C" fn bm_debug_info(ptr: *const BuildMap) -> *const c_char {
 #[no_mangle]
 pub extern "C" fn dependencies_get_targets(ptr: *const Dependencies) -> *const Vec<String> {
     let deps = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    Box::into_raw(Box::new(deps.build_targets.clone()))
+    Box::into_raw(Box::new(deps.target_paths.clone()))
 }
 
 #[no_mangle]

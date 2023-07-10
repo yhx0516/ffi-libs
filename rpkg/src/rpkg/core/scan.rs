@@ -4,50 +4,50 @@ use std::path::Path;
 use walkdir::WalkDir;
 
 struct ScanOptions {
-    pub block_pkg: bool,
-    pub block_manifest: bool,
+    pub block_by_pkg: bool,
+    pub block_by_manifest: bool,
 }
 
 pub fn scan_files(root_path: impl AsRef<Path>, patterns: &[impl AsRef<str>]) -> Vec<String> {
     let options = ScanOptions {
-        block_pkg: false,
-        block_manifest: false,
+        block_by_pkg: false,
+        block_by_manifest: false,
     };
 
     inner_scan_files(root_path, patterns, &options)
 }
 
-pub fn scan_files_block_pkg(
+pub fn scan_files_block_by_pkg(
     root_path: impl AsRef<Path>,
     patterns: &[impl AsRef<str>],
 ) -> Vec<String> {
     let options = ScanOptions {
-        block_pkg: true,
-        block_manifest: false,
+        block_by_pkg: true,
+        block_by_manifest: false,
     };
 
     inner_scan_files(root_path, patterns, &options)
 }
 
-pub fn scan_files_block_manifest(
+pub fn scan_files_block_by_manifest(
     root_path: impl AsRef<Path>,
     patterns: &[impl AsRef<str>],
 ) -> Vec<String> {
     let options = ScanOptions {
-        block_pkg: false,
-        block_manifest: true,
+        block_by_pkg: false,
+        block_by_manifest: true,
     };
 
     inner_scan_files(root_path, patterns, &options)
 }
 
-pub fn scan_files_block_pkg_manifest(
+pub fn scan_files_block_by_pkg_manifest(
     root_path: impl AsRef<Path>,
     patterns: &[impl AsRef<str>],
 ) -> Vec<String> {
     let options = ScanOptions {
-        block_pkg: true,
-        block_manifest: true,
+        block_by_pkg: true,
+        block_by_manifest: true,
     };
 
     inner_scan_files(root_path, patterns, &options)
@@ -79,7 +79,7 @@ fn inner_scan_files(
         };
         let path = entry.path();
 
-        if options.block_pkg {
+        if options.block_by_pkg {
             // skip sub directory (.pkg)
             if path.is_dir() && path != root_path && path.join(".pkg").is_file() {
                 walk_iter.skip_current_dir();
@@ -92,7 +92,7 @@ fn inner_scan_files(
             }
         }
 
-        if options.block_manifest {
+        if options.block_by_manifest {
             // skip sub directory (manifest.toml)
             if path.is_dir() && path != root_path && path.join("manifest.toml").is_file() {
                 walk_iter.skip_current_dir();
@@ -164,7 +164,7 @@ fn create_git_glob_macther() -> GlobMatcher {
 #[cfg(test)]
 mod tests {
 
-    use super::{scan_files, scan_files_block_pkg};
+    use super::{scan_files, scan_files_block_by_pkg};
     use std::{fs, path::Path};
 
     #[test]
@@ -201,7 +201,7 @@ mod tests {
         }
 
         let patterns = ["*.asset"];
-        let files = scan_files_block_pkg(foo1_path, &patterns);
+        let files = scan_files_block_by_pkg(foo1_path, &patterns);
         let expect_files = [
             "../target/tmp/pkg_assets/foo1/0.asset",
             "../target/tmp/pkg_assets/foo1/1.asset",
@@ -235,7 +235,7 @@ mod tests {
         }
 
         let patterns = ["bar/*.txt", "!bar/*3.txt"];
-        let files = scan_files_block_pkg(foo2_path, &patterns);
+        let files = scan_files_block_by_pkg(foo2_path, &patterns);
         let expect_files = ["../target/tmp/pkg_assets/foo2/bar/2.txt"];
         let expect_files: Vec<String> = expect_files.iter().map(|s| s.to_string()).collect();
         assert_eq!(files, expect_files);
@@ -273,7 +273,7 @@ mod tests {
         }
 
         let patterns = ["*.txt", "**/*.txt"];
-        let files = scan_files_block_pkg(foo3_path, &patterns);
+        let files = scan_files_block_by_pkg(foo3_path, &patterns);
         let expect_files = [
             "../target/tmp/pkg_assets/foo3/2.txt",
             "../target/tmp/pkg_assets/foo3/3.txt",

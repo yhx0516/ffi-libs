@@ -13,13 +13,13 @@ use rutils::path::norm_path_extreme;
 use crate::core::resolve_build_deps;
 use crate::core::Assets;
 use crate::core::Dependencies;
-use crate::core::TargetPaths;
+use crate::core::PKGTargetPaths;
 use crate::BuildTarget;
 use crate::TomlPKG;
 
 use crate::build_target_url;
 use crate::resolve_target_path;
-use crate::scan_files_block_pkg_manifest;
+use crate::scan_files_block_by_pkg_manifest;
 
 #[derive(Default)]
 pub struct BuildMap {
@@ -27,10 +27,10 @@ pub struct BuildMap {
     root_path: String,
 
     /// key: pkg path, value: target paths
-    pkg_to_targets: BTreeMap<String, TargetPaths>,
+    pkg_to_targets: BTreeMap<String, PKGTargetPaths>,
 
     /// key: mount path, value: target paths
-    addon_to_targets: BTreeMap<String, TargetPaths>,
+    addon_to_targets: BTreeMap<String, PKGTargetPaths>,
 
     /// key: bundle path, value: bundle url
     bundle_urls: BTreeMap<String, String>,
@@ -237,13 +237,13 @@ impl BuildMap {
     ) -> Result<()> {
         let root_path = self.get_root_path().clone();
         let addon_path = canonicalize_path(addon_path.as_ref())?;
-        let mut addon_to_targets = TargetPaths::new();
+        let mut addon_to_targets = PKGTargetPaths::new();
 
         for pkg_path in pkg_paths {
             let pkg_path = pkg_path.as_ref();
             let cur_path = pkg_path.parent().unwrap();
             let toml_pkg = TomlPKG::parse(&pkg_path)?;
-            let mut pkg_to_targets = TargetPaths::new();
+            let mut pkg_to_targets = PKGTargetPaths::new();
 
             // bundle
             for target in toml_pkg.bundles.unwrap_or(Vec::new()) {
@@ -474,7 +474,7 @@ fn inner_scan_assets(
     let path = Path::new(root_path).join(&target_path);
     let mut assets = Assets::new();
 
-    for item in scan_files_block_pkg_manifest(path, patterns) {
+    for item in scan_files_block_by_pkg_manifest(path, patterns) {
         let Some(rel_path) = item.strip_prefix(root_path) else {
             return Err(anyhow!("{} is not the prefix of {}",root_path, &target_path));
         };
@@ -492,7 +492,7 @@ impl Display for BuildMap {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut output = String::new();
 
-        let pkgs_to_str = |target_map: &BTreeMap<String, TargetPaths>| {
+        let pkgs_to_str = |target_map: &BTreeMap<String, PKGTargetPaths>| {
             let mut output = String::new();
             for (key, val) in target_map {
                 output.push_str(&format!("  {}:\n", key));

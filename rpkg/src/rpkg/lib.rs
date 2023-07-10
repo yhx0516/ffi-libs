@@ -7,9 +7,9 @@ mod toml;
 pub use self::c_api::*;
 
 pub use self::core::scan_files;
-pub use self::core::scan_files_block_manifest;
-pub use self::core::scan_files_block_pkg;
-pub use self::core::scan_files_block_pkg_manifest;
+pub use self::core::scan_files_block_by_manifest;
+pub use self::core::scan_files_block_by_pkg;
+pub use self::core::scan_files_block_by_pkg_manifest;
 pub use self::core::BuildMap;
 
 pub use self::toml::build_target::TomlBundle;

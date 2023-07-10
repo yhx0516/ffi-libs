@@ -27,7 +27,7 @@ namespace csharp_link_rust.libs
 
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr rpkg_scan_files_block_pkg(
+        public static extern IntPtr rpkg_scan_files_block_by_pkg(
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
                 string[] patterns,
                 uint patterns_len
@@ -35,7 +35,7 @@ namespace csharp_link_rust.libs
 
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr rpkg_scan_files_block_manifest(
+        public static extern IntPtr rpkg_scan_files_block_by_manifest(
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
                 string[] patterns,
                 uint patterns_len
@@ -43,7 +43,7 @@ namespace csharp_link_rust.libs
 
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr rpkg_scan_files_block_pkg_manifest(
+        public static extern IntPtr rpkg_scan_files_block_pkg_by_manifest(
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
                 string[] patterns,
                 uint patterns_len
@@ -227,7 +227,7 @@ namespace csharp_link_rust.libs
             foreach (string member in members)
             {
                  string addon_path = asset_path +"/"+ member;
-                IntPtr addon_pkgs_ptr = rpkg_scan_files_block_manifest(addon_path, pkg_patterns, (UInt32)pkg_patterns.Length);
+                IntPtr addon_pkgs_ptr = rpkg_scan_files_block_by_manifest(addon_path, pkg_patterns, (UInt32)pkg_patterns.Length);
                 Console.WriteLine("  addon " + member + " pkgs (" + addon_path + "):");
 
                 string[] addon_pkgs = Ptr2StringList(addon_pkgs_ptr);

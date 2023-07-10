@@ -7,7 +7,7 @@ use crate::BuildTarget;
 
 #[derive(Default, Debug)]
 pub struct Dependencies {
-    pub build_targets: Vec<String>,
+    pub target_paths: Vec<String>,
     pub is_circular: bool,
 }
 
@@ -65,7 +65,7 @@ pub fn resolve_build_deps(
 
         indegree_map.insert(target_path.clone(), 1);
         dep_map.insert(target_path.clone(), deps.clone());
-        res.build_targets.push(target_path);
+        res.target_paths.push(target_path);
         queue.extend(deps);
     }
 
@@ -95,7 +95,7 @@ pub fn resolve_build_deps(
     res.is_circular = zero_indegree != dep_map.len();
 
     // deeper depth dep has higher priority, so reverse the build targets
-    res.build_targets.reverse();
+    res.target_paths.reverse();
 
     Ok(res)
 }

@@ -1,4 +1,4 @@
-use rpkg::scan_files_block_manifest;
+use rpkg::scan_files_block_by_manifest;
 use rpkg::BuildMap;
 use rutils::path::norm_path;
 use std::path::Path;
@@ -22,7 +22,7 @@ fn main() {
     for member in members {
         // 搜索 member 下的 pkg 文件
         let addon_path = Path::new(asset_path).join(member);
-        let addon_pkgs = scan_files_block_manifest(&addon_path, &patterns);
+        let addon_pkgs = scan_files_block_by_manifest(&addon_path, &patterns);
         println!("  mount \"{}\" pkgs:", member);
         for item in &addon_pkgs {
             println!("    {}", item);
@@ -53,7 +53,7 @@ fn main() {
     assert_eq!(deps.is_circular, false);
 
     // 获取依赖项
-    let mut to_build = deps.build_targets.clone();
+    let mut to_build = deps.target_paths.clone();
 
     // 加入自身
     to_build.push(target_path.to_string());
@@ -85,7 +85,7 @@ fn main() {
     assert_eq!(deps.is_circular, false);
 
     // 获取依赖项
-    let mut to_build = deps.build_targets.clone();
+    let mut to_build = deps.target_paths.clone();
 
     // 加入自身
     to_build.push(target_path.to_string());

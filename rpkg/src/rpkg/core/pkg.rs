@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use std::fmt::Display;
 
 #[derive(Debug, Default)]
-pub struct TargetPaths {
+pub struct PKGTargetPaths {
     bundles: HashSet<String>,
     subscenes: HashSet<String>,
     files: HashSet<String>,
@@ -12,9 +12,9 @@ pub struct TargetPaths {
     zips: HashSet<String>,
 }
 
-impl TargetPaths {
+impl PKGTargetPaths {
     pub fn new() -> Self {
-        TargetPaths::default()
+        PKGTargetPaths::default()
     }
 
     pub fn get_bundles(&self) -> Vec<&String> {
@@ -72,7 +72,7 @@ impl TargetPaths {
         }
     }
 
-    pub fn append(&mut self, pkg_targets: &TargetPaths) {
+    pub fn append(&mut self, pkg_targets: &PKGTargetPaths) {
         for target in &pkg_targets.bundles {
             self.bundles.insert(target.clone());
         }
@@ -95,7 +95,7 @@ impl TargetPaths {
     }
 }
 
-impl Display for TargetPaths {
+impl Display for PKGTargetPaths {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut output = String::new();
 
