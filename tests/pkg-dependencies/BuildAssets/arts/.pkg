@@ -1,0 +1,5 @@
+[[bundle]]
+patterns = [
+   "**/*.prefab",
+   "!**/Subscene/**"
+]

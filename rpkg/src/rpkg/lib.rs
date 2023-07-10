@@ -1,5 +1,21 @@
-pub use c_api::*;
-pub use rutils::{str_dispose, strs_dispose, strs_get, strs_len};
+pub use rutils::c_api::*;
 
 mod c_api;
-pub mod core;
+mod core;
+mod toml;
+
+pub use self::c_api::*;
+
+pub use self::core::scan_files;
+pub use self::core::scan_files_block_by_manifest;
+pub use self::core::scan_files_block_by_pkg;
+pub use self::core::scan_files_block_by_pkg_manifest;
+pub use self::core::BuildMap;
+
+pub use self::toml::build_target::TomlBundle;
+pub use self::toml::build_target::TomlDylib;
+pub use self::toml::build_target::TomlFile;
+pub use self::toml::build_target::TomlSubscene;
+pub use self::toml::build_target::TomlZip;
+pub use self::toml::build_target::{build_target_url, resolve_target_path, BuildTarget};
+pub use self::toml::TomlPKG;

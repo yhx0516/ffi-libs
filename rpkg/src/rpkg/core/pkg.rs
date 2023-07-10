@@ -1,110 +1,127 @@
-use serde::Deserialize;
-use std::{fs, path::Path};
+use anyhow::anyhow;
+use anyhow::Result;
+use std::collections::HashSet;
+use std::fmt::Display;
 
-use super::build_target::*;
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct TomlPKG {
-    #[serde(rename = "bundle")]
-    pub bundles: Option<Vec<TomlBundle>>,
-
-    #[serde(rename = "subscene")]
-    pub subscenes: Option<Vec<TomlSubscene>>,
-
-    #[serde(rename = "file")]
-    pub files: Option<Vec<TomlFile>>,
-
-    #[serde(rename = "dylib")]
-    pub dylibs: Option<Vec<TomlDylib>>,
-
-    #[serde(rename = "zip")]
-    pub zips: Option<Vec<TomlZip>>,
+#[derive(Debug, Default)]
+pub struct PKGTargetPaths {
+    bundles: HashSet<String>,
+    subscenes: HashSet<String>,
+    files: HashSet<String>,
+    dylibs: HashSet<String>,
+    zips: HashSet<String>,
 }
 
-impl TomlPKG {
-    pub fn get_deps(&self) -> Vec<String> {
-        let Some(bundles) = &self.bundles else {
-            return Vec::new();
+impl PKGTargetPaths {
+    pub fn new() -> Self {
+        PKGTargetPaths::default()
+    }
+
+    pub fn get_bundles(&self) -> Vec<&String> {
+        self.bundles.iter().map(|v| v).collect()
+    }
+
+    pub fn get_subscenes(&self) -> Vec<&String> {
+        self.subscenes.iter().map(|v| v).collect()
+    }
+
+    pub fn get_files(&self) -> Vec<&String> {
+        self.files.iter().map(|v| v).collect()
+    }
+
+    pub fn get_dylibs(&self) -> Vec<&String> {
+        self.dylibs.iter().map(|v| v).collect()
+    }
+
+    pub fn get_zips(&self) -> Vec<&String> {
+        self.zips.iter().map(|v| v).collect()
+    }
+
+    pub fn push_bundle(&mut self, path: &String) -> Result<()> {
+        match self.bundles.insert(path.to_owned()) {
+            true => Ok(()),
+            false => Err(anyhow!("{} already exist", path)),
+        }
+    }
+
+    pub fn push_subscene(&mut self, path: &String) -> Result<()> {
+        match self.subscenes.insert(path.to_owned()) {
+            true => Ok(()),
+            false => Err(anyhow!("{} already exist", path)),
+        }
+    }
+
+    pub fn push_file(&mut self, path: &String) -> Result<()> {
+        match self.files.insert(path.to_owned()) {
+            true => Ok(()),
+            false => Err(anyhow!("{} already exist", path)),
+        }
+    }
+
+    pub fn push_dylib(&mut self, path: &String) -> Result<()> {
+        match self.dylibs.insert(path.to_owned()) {
+            true => Ok(()),
+            false => Err(anyhow!("{} already exist", path)),
+        }
+    }
+
+    pub fn push_zip(&mut self, path: &String) -> Result<()> {
+        match self.zips.insert(path.to_owned()) {
+            true => Ok(()),
+            false => Err(anyhow!("{} already exist", path)),
+        }
+    }
+
+    pub fn append(&mut self, pkg_targets: &PKGTargetPaths) {
+        for target in &pkg_targets.bundles {
+            self.bundles.insert(target.clone());
+        }
+
+        for target in &pkg_targets.subscenes {
+            self.subscenes.insert(target.clone());
+        }
+
+        for target in &pkg_targets.files {
+            self.files.insert(target.clone());
+        }
+
+        for target in &pkg_targets.dylibs {
+            self.dylibs.insert(target.clone());
+        }
+
+        for target in &pkg_targets.zips {
+            self.zips.insert(target.clone());
+        }
+    }
+}
+
+impl Display for PKGTargetPaths {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut output = String::new();
+
+        let targets_to_str = |targets: &HashSet<String>| {
+            let mut output = String::new();
+            for val in targets {
+                output.push_str(&format!("    {}\n", val));
+            }
+            output
         };
 
-        let mut deps = Vec::new();
-        for bundle in bundles {
-            let Some(d) = bundle.dependencies.as_ref() else {
-                continue;
-            };
-            deps.append(&mut d.to_owned());
-        }
-        deps
-    }
+        output.push_str("  bundle_targets:\n");
+        output.push_str(&targets_to_str(&self.bundles));
 
-    pub fn scan_assets(
-        &self,
-        root_path: impl AsRef<Path>,
-        cur_path: impl AsRef<Path>,
-    ) -> Vec<String> {
-        let mut assets = Vec::new();
+        output.push_str("  subscenes_targets:\n");
+        output.push_str(&targets_to_str(&self.subscenes));
 
-        if let Some(targets) = &self.bundles {
-            for target in targets {
-                assets.append(&mut target.scan_assets(&root_path, &cur_path));
-            }
-        }
+        output.push_str("  files_targets:\n");
+        output.push_str(&targets_to_str(&self.files));
 
-        if let Some(targets) = &self.subscenes {
-            for target in targets {
-                assets.append(&mut target.scan_assets(&root_path, &cur_path));
-            }
-        }
+        output.push_str("  dylibs_targets:\n");
+        output.push_str(&targets_to_str(&self.dylibs));
 
-        if let Some(targets) = &self.files {
-            for target in targets {
-                assets.append(&mut target.scan_assets(&root_path, &cur_path));
-            }
-        }
+        output.push_str("  zips_targets:\n");
+        output.push_str(&targets_to_str(&self.zips));
 
-        if let Some(targets) = &self.dylibs {
-            for target in targets {
-                assets.append(&mut target.scan_assets(&root_path, &cur_path));
-            }
-        }
-
-        if let Some(targets) = &self.zips {
-            for target in targets {
-                assets.append(&mut target.scan_assets(&root_path, &cur_path));
-            }
-        }
-
-        assets.sort();
-        assets
+        f.write_str(&output)
     }
 }
-
-pub fn parse(file: impl AsRef<Path>) -> Option<TomlPKG> {
-    let Ok(content) = fs::read_to_string(file.as_ref()) else {
-        eprintln!("read {} failed",file.as_ref().display());   
-        return None;
-    };
-
-    let Ok(pkg) = toml::from_str(&content) else {
-        eprintln!("parse {} failed",file.as_ref().display());   
-        return None;
-    };
-    Some(pkg)
-}
-
-pub fn get_dep_patterns_from_file(file: impl AsRef<Path>) -> Option<Vec<String>> {
-    match parse(file) {
-        Some(pkg) => Some(pkg.get_deps()),
-        None => None,
-    }
-}
-
-pub fn scan_assets_from_file(file: impl AsRef<Path>, root_path: impl AsRef<Path>) -> Vec<String> {
-    let Some(pkg) = parse(&file) else {
-        return Vec::new();
-    };
-    let cur_path = file.as_ref().parent().unwrap();
-    pkg.scan_assets(root_path, cur_path)
-}
-
-// NOTE: unit test will run in unity project

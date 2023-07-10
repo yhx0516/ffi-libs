@@ -6,3 +6,14 @@ build cmd:
 ```
 cargo build -p rtoml --release
 ```
+
+### rpkg - .pkg 解析与文件搜索
+build cmd:
+```
+cargo build -p rpg --release
+```
+run examples
+```
+cargo run -p rpkg --example pkg_addon_scan
+cargo run -p rpkg --example pkg_norm_scan
+```

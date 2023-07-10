@@ -1,74 +1,72 @@
-use globset::GlobBuilder;
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use walkdir::WalkDir;
+use anyhow::anyhow;
+use anyhow::Result;
+use std::collections::{BTreeMap, HashMap};
 
-use super::pkg;
+use crate::toml::build_target::resolve_dep_path;
+use crate::BuildTarget;
 
 #[derive(Default, Debug)]
 pub struct Dependencies {
-    pub files: Vec<String>,
-    pub invalid_files: Vec<String>,
+    pub target_paths: Vec<String>,
     pub is_circular: bool,
 }
 
-pub fn seek_dependencies(
-    root_path: impl AsRef<Path>,
-    cur_pkg: impl AsRef<Path>,
-    patterns: &[impl AsRef<str>],
-) -> Dependencies {
-    let cur_pkg = cur_pkg.as_ref();
-    let mut deps = Dependencies::default();
+fn check_deps_valid(
+    target_path: impl AsRef<str>,
+    deps: &Vec<String>,
+    target_map: &BTreeMap<String, Box<dyn BuildTarget>>,
+) -> Result<()> {
+    let parent = target_path.as_ref();
+    for dep in deps {
+        if target_map.get(dep).is_some() {
+            continue;
+        }
+        return Err(anyhow!("invalid dependency: {}, parent: {}", dep, parent));
+    }
+    Ok(())
+}
 
-    if pkg::parse(cur_pkg).is_none() {
-        deps.invalid_files.push(cur_pkg.display().to_string());
-        return deps;
+pub fn resolve_build_deps(
+    root_path: impl AsRef<str>,
+    target_path: impl AsRef<str>,
+    target_map: &BTreeMap<String, Box<dyn BuildTarget>>,
+) -> Result<Dependencies> {
+    let target_path = target_path.as_ref();
+    let root_path = root_path.as_ref();
+
+    let Some(target) = target_map.get(target_path) else {
+        return Err(anyhow!("not found target: {}",target_path));
     };
 
-    deps.files.push(cur_pkg.display().to_string());
+    let mut res = Dependencies::default();
+
+    let deps = resolve_dep_path(root_path, target_path, target.get_deps())?;
+    check_deps_valid(target_path, &deps, target_map)?;
 
     let mut indegree_map = HashMap::new();
     let mut dep_map = HashMap::new();
-
-    let mut rel_patterns = Vec::new();
-    let mut abs_patterns = Vec::new();
-    split_patterns(&patterns, &mut rel_patterns, &mut abs_patterns);
-
-    let mut dep_pkgs = Vec::new();
-    dep_pkgs.append(&mut glob_pkgs(cur_pkg.parent().unwrap(), &rel_patterns));
-    dep_pkgs.append(&mut glob_pkgs(&root_path, &abs_patterns));
-
-    indegree_map.insert(cur_pkg.to_path_buf(), 0);
-    dep_map.insert(cur_pkg.to_path_buf(), dep_pkgs.clone());
+    indegree_map.insert(target_path.to_string(), 0);
+    dep_map.insert(target_path.to_string(), deps.clone());
 
     // calculate indegree and seek dependencies
-    let mut queue = dep_pkgs;
+    let mut queue = deps;
     while !queue.is_empty() {
-        let path = queue.pop().unwrap();
-        let file = PathBuf::from(&path);
+        // pop front
+        let target_path = queue.remove(0);
 
-        let Some(patterns) = pkg::get_dep_patterns_from_file(&file) else {
-            deps.invalid_files.push(path);
-            continue;
-        };
-
-        if let Some(val) = indegree_map.get_mut(&file) {
+        if let Some(val) = indegree_map.get_mut(&target_path) {
             *val += 1;
             continue;
         }
 
-        let mut rel_patterns = Vec::new();
-        let mut abs_patterns = Vec::new();
-        split_patterns(&patterns, &mut rel_patterns, &mut abs_patterns);
+        let target = target_map.get(&target_path).unwrap();
+        let deps = resolve_dep_path(root_path, &target_path, target.get_deps())?;
+        check_deps_valid(&target_path, &deps, target_map)?;
 
-        let mut dep_pkgs = Vec::new();
-        dep_pkgs.append(&mut glob_pkgs(file.parent().unwrap(), &rel_patterns));
-        dep_pkgs.append(&mut glob_pkgs(&root_path, &abs_patterns));
-
-        indegree_map.insert(file.clone(), 1);
-        dep_map.insert(file.clone(), dep_pkgs.clone());
-        deps.files.push(file.display().to_string());
-        queue.extend(dep_pkgs);
+        indegree_map.insert(target_path.clone(), 1);
+        dep_map.insert(target_path.clone(), deps.clone());
+        res.target_paths.push(target_path);
+        queue.extend(deps);
     }
 
     let mut queue: Vec<_> = indegree_map
@@ -84,178 +82,20 @@ pub fn seek_dependencies(
     while !queue.is_empty() {
         zero_indegree += 1;
         let path = queue.pop().unwrap();
-        for file in &dep_map[&path] {
-            let file = PathBuf::from(file);
-            if let Some(val) = indegree_map.get_mut(&file) {
+        for dep_path in &dep_map[&path] {
+            if let Some(val) = indegree_map.get_mut(dep_path) {
                 *val -= 1;
                 if *val == 0 {
-                    queue.push(file);
+                    queue.push(dep_path.to_owned());
                 }
             }
         }
     }
 
-    deps.is_circular = zero_indegree != dep_map.len();
-    deps
-}
+    res.is_circular = zero_indegree != dep_map.len();
 
-/// split patterns into rel_patterns and abs_patterns.
-///   - rel_patterns base on '.pkg' file's parent directory;
-///   - abs_patterns base on specify root path.
-fn split_patterns(
-    patterns: &[impl AsRef<str>],
-    rel_patterns: &mut Vec<String>,
-    abs_patterns: &mut Vec<String>,
-) {
-    for pattern in patterns {
-        let pattern = pattern.as_ref();
-        // NOTE: not support ignore pattern like "!**.pkg" and skip it
-        if pattern.starts_with("!") {
-            continue;
-        }
+    // deeper depth dep has higher priority, so reverse the build targets
+    res.target_paths.reverse();
 
-        match pattern.starts_with("/") {
-            true => abs_patterns.push(pattern[1..].to_owned()),
-            false => rel_patterns.push(pattern.to_owned()),
-        }
-    }
-}
-
-fn glob_pkgs(base_path: impl AsRef<Path>, patterns: &[impl AsRef<str>]) -> Vec<String> {
-    if patterns.as_ref().is_empty() {
-        return Vec::new();
-    }
-
-    let base_path = base_path.as_ref();
-    let mut include_globs = Vec::new();
-    let git_glob = GlobBuilder::new("**/.git")
-        .literal_separator(true)
-        .build()
-        .unwrap()
-        .compile_matcher();
-
-    // build include_globs from patterns
-    for pattern in patterns {
-        let pattern = base_path.join(pattern.as_ref()).display().to_string();
-
-        let glob = GlobBuilder::new(pattern.as_ref())
-            .literal_separator(true)
-            .build()
-            .unwrap()
-            .compile_matcher();
-
-        include_globs.push(glob);
-    }
-
-    let mut walk_iter = WalkDir::new(base_path).into_iter();
-    let mut include_files = Vec::new();
-
-    loop {
-        let entry = match walk_iter.next() {
-            Some(Ok(entry)) => entry,
-            Some(Err(err)) => {
-                eprintln!("{:?}", err);
-                continue;
-            }
-            None => break,
-        };
-
-        let path = entry.path();
-
-        // skip .git directory
-        if git_glob.is_match(path) {
-            walk_iter.skip_current_dir();
-            continue;
-        }
-
-        // skip invalid pkg file
-        if path.is_file() && (path == base_path.join(".pkg") || !path.ends_with(".pkg")) {
-            continue;
-        }
-
-        // include file
-        if include_globs.iter().any(|m| m.is_match(path)) {
-            let path = path.display().to_string().replace("\\", "/");
-            include_files.push(path);
-        }
-    }
-
-    // sort files
-    include_files.sort();
-    include_files
-}
-
-#[cfg(test)]
-mod tests {
-
-    use super::seek_dependencies;
-
-    #[test]
-    fn circular_dependencies_test() {
-        let root_path = "../tests";
-        let cur_pkg = "../tests/pkg-dependencies/BuildAssets/Prefab/.pkg";
-
-        // global dependencies
-        let pattterns = [
-            "/pkg-dependencies/BuildAssets/Material/.pkg",
-            "/pkg-dependencies/BuildAssets/Material/DepMaterial/.pkg",
-        ];
-        let mut deps = seek_dependencies(root_path, cur_pkg, &pattterns);
-        assert_eq!(false, deps.is_circular);
-
-        deps.files.sort();
-        let expect_deps = vec![
-            "../tests/pkg-dependencies/BuildAssets/Material/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/Material/DepMaterial/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/Prefab/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/Shader/.pkg",
-        ];
-        assert_eq!(expect_deps, deps.files);
-
-        // relative dependencies
-        let pattterns = ["**/.pkg"];
-        let cur_pkg = "../tests/pkg-dependencies/BuildAssets/rel.pkg";
-        let mut deps = seek_dependencies(root_path, cur_pkg, &pattterns);
-        assert_eq!(false, deps.is_circular);
-        deps.files.sort();
-        let expect_deps = vec![
-            "../tests/pkg-dependencies/BuildAssets/Material/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/Material/DepMaterial/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/Material/SubMaterial/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/PKGTest/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/Prefab/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/Shader/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/rel.pkg",
-        ];
-        assert_eq!(expect_deps, deps.files);
-
-        // relative dependencies
-        let pattterns = ["**/PKGTest/.pkg"];
-        let cur_pkg = "../tests/pkg-dependencies/BuildAssets/rel2.pkg";
-        let mut deps = seek_dependencies(root_path, cur_pkg, &pattterns);
-        assert_eq!(false, deps.is_circular);
-        deps.files.sort();
-        let expect_deps = vec![
-            "../tests/pkg-dependencies/BuildAssets/Material/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/Material/DepMaterial/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/PKGTest/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/Shader/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/rel2.pkg",
-        ];
-        assert_eq!(expect_deps, deps.files);
-
-        // circular dependencies
-        let pattterns = ["/pkg-dependencies/CircularDep/B/.pkg"];
-        let cur_pkg = "../tests/pkg-dependencies/CircularDep/A/.pkg";
-        let deps = seek_dependencies(root_path, cur_pkg, &pattterns);
-        assert_eq!(true, deps.is_circular);
-    }
-
-    #[test]
-    fn a1() {
-        let a = std::path::Path::new("./");
-        let b = std::path::Path::new("./tests/..");
-
-        assert_eq!(a.canonicalize().unwrap(), b.canonicalize().unwrap());
-    }
+    Ok(res)
 }

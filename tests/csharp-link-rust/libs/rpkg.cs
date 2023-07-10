@@ -15,24 +15,167 @@ namespace csharp_link_rust.libs
         public static extern string get_version();
 
         // ===============================================
-        // Pkg Match Patterns
+        // scan api
         // ===============================================
-
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr pkg_match_patterns(
+        public static extern IntPtr rpkg_scan_files(
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
                 string[] patterns,
-                uint patterns_len,
-                bool include_pkg
+                uint patterns_len
             );
 
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr pkg_scan_assets_from_file(
-                [MarshalAs(UnmanagedType.LPUTF8Str)] string file,
-                [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path
+        public static extern IntPtr rpkg_scan_files_block_by_pkg(
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
+                string[] patterns,
+                uint patterns_len
             );
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr rpkg_scan_files_block_by_manifest(
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
+                string[] patterns,
+                uint patterns_len
+            );
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr rpkg_scan_files_block_pkg_by_manifest(
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
+                string[] patterns,
+                uint patterns_len
+            );
+
+        // ============================================================
+        // BuildMap api
+        // ============================================================
+        // return BuildMap ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_new([MarshalAs(UnmanagedType.LPUTF8Str)] string root_path);
+
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern bool bm_insert(
+                IntPtr ptr,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path,
+                string[] patterns,
+                uint patterns_len
+            );
+
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern void bm_dispose(IntPtr ptr);
+
+        // return Dependencies ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_resolve_bundle_deps(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
+
+        // return Dependencies ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_resolve_subscene_deps(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
+
+        // return Dependencies ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_resolve_dylib_deps(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
+
+        // return Dependencies ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_resolve_file_deps(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
+
+        // return Dependencies ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_resolve_zip_deps(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_asset_urls(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_bundle_paths(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_subscene_paths(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_file_paths(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_dylib_paths(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_zip_paths(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_bundle_paths_from_pkg(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string pkg_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_subscene_paths_from_pkg(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string pkg_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_file_paths_from_pkg(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string pkg_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_dylib_paths_from_pkg(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string pkg_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_zip_paths_from_pkg(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string pkg_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_bundle_assets(IntPtr ptr,[MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_subscene_assets(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_file_assets(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_dylib_assets(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_zip_assets(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path);
+
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern string bm_get_root_path(IntPtr ptr);
+
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern string bm_find_bundle_url(IntPtr ptr, string bundle_path);
+
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern string bm_debug_info(IntPtr ptr);
+
+        // ============================================================
+        // Dependencies api
+        // ============================================================
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr dependencies_get_targets(IntPtr ptr);
+
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern bool dependencies_is_circular(IntPtr ptr);
+
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern void dependencies_dispose(IntPtr ptr);
+
+        // ============================================================
+        // Vec<String> api
+        // ============================================================
 
         [DllImport("../../../../../target/debug/rpkg.dll")]
         public static extern uint strs_len(IntPtr ptr);
@@ -41,155 +184,120 @@ namespace csharp_link_rust.libs
         public static extern string strs_get(IntPtr ptr, uint index);
 
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern void dispose_strs(IntPtr ptr);
-
-        // ============================================================
-        // PKG Seek Dependencies
-        // ============================================================
-        // return Dependencies ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr pkg_seek_dependencies(
-                [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
-                [MarshalAs(UnmanagedType.LPUTF8Str)] string file,
-                string[] patterns,
-                uint patterns_len
-            );
-
-        // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr dependencies_get_files(IntPtr ptr);
-
-        // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr dependencies_get_invalid_files(IntPtr ptr);
+        public static extern void strs_dispose(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern bool dependencies_is_circular(IntPtr ptr);
+        public static extern string try_log_once();
 
-        [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern void dependencies_dispose(IntPtr ptr);
 
         public static void PkgMatchTest()
         {
-            try
-            {
-                PkgMatchPattern();
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("本部分测试需要配合 rust 生成的文件目录才能正常运行。");
-            }       
+            UnityBuildTest();
 
-            PkgSeekDependencies();
         }
 
-        private static void PkgSeekDependencies()
-        {
-            Console.WriteLine("  - pkg seek dependencies");
-            string root_path = "../../../../../tests";
-            string path1 = "../../../../../tests/pkg-dependencies/BuildAssets/Prefab/.pkg";
-            string [] pattterns1 = {
-                    "/pkg-dependencies/BuildAssets/Material/.pkg",
-                    "/pkg-dependencies/BuildAssets/Material/DepMaterial/.pkg",
-            };
-            IntPtr deps_ptr1 = pkg_seek_dependencies(root_path, path1, pattterns1, (UInt32)pattterns1.Length);
-            System.IntPtr strs_ptr1 = dependencies_get_files(deps_ptr1);
-            Console.WriteLine("      [" + path1 + "]");
-            Console.WriteLine("      is_circular: " + dependencies_is_circular(deps_ptr1));
-            Console.WriteLine("      res:");
-            foreach (string file in InnerPrintStrs(strs_ptr1))
-            {
-                Console.WriteLine("        " + file);
-            }
-            dependencies_dispose(deps_ptr1);
-            Console.WriteLine("");
-
-            string path2 = "../../../../../tests/pkg-dependencies/BuildAssets/rel.pkg";
-            string[] pattterns2 = { "**/.pkg" };
-            IntPtr deps_ptr2 = pkg_seek_dependencies(root_path, path2, pattterns2, (UInt32)pattterns2.Length);
-            System.IntPtr strs_ptr2 = dependencies_get_files(deps_ptr2);
-            Console.WriteLine("      [" + path2 + "]");
-            Console.WriteLine("      is_circular: " + dependencies_is_circular(deps_ptr2));
-            Console.WriteLine("      res:");
-            foreach (string file in InnerPrintStrs(strs_ptr2))
-            {
-                Console.WriteLine("        " + file);
-            }
-            dependencies_dispose(deps_ptr2);
-            Console.WriteLine("");
-
-            string path3 = "../../../../../tests/pkg-dependencies/BuildAssets/rel2.pkg";
-            string[] pattterns3 = { "**/PKGTest/.pkg" };
-            IntPtr deps_ptr3 = pkg_seek_dependencies(root_path, path3, pattterns3, (UInt32)pattterns3.Length);
-            System.IntPtr strs_ptr3 = dependencies_get_files(deps_ptr3);
-            Console.WriteLine("      [" + path3 + "]");
-            Console.WriteLine("      is_circular: " + dependencies_is_circular(deps_ptr3));
-            Console.WriteLine("      res:");
-            foreach (string file in InnerPrintStrs(strs_ptr3))
-            {
-                Console.WriteLine("        " + file);
-            }
-            dependencies_dispose(deps_ptr3);
-            Console.WriteLine("");
-
-            string path4 = "../../../../../tests/pkg-dependencies/CircularDep/A/.pkg";
-            string[] pattterns4 = { "/pkg-dependencies/CircularDep/B/.pkg" };
-            IntPtr deps_ptr4 = pkg_seek_dependencies(root_path, path4, pattterns4, (UInt32)pattterns4.Length);
-            System.IntPtr strs_ptr4 = dependencies_get_files(deps_ptr4);
-            Console.WriteLine("      [" + path4 + "]");
-            Console.WriteLine("      is_circular: " + dependencies_is_circular(deps_ptr4));
-            Console.WriteLine("      res:");
-            foreach (string file in InnerPrintStrs(strs_ptr4))
-            {
-                Console.WriteLine("        " + file);
-            }
-            dependencies_dispose(deps_ptr4);
-            Console.WriteLine("");
-        }
-
-
-
-        // NOTE: 基于 rust pkg_match_files_test() 生成的文件树结构进行测试
-        private static void PkgMatchPattern()
+        private static void UnityBuildTest()
         {
             Console.WriteLine("[rpkg]");
-            Console.WriteLine("  - pkg match version");
-            Console.WriteLine("      version: " + get_version());
+            Console.WriteLine("  version: " + get_version());
             Console.WriteLine("");
 
-            Console.WriteLine("  - pkg match patterns test");
-            string root_path1 = "../../../../../target/tmp/pkg_assets/foo1";
-            string[] patterns1 = { "*.asset" };
-            System.IntPtr strs_ptr1 = pkg_match_patterns(root_path1, patterns1, (UInt32)patterns1.Length, false);
-            Console.WriteLine("      [\"*.asset\"]: ");
-            foreach (string file in InnerPrintStrs(strs_ptr1))
+            // 搜索所有 pkg 文件(不是 build map 的步骤)
+            string asset_path = "../../../../../tests/pkg-dependencies/BuildAssets";
+            string[] pkg_patterns = { "**/.pkg" };
+            IntPtr pkgs_ptr = rpkg_scan_files(asset_path, pkg_patterns, (UInt32)pkg_patterns.Length);
+            Console.WriteLine("total pkgs:");
+
+            string[] total_pkgs = Ptr2StringList(pkgs_ptr);
+            foreach (string item in total_pkgs)
             {
-                Console.WriteLine("        " + file);
+                Console.WriteLine("  " + item);
             }
             Console.WriteLine("");
 
-            string root_path2 = "../../../../../target/tmp/pkg_assets/foo2";
-            string[] patterns2 = { "*.txt", "!bar/*2.txt" };
-            System.IntPtr strs_ptr2 = pkg_match_patterns(root_path2, patterns2, (UInt32)patterns2.Length, false);
-            Console.WriteLine("      [\"*.txt\", \"!bar/*2.txt\"]: ");
-            foreach (string file in InnerPrintStrs(strs_ptr2))
+            // 初始化 BuildMap
+            string root_path = "../../../../../tests/pkg-dependencies";
+            IntPtr build_map_ptr = bm_new(root_path);
+
+            // manifest.toml 解析获取 members
+            Console.WriteLine("addons and pkgs:");
+            string[] members = { "./", "addon1", "addon2" };
+
+            // 获取 member 下的 pkg 文件
+            foreach (string member in members)
             {
-                Console.WriteLine("        " + file);
+                 string addon_path = asset_path +"/"+ member;
+                IntPtr addon_pkgs_ptr = rpkg_scan_files_block_by_manifest(addon_path, pkg_patterns, (UInt32)pkg_patterns.Length);
+                Console.WriteLine("  addon " + member + " pkgs (" + addon_path + "):");
+
+                string[] addon_pkgs = Ptr2StringList(addon_pkgs_ptr);
+                foreach (string item in addon_pkgs)
+                {
+                    Console.WriteLine("    " + item);
+                }
+
+                // 插入 member 及其 pkgs 至 build_map
+                bool is_insert_succ = bm_insert(build_map_ptr, addon_path, addon_pkgs, (UInt32)addon_pkgs.Length);
+                if (!is_insert_succ)
+                {
+                    Console.WriteLine("build map insert failed: " + addon_path);
+                    break;
+                }
             }
+            Console.WriteLine("");
+            Console.WriteLine("build map: ");
+            Console.WriteLine(bm_debug_info(build_map_ptr));
             Console.WriteLine("");
 
-            string root_path3 = "../../../../../target/tmp/pkg_assets/foo3";
-            string[] patterns3 = { "*.txt", "**/*.txt" };
-            System.IntPtr strs_ptr3 = pkg_match_patterns(root_path3, patterns3, (UInt32)patterns3.Length, false);
-            Console.WriteLine("      [\"*.txt\", \"**/*.txt\"]: ");
-            foreach (string file in InnerPrintStrs(strs_ptr3))
+
+            // 获取 pkg 文件里的某个 bundle
+            string bundle_path = "BuildAssets/addon1/Prefab";
+            string addon_path1 = "../../../../../tests/pkg-dependencies/BuildAssets/addon1";
+            string bundle_url = bm_find_bundle_url(build_map_ptr, bundle_path);
+            Console.WriteLine(bundle_path + "(" + bundle_url + ")" + " deps");
+
+            // 获取这个 bundle 的依赖（含自身）
+            IntPtr deps_ptr = bm_resolve_bundle_deps(build_map_ptr, bundle_path);
+            IntPtr to_build_ptr = dependencies_get_targets(deps_ptr);
+            string[] to_build = Ptr2StringList(to_build_ptr);
+            foreach (string target_path in to_build)
             {
-                Console.WriteLine("        " + file);
+                Console.WriteLine("  " + target_path + " assets:");
+
+                // 获取这个 bundle 关联的具体资源
+                IntPtr asset_paths_ptr = bm_get_bundle_assets(build_map_ptr, target_path);
+                foreach(string path in Ptr2StringList(asset_paths_ptr))
+                {
+                    Console.WriteLine("    path: " + path);
+                }
             }
-            Console.WriteLine("");
+            Console.WriteLine();
+
+            Console.WriteLine("asset_urls:");
+            IntPtr asset_urls_ptr = bm_get_asset_urls(build_map_ptr, addon_path1);
+            foreach (string url in Ptr2StringList(asset_urls_ptr))
+            {
+                Console.WriteLine("  url: " + url);
+            }
+
+
+
+            // 获取错误 bundle 并提示信息
+            {
+                string err_bundle_path = "BuildAssets/addon1/Prefab/A";
+                string url = bm_find_bundle_url(build_map_ptr, err_bundle_path);
+                if (string.IsNullOrEmpty(url))
+                {
+                    Console.WriteLine("error:");
+                    Console.WriteLine(try_log_once());
+                }
+            }
+
+            dependencies_dispose(deps_ptr);
+            bm_dispose(build_map_ptr);
         }
 
-        private static string[] InnerPrintStrs(System.IntPtr strs_ptr)
+        private static string[] Ptr2StringList(System.IntPtr strs_ptr)
         {
             if (strs_ptr != System.IntPtr.Zero)
             {
@@ -202,10 +310,10 @@ namespace csharp_link_rust.libs
                         files[i] = strs_get(strs_ptr, i);
                     }
 
-                    dispose_strs(strs_ptr);
+                    strs_dispose(strs_ptr);
                     return files;
                 }
-                dispose_strs(strs_ptr);
+                strs_dispose(strs_ptr);
             }
             return new string[0];
         }
