@@ -59,7 +59,7 @@ namespace csharp_link_rust.libs
         [DllImport("../../../../../target/debug/rpkg.dll")]
         public static extern bool bm_insert(
                 IntPtr ptr,
-                [MarshalAs(UnmanagedType.LPUTF8Str)] string mount_path,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path,
                 string[] patterns,
                 uint patterns_len
             );
@@ -89,27 +89,27 @@ namespace csharp_link_rust.libs
 
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr bm_get_asset_urls(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string mount_path);
+        public static extern IntPtr bm_get_asset_urls(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path);
 
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr bm_get_bundle_paths(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string mount_path);
+        public static extern IntPtr bm_get_bundle_paths(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path);
 
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr bm_get_subscene_paths(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string mount_path);
+        public static extern IntPtr bm_get_subscene_paths(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path);
 
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr bm_get_file_paths(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string mount_path);
+        public static extern IntPtr bm_get_file_paths(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path);
 
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr bm_get_dylib_paths(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string mount_path);
+        public static extern IntPtr bm_get_dylib_paths(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path);
 
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr bm_get_zip_paths(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string mount_path);
+        public static extern IntPtr bm_get_zip_paths(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path);
 
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
@@ -226,7 +226,7 @@ namespace csharp_link_rust.libs
             // 获取 member 下的 pkg 文件
             foreach (string member in members)
             {
-                string addon_path = asset_path +"/"+ member;
+                 string addon_path = asset_path +"/"+ member;
                 IntPtr addon_pkgs_ptr = rpkg_scan_files_block_manifest(addon_path, pkg_patterns, (UInt32)pkg_patterns.Length);
                 Console.WriteLine("  addon " + member + " pkgs (" + addon_path + "):");
 
@@ -252,7 +252,7 @@ namespace csharp_link_rust.libs
 
             // 获取 pkg 文件里的某个 bundle
             string bundle_path = "BuildAssets/addon1/Prefab";
-            string mount_path = "../../../../../tests/pkg-dependencies/BuildAssets/addon1";
+            string addon_path1 = "../../../../../tests/pkg-dependencies/BuildAssets/addon1";
             string bundle_url = bm_find_bundle_url(build_map_ptr, bundle_path);
             Console.WriteLine(bundle_path + "(" + bundle_url + ")" + " deps");
 
@@ -265,15 +265,16 @@ namespace csharp_link_rust.libs
                 Console.WriteLine("  " + target_path + " assets:");
 
                 // 获取这个 bundle 关联的具体资源
-                IntPtr asset_paths_ptr = bm_get_bundle_assets(build_map_ptr,target_path);
+                IntPtr asset_paths_ptr = bm_get_bundle_assets(build_map_ptr, target_path);
                 foreach(string path in Ptr2StringList(asset_paths_ptr))
                 {
                     Console.WriteLine("    path: " + path);
                 }
             }
+            Console.WriteLine();
 
             Console.WriteLine("asset_urls:");
-            IntPtr asset_urls_ptr = bm_get_asset_urls(build_map_ptr,mount_path);
+            IntPtr asset_urls_ptr = bm_get_asset_urls(build_map_ptr, addon_path1);
             foreach (string url in Ptr2StringList(asset_urls_ptr))
             {
                 Console.WriteLine("  url: " + url);

@@ -30,9 +30,9 @@ impl BuildTarget for TomlDylib {
         false
     }
 
-    fn build_asset_url(&self, mount_path: &str, _: &str, asset_path: &str) -> String {
+    fn build_asset_url(&self, addon_path: &str, _: &str, asset_path: &str) -> String {
         let asset_path = Path::new(asset_path).with_extension("dll");
-        let rel_asset_path = asset_path.strip_prefix(mount_path).unwrap();
+        let rel_asset_path = asset_path.strip_prefix(addon_path).unwrap();
 
         let url = format!("{}://{}", ASSET_PROTOCAL, norm_path_extreme(rel_asset_path));
         url.to_lowercase()

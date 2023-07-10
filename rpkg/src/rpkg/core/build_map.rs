@@ -30,7 +30,7 @@ pub struct BuildMap {
     target_paths: BTreeMap<String, TargetPaths>,
 
     /// key: mount path, value: target paths
-    mount_target_paths: BTreeMap<String, TargetPaths>,
+    addon_target_paths: BTreeMap<String, TargetPaths>,
 
     /// key: bundle path, value: bundle url
     bundle_urls: BTreeMap<String, String>,
@@ -77,43 +77,41 @@ impl BuildMap {
         &self.root_path
     }
 
-    
-
-    pub fn get_bundle_paths(&self, mount_path: impl AsRef<str>) -> Result<Vec<&String>> {
-        let mount_path = norm_path(canonicalize_path(mount_path.as_ref())?);
-        match self.mount_target_paths.get(&mount_path) {
+    pub fn get_bundle_paths(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
+        let addon_path = norm_path(canonicalize_path(addon_path.as_ref())?);
+        match self.addon_target_paths.get(&addon_path) {
             Some(target_paths) => Ok(target_paths.get_bundles()),
             None => Ok(Vec::new()),
         }
     }
 
-    pub fn get_subscene_paths(&self, mount_path: impl AsRef<str>) -> Result<Vec<&String>> {
-        let mount_path = norm_path(canonicalize_path(mount_path.as_ref())?);
-        match self.mount_target_paths.get(&mount_path) {
+    pub fn get_subscene_paths(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
+        let addon_path = norm_path(canonicalize_path(addon_path.as_ref())?);
+        match self.addon_target_paths.get(&addon_path) {
             Some(target_paths) => Ok(target_paths.get_subscenes()),
             None => Ok(Vec::new()),
         }
     }
 
-    pub fn get_file_paths(&self, mount_path: impl AsRef<str>) -> Result<Vec<&String>> {
-        let mount_path = norm_path(canonicalize_path(mount_path.as_ref())?);
-        match self.mount_target_paths.get(&mount_path) {
+    pub fn get_file_paths(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
+        let addon_path = norm_path(canonicalize_path(addon_path.as_ref())?);
+        match self.addon_target_paths.get(&addon_path) {
             Some(target_paths) => Ok(target_paths.get_files()),
             None => Ok(Vec::new()),
         }
     }
 
-    pub fn get_dylib_paths(&self, mount_path: impl AsRef<str>) -> Result<Vec<&String>> {
-        let mount_path = norm_path(canonicalize_path(mount_path.as_ref())?);
-        match self.mount_target_paths.get(&mount_path) {
+    pub fn get_dylib_paths(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
+        let addon_path = norm_path(canonicalize_path(addon_path.as_ref())?);
+        match self.addon_target_paths.get(&addon_path) {
             Some(target_paths) => Ok(target_paths.get_dylibs()),
             None => Ok(Vec::new()),
         }
     }
 
-    pub fn get_zip_paths(&self, mount_path: impl AsRef<str>) -> Result<Vec<&String>> {
-        let mount_path = norm_path(canonicalize_path(mount_path.as_ref())?);
-        match self.mount_target_paths.get(&mount_path) {
+    pub fn get_zip_paths(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
+        let addon_path = norm_path(canonicalize_path(addon_path.as_ref())?);
+        match self.addon_target_paths.get(&addon_path) {
             Some(target_paths) => Ok(target_paths.get_zips()),
             None => Ok(Vec::new()),
         }
@@ -194,35 +192,35 @@ impl BuildMap {
         }
     }
 
-    pub fn get_asset_urls(&self, mount_path: impl AsRef<str>) -> Result<Vec<&String>> {
-        let mount_path = mount_path.as_ref();
+    pub fn get_asset_urls(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
+        let addon_path = addon_path.as_ref();
         let mut asset_urls = Vec::new();
 
-        for target_path in self.get_bundle_paths(mount_path)? {
+        for target_path in self.get_bundle_paths(addon_path)? {
             if let Some(assets) = self.bundle_assets.get(target_path) {
                 asset_urls.append(&mut assets.get_urls());
             }
         }
 
-        for target_path in self.get_subscene_paths(mount_path)? {
+        for target_path in self.get_subscene_paths(addon_path)? {
             if let Some(assets) = self.subscene_assets.get(target_path) {
                 asset_urls.append(&mut assets.get_urls());
             }
         }
 
-        for target_path in self.get_file_paths(mount_path)? {
+        for target_path in self.get_file_paths(addon_path)? {
             if let Some(assets) = self.file_assets.get(target_path) {
                 asset_urls.append(&mut assets.get_urls());
             }
         }
 
-        for target_path in self.get_dylib_paths(mount_path)? {
+        for target_path in self.get_dylib_paths(addon_path)? {
             if let Some(assets) = self.dylib_assets.get(target_path) {
                 asset_urls.append(&mut assets.get_urls());
             }
         }
 
-        for target_path in self.get_zip_paths(mount_path)? {
+        for target_path in self.get_zip_paths(addon_path)? {
             if let Some(assets) = self.zip_assets.get(target_path) {
                 asset_urls.append(&mut assets.get_urls());
             }
@@ -234,12 +232,12 @@ impl BuildMap {
     // insert
     pub fn insert(
         &mut self,
-        mount_path: impl AsRef<str>,
+        addon_path: impl AsRef<str>,
         pkg_paths: Vec<impl AsRef<Path>>,
     ) -> Result<()> {
         let root_path = self.get_root_path().clone();
-        let mount_path = canonicalize_path(mount_path.as_ref())?;
-        let mut mount_target_paths = TargetPaths::new();
+        let addon_path = canonicalize_path(addon_path.as_ref())?;
+        let mut addon_target_paths = TargetPaths::new();
 
         for pkg_path in pkg_paths {
             let pkg_path = pkg_path.as_ref();
@@ -259,13 +257,13 @@ impl BuildMap {
 
                 // update bundle_url map
                 {
-                    let target_url = build_target_url(&root_path, &mount_path, &target_path)?;
+                    let target_url = build_target_url(&root_path, &addon_path, &target_path)?;
                     let target_path = target_path.to_lowercase();
                     self.bundle_urls.entry(target_path).or_insert(target_url);
                 }
 
                 // update bundle_assets map
-                let assets = self.scan_bundle_assets(norm_path(&mount_path), &target_path)?;
+                let assets = self.scan_bundle_assets(norm_path(&addon_path), &target_path)?;
                 self.bundle_assets.entry(target_path).or_insert(assets);
             }
 
@@ -281,13 +279,13 @@ impl BuildMap {
 
                 // update bundle_url map
                 {
-                    let target_url = build_target_url(&root_path, &mount_path, &target_path)?;
+                    let target_url = build_target_url(&root_path, &addon_path, &target_path)?;
                     let target_path = target_path.to_lowercase();
                     self.bundle_urls.entry(target_path).or_insert(target_url);
                 }
 
                 // update subscene_assets map
-                let assets = self.scan_subscene_assets(norm_path(&mount_path), &target_path)?;
+                let assets = self.scan_subscene_assets(norm_path(&addon_path), &target_path)?;
                 self.subscene_assets.entry(target_path).or_insert(assets);
             }
 
@@ -302,7 +300,7 @@ impl BuildMap {
                     .or_insert(Box::new(target));
 
                 // update file_assets map
-                let assets = self.scan_file_assets(norm_path(&mount_path), &target_path)?;
+                let assets = self.scan_file_assets(norm_path(&addon_path), &target_path)?;
                 self.file_assets.entry(target_path).or_insert(assets);
             }
 
@@ -317,7 +315,7 @@ impl BuildMap {
                     .or_insert(Box::new(target));
 
                 // update dylib_assets map
-                let assets = self.scan_dylib_assets(norm_path(&mount_path), &target_path)?;
+                let assets = self.scan_dylib_assets(norm_path(&addon_path), &target_path)?;
                 self.dylib_assets.entry(target_path).or_insert(assets);
             }
 
@@ -332,20 +330,20 @@ impl BuildMap {
                     .or_insert(Box::new(target));
 
                 // update dylib_assets map
-                let assets = self.scan_zip_assets(norm_path(&mount_path), &target_path)?;
+                let assets = self.scan_zip_assets(norm_path(&addon_path), &target_path)?;
                 self.zip_assets.entry(target_path).or_insert(assets);
             }
 
-            // append mount_target_paths
-            mount_target_paths.append(&target_paths);
+            // append addon_target_paths
+            addon_target_paths.append(&target_paths);
 
             // update pkgs map
             self.target_paths.insert(norm_path(pkg_path), target_paths);
         }
 
-        // update mount_target_paths
-        self.mount_target_paths
-            .insert(norm_path(mount_path), mount_target_paths);
+        // update addon_target_paths
+        self.addon_target_paths
+            .insert(norm_path(addon_path), addon_target_paths);
 
         Ok(())
     }
@@ -410,58 +408,58 @@ impl BuildMap {
 
     pub fn scan_bundle_assets(
         &self,
-        mount_path: impl AsRef<str>,
+        addon_path: impl AsRef<str>,
         target_path: impl AsRef<str>,
     ) -> Result<Assets> {
         let root_path = self.get_root_path();
-        inner_scan_assets(root_path, mount_path, target_path, &self.bundle_targets)
+        inner_scan_assets(root_path, addon_path, target_path, &self.bundle_targets)
     }
 
     pub fn scan_subscene_assets(
         &self,
-        mount_path: impl AsRef<str>,
+        addon_path: impl AsRef<str>,
         target_path: impl AsRef<str>,
     ) -> Result<Assets> {
         let root_path = self.get_root_path();
-        inner_scan_assets(root_path, mount_path, target_path, &self.subscene_targets)
+        inner_scan_assets(root_path, addon_path, target_path, &self.subscene_targets)
     }
 
     pub fn scan_dylib_assets(
         &self,
-        mount_path: impl AsRef<str>,
+        addon_path: impl AsRef<str>,
         target_path: impl AsRef<str>,
     ) -> Result<Assets> {
         let root_path = self.get_root_path();
-        inner_scan_assets(root_path, mount_path, target_path, &self.dylib_targets)
+        inner_scan_assets(root_path, addon_path, target_path, &self.dylib_targets)
     }
 
     pub fn scan_file_assets(
         &self,
-        mount_path: impl AsRef<str>,
+        addon_path: impl AsRef<str>,
         target_path: impl AsRef<str>,
     ) -> Result<Assets> {
         let root_path = self.get_root_path();
-        inner_scan_assets(root_path, mount_path, target_path, &self.file_targets)
+        inner_scan_assets(root_path, addon_path, target_path, &self.file_targets)
     }
 
     pub fn scan_zip_assets(
         &self,
-        mount_path: impl AsRef<str>,
+        addon_path: impl AsRef<str>,
         target_path: impl AsRef<str>,
     ) -> Result<Assets> {
         let root_path = self.get_root_path();
-        inner_scan_assets(root_path, mount_path, target_path, &self.zip_targets)
+        inner_scan_assets(root_path, addon_path, target_path, &self.zip_targets)
     }
 }
 
 fn inner_scan_assets(
     root_path: impl AsRef<str>,
-    mount_path: impl AsRef<str>,
+    addon_path: impl AsRef<str>,
     target_path: impl AsRef<str>,
     target_map: &BTreeMap<String, Box<dyn BuildTarget>>,
 ) -> Result<Assets> {
     let root_path = root_path.as_ref();
-    let mount_path = norm_path(canonicalize_path(mount_path.as_ref())?);
+    let addon_path = norm_path(canonicalize_path(addon_path.as_ref())?);
     let target_path = norm_path(target_path.as_ref());
 
     let Some(target) = target_map.get(&target_path) else {
@@ -481,7 +479,7 @@ fn inner_scan_assets(
         };
 
         let target_path = format!("{}/{}", root_path, target_path);
-        let url = target.build_asset_url(&mount_path, &target_path, &item);
+        let url = target.build_asset_url(&addon_path, &target_path, &item);
 
         assets.push_asset(norm_path_extreme(rel_path), url)
     }
@@ -537,7 +535,7 @@ impl Display for BuildMap {
         output.push_str(&pkgs_to_str(&self.target_paths));
 
         output.push_str("mount_pkgs:\n    ");
-        output.push_str(&pkgs_to_str(&self.mount_target_paths));
+        output.push_str(&pkgs_to_str(&self.addon_target_paths));
 
         output.push_str("bundle_urls:\n");
         output.push_str(&urls_to_str(&self.bundle_urls));

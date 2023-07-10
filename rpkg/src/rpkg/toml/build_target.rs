@@ -35,14 +35,14 @@ pub trait BuildTarget {
         output
     }
 
-    fn build_asset_url(&self, mount_path: &str, target_path: &str, asset_path: &str) -> String {
-        // NOTE: 出现要 build 的资源不在指定的 mount_path 下，则直接返回空字符串
-        let Some(pkg_path) =  target_path.strip_prefix(mount_path) else {
-            println!("mount path {} is not the prefix of {}",mount_path,target_path);
+    fn build_asset_url(&self, addon_path: &str, target_path: &str, asset_path: &str) -> String {
+        // NOTE: 出现要 build 的资源不在指定的 addon_path 下，则直接返回空字符串
+        let Some(pkg_path) =  target_path.strip_prefix(addon_path) else {
+            println!("mount path {} is not the prefix of {}",addon_path,target_path);
             return String::new();
         };
 
-        let pkg_path = match (self.is_pkg(), mount_path == target_path) {
+        let pkg_path = match (self.is_pkg(), addon_path == target_path) {
             (true, true) => {
                 let path = Path::new("assets").with_extension(ASSET_PKG_EXTENSION);
                 Some(path)
@@ -57,7 +57,7 @@ pub trait BuildTarget {
 
         let rel_asset_path = match pkg_path {
             Some(_) => asset_path.strip_prefix(target_path).unwrap(),
-            None => asset_path.strip_prefix(mount_path).unwrap(),
+            None => asset_path.strip_prefix(addon_path).unwrap(),
         };
 
         let url = match pkg_path {
@@ -96,16 +96,16 @@ pub fn resolve_target_path(
 
 pub fn build_target_url(
     root_path: impl AsRef<Path>,
-    mount_path: impl AsRef<Path>,
+    addon_path: impl AsRef<Path>,
     target_path: impl AsRef<Path>,
 ) -> Result<String> {
     let root_path = root_path.as_ref();
-    let mount_path = mount_path.as_ref();
+    let addon_path = addon_path.as_ref();
     let target_path = root_path.join(target_path.as_ref());
 
-    let rel_path = match mount_path == target_path {
+    let rel_path = match addon_path == target_path {
         true => String::from("assets"),
-        false => norm_path_extreme(target_path.strip_prefix(mount_path)?),
+        false => norm_path_extreme(target_path.strip_prefix(addon_path)?),
     };
 
     let url = format!("{}://{}.{}", ASSET_PROTOCAL, rel_path, ASSET_PKG_EXTENSION);

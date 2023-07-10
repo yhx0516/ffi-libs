@@ -21,15 +21,15 @@ fn main() {
     println!("mounts and pkgs:");
     for member in members {
         // 搜索 member 下的 pkg 文件
-        let mount_path = Path::new(asset_path).join(member);
-        let mount_pkgs = scan_files_block_manifest(&mount_path, &patterns);
+        let addon_path = Path::new(asset_path).join(member);
+        let addon_pkgs = scan_files_block_manifest(&addon_path, &patterns);
         println!("  mount \"{}\" pkgs:", member);
-        for item in &mount_pkgs {
+        for item in &addon_pkgs {
             println!("    {}", item);
         }
 
         // 插入 pkg 文件并解析
-        if let Err(e) = build_map.insert(norm_path(&mount_path), mount_pkgs) {
+        if let Err(e) = build_map.insert(norm_path(&addon_path), addon_pkgs) {
             panic!("{}", e.to_string());
         }
     }
@@ -42,7 +42,7 @@ fn main() {
 
     // bundle
     // 根据 bundle_path 查询与之关联的所有 target
-    let mount_path = "./tests/pkg-dependencies/BuildAssets/addon1";
+    let addon_path = "./tests/pkg-dependencies/BuildAssets/addon1";
     let target_path = "BuildAssets/addon1/Prefab";
     let deps = match build_map.resolve_bundle_deps(target_path) {
         Err(e) => panic!("{}", e.to_string()),
@@ -69,7 +69,7 @@ fn main() {
 
     // 获取 asset_urls
     println!("asset_urls:");
-    for url in build_map.get_asset_urls(mount_path).unwrap() {
+    for url in build_map.get_asset_urls(addon_path).unwrap() {
         println!("  {}", url);
     }
     println!();
