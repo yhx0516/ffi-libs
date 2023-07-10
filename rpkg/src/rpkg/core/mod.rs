@@ -1,10 +1,12 @@
 mod assets;
 mod build_map;
 mod dependencies;
+mod pkg;
 mod scan;
 
 pub use assets::Assets;
 pub use build_map::BuildMap;
+pub use pkg::TargetPaths;
 
 pub use dependencies::resolve_build_deps;
 pub use dependencies::Dependencies;

@@ -18,4 +18,4 @@ pub use self::toml::build_target::TomlFile;
 pub use self::toml::build_target::TomlSubscene;
 pub use self::toml::build_target::TomlZip;
 pub use self::toml::build_target::{build_target_url, resolve_target_path, BuildTarget};
-pub use self::toml::pkg;
+pub use self::toml::TomlPKG;

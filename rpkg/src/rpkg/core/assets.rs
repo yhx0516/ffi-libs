@@ -28,7 +28,7 @@ impl Display for Assets {
         let mut output = String::new();
 
         for (path, url) in &self.0 {
-            output.push_str(&format!("    path:{}, url:{}\n", path, url));
+            output.push_str(&format!("path:{}, url:{}\n", path, url));
         }
         f.write_str(&output)
     }

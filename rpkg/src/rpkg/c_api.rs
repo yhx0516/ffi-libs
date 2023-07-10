@@ -2,7 +2,7 @@ use once_cell::sync::OnceCell;
 use rutils::ffi;
 use std::ffi::c_char;
 
-use crate::core::{Assets, BuildMap, Dependencies};
+use crate::core::{BuildMap, Dependencies};
 use crate::scan_files;
 use crate::scan_files_block_manifest;
 use crate::scan_files_block_pkg;
@@ -254,98 +254,203 @@ pub extern "C" fn bm_resolve_zip_deps(
 }
 
 #[no_mangle]
-pub extern "C" fn bm_scan_bundle_assets(
+pub extern "C" fn bm_get_bundle_paths(
     ptr: *mut BuildMap,
     mount_path: *const c_char,
-    target_path: *const c_char,
-) -> *const Assets {
+) -> *const Vec<String> {
     let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let mount_path = ffi::char_ptr_to_str(mount_path);
-    let target_path = ffi::char_ptr_to_str(target_path);
 
-    match build_map.scan_bundle_assets(mount_path, target_path) {
-        Ok(v) => Box::into_raw(Box::new(v)),
+    let target_paths = match build_map.get_bundle_paths(mount_path) {
+        Ok(v) => v,
         Err(e) => {
             OnceLog::new(e.to_string());
-            std::ptr::null()
+            return std::ptr::null();
         }
-    }
+    };
+
+    let assets: Vec<_> = target_paths.iter().map(|s| s.to_string()).collect();
+    Box::into_raw(Box::new(assets))
 }
 
 #[no_mangle]
-pub extern "C" fn bm_scan_subscene_assets(
+pub extern "C" fn bm_get_subscene_paths(
     ptr: *mut BuildMap,
     mount_path: *const c_char,
-    target_path: *const c_char,
-) -> *const Assets {
+) -> *const Vec<String> {
     let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let mount_path = ffi::char_ptr_to_str(mount_path);
-    let target_path = ffi::char_ptr_to_str(target_path);
 
-    match build_map.scan_subscene_assets(mount_path, target_path) {
-        Ok(v) => Box::into_raw(Box::new(v)),
+    let target_paths = match build_map.get_subscene_paths(mount_path) {
+        Ok(v) => v,
         Err(e) => {
             OnceLog::new(e.to_string());
-            std::ptr::null()
+            return std::ptr::null();
         }
-    }
+    };
+
+    let assets: Vec<_> = target_paths.iter().map(|s| s.to_string()).collect();
+    Box::into_raw(Box::new(assets))
 }
 
 #[no_mangle]
-pub extern "C" fn bm_scan_dylib_assets(
+pub extern "C" fn bm_get_file_paths(
     ptr: *mut BuildMap,
     mount_path: *const c_char,
-    target_path: *const c_char,
-) -> *const Assets {
+) -> *const Vec<String> {
     let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let mount_path = ffi::char_ptr_to_str(mount_path);
-    let target_path = ffi::char_ptr_to_str(target_path);
 
-    match build_map.scan_dylib_assets(mount_path, target_path) {
-        Ok(v) => Box::into_raw(Box::new(v)),
+    let target_paths = match build_map.get_file_paths(mount_path) {
+        Ok(v) => v,
         Err(e) => {
             OnceLog::new(e.to_string());
-            std::ptr::null()
+            return std::ptr::null();
         }
-    }
+    };
+
+    let assets: Vec<_> = target_paths.iter().map(|s| s.to_string()).collect();
+    Box::into_raw(Box::new(assets))
 }
 
 #[no_mangle]
-pub extern "C" fn bm_scan_file_assets(
+pub extern "C" fn bm_get_dylib_paths(
     ptr: *mut BuildMap,
     mount_path: *const c_char,
-    target_path: *const c_char,
-) -> *const Assets {
+) -> *const Vec<String> {
     let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let mount_path = ffi::char_ptr_to_str(mount_path);
-    let target_path = ffi::char_ptr_to_str(target_path);
 
-    match build_map.scan_file_assets(mount_path, target_path) {
-        Ok(v) => Box::into_raw(Box::new(v)),
+    let target_paths = match build_map.get_dylib_paths(mount_path) {
+        Ok(v) => v,
         Err(e) => {
             OnceLog::new(e.to_string());
-            std::ptr::null()
+            return std::ptr::null();
         }
-    }
+    };
+
+    let assets: Vec<_> = target_paths.iter().map(|s| s.to_string()).collect();
+    Box::into_raw(Box::new(assets))
 }
 
 #[no_mangle]
-pub extern "C" fn bm_scan_zip_assets(
+pub extern "C" fn bm_get_zip_paths(
     ptr: *mut BuildMap,
     mount_path: *const c_char,
-    target_path: *const c_char,
-) -> *const Assets {
+) -> *const Vec<String> {
     let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let mount_path = ffi::char_ptr_to_str(mount_path);
-    let target_path = ffi::char_ptr_to_str(target_path);
 
-    match build_map.scan_zip_assets(mount_path, target_path) {
-        Ok(v) => Box::into_raw(Box::new(v)),
+    let target_paths = match build_map.get_zip_paths(mount_path) {
+        Ok(v) => v,
         Err(e) => {
             OnceLog::new(e.to_string());
-            std::ptr::null()
+            return std::ptr::null();
         }
-    }
+    };
+
+    let assets: Vec<_> = target_paths.iter().map(|s| s.to_string()).collect();
+    Box::into_raw(Box::new(assets))
+}
+
+#[no_mangle]
+pub extern "C" fn bm_get_bundle_assets(
+    ptr: *mut BuildMap,
+    target_path: *const c_char,
+) -> *const Vec<String> {
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let target_path = ffi::char_ptr_to_str(target_path);
+
+    let assets: Vec<_> = build_map
+        .get_bundle_assets(target_path)
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    Box::into_raw(Box::new(assets))
+}
+
+#[no_mangle]
+pub extern "C" fn bm_get_subscene_assets(
+    ptr: *mut BuildMap,
+    target_path: *const c_char,
+) -> *const Vec<String> {
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let target_path = ffi::char_ptr_to_str(target_path);
+
+    let assets: Vec<_> = build_map
+        .get_subscene_assets(target_path)
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    Box::into_raw(Box::new(assets))
+}
+
+#[no_mangle]
+pub extern "C" fn bm_get_dylib_assets(
+    ptr: *mut BuildMap,
+    target_path: *const c_char,
+) -> *const Vec<String> {
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let target_path = ffi::char_ptr_to_str(target_path);
+
+    let assets: Vec<_> = build_map
+        .get_dylib_assets(target_path)
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    Box::into_raw(Box::new(assets))
+}
+
+#[no_mangle]
+pub extern "C" fn bm_get_file_assets(
+    ptr: *mut BuildMap,
+    target_path: *const c_char,
+) -> *const Vec<String> {
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let target_path = ffi::char_ptr_to_str(target_path);
+
+    let assets: Vec<_> = build_map
+        .get_file_assets(target_path)
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    Box::into_raw(Box::new(assets))
+}
+
+#[no_mangle]
+pub extern "C" fn bm_get_zip_assets(
+    ptr: *mut BuildMap,
+    target_path: *const c_char,
+) -> *const Vec<String> {
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let target_path = ffi::char_ptr_to_str(target_path);
+
+    let assets: Vec<_> = build_map
+        .get_zip_assets(target_path)
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+    Box::into_raw(Box::new(assets))
+}
+
+#[no_mangle]
+pub extern "C" fn bm_get_asset_urls(
+    ptr: *const BuildMap,
+    mount_path: *const c_char,
+) -> *const Vec<String> {
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let mount_path = ffi::char_ptr_to_str(mount_path);
+
+    let urls = match build_map.get_asset_urls(mount_path) {
+        Ok(v) => v,
+        Err(e) => {
+            OnceLog::new(e.to_string());
+            return std::ptr::null();
+        }
+    };
+
+    let urls: Vec<_> = urls.iter().map(|s| s.to_string()).collect();
+    Box::into_raw(Box::new(urls))
 }
 
 #[no_mangle]
@@ -398,29 +503,4 @@ pub extern "C" fn dependencies_dispose(ptr: *mut Dependencies) {
         return;
     }
     unsafe { Box::from_raw(ptr) };
-}
-
-// ============================================================
-// Assets api
-// ============================================================
-#[no_mangle]
-pub extern "C" fn assets_dispose(ptr: *mut Assets) {
-    if ptr.is_null() {
-        return;
-    }
-    unsafe { Box::from_raw(ptr) };
-}
-
-#[no_mangle]
-pub extern "C" fn assets_get_paths(ptr: *const Assets) -> *const Vec<String> {
-    let assets = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    let paths: Vec<String> = assets.get_paths().iter().map(ToString::to_string).collect();
-    Box::into_raw(Box::new(paths))
-}
-
-#[no_mangle]
-pub extern "C" fn assets_get_urls(ptr: *const Assets) -> *const Vec<String> {
-    let assets = unsafe { ptr.as_ref().expect("invalid ptr: ") };
-    let paths: Vec<String> = assets.get_urls().iter().map(ToString::to_string).collect();
-    Box::into_raw(Box::new(paths))
 }

@@ -24,6 +24,18 @@ pub struct TomlPKG {
 }
 
 impl TomlPKG {
+    pub fn parse(file: impl AsRef<Path>) -> Result<TomlPKG> {
+        let Ok(content) = fs::read_to_string(file.as_ref()) else {
+            return Err(anyhow!("read {} failed",file.as_ref().display()));
+        };
+
+        let Ok(pkg) = toml::from_str(&content) else {
+            return Err(anyhow!("parse {} failed",file.as_ref().display()));
+        };
+
+        Ok(pkg)
+    }
+
     pub fn get_deps(&self) -> Vec<String> {
         let Some(bundles) = &self.bundles else {
             return Vec::new();
@@ -38,16 +50,4 @@ impl TomlPKG {
         }
         deps
     }
-}
-
-pub fn parse(file: impl AsRef<Path>) -> Result<TomlPKG> {
-    let Ok(content) = fs::read_to_string(file.as_ref()) else {
-        return Err(anyhow!("read {} failed",file.as_ref().display()));
-    };
-
-    let Ok(pkg) = toml::from_str(&content) else {
-        return Err(anyhow!("parse {} failed",file.as_ref().display()));
-    };
-
-    Ok(pkg)
 }

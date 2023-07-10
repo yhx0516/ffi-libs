@@ -1,2 +1,4 @@
 pub mod build_target;
-pub mod pkg;
+
+mod pkg;
+pub use pkg::TomlPKG;
