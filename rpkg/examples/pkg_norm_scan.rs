@@ -2,7 +2,7 @@ use rpkg::scan_files;
 use rpkg::BuildMap;
 
 fn main() {
-    let root_path = r"./tests/pkg-dependencies/";
+    let root_path = "./tests/pkg-dependencies/";
     let asset_path = "./tests/pkg-dependencies/BuildAssets";
     let patterns = ["**/.pkg"];
 

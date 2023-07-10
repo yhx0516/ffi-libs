@@ -39,7 +39,6 @@ pub fn resolve_build_deps(
     };
 
     let mut res = Dependencies::default();
-    res.build_targets.push(target_path.to_string());
 
     let deps = resolve_dep_path(root_path, target_path, target.get_deps())?;
     check_deps_valid(target_path, &deps, target_map)?;

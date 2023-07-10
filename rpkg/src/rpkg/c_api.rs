@@ -354,6 +354,106 @@ pub extern "C" fn bm_get_zip_paths(
 }
 
 #[no_mangle]
+pub extern "C" fn bm_get_bundle_paths_from_pkg(
+    ptr: *mut BuildMap,
+    mount_path: *const c_char,
+) -> *const Vec<String> {
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let mount_path = ffi::char_ptr_to_str(mount_path);
+
+    let target_paths = match build_map.get_bundle_paths_from_pkg(mount_path) {
+        Ok(v) => v,
+        Err(e) => {
+            OnceLog::new(e.to_string());
+            return std::ptr::null();
+        }
+    };
+
+    let assets: Vec<_> = target_paths.iter().map(|s| s.to_string()).collect();
+    Box::into_raw(Box::new(assets))
+}
+
+#[no_mangle]
+pub extern "C" fn bm_get_subscene_paths_from_pkg(
+    ptr: *mut BuildMap,
+    mount_path: *const c_char,
+) -> *const Vec<String> {
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let mount_path = ffi::char_ptr_to_str(mount_path);
+
+    let target_paths = match build_map.get_subscene_paths_from_pkg(mount_path) {
+        Ok(v) => v,
+        Err(e) => {
+            OnceLog::new(e.to_string());
+            return std::ptr::null();
+        }
+    };
+
+    let assets: Vec<_> = target_paths.iter().map(|s| s.to_string()).collect();
+    Box::into_raw(Box::new(assets))
+}
+
+#[no_mangle]
+pub extern "C" fn bm_get_file_paths_from_pkg(
+    ptr: *mut BuildMap,
+    mount_path: *const c_char,
+) -> *const Vec<String> {
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let mount_path = ffi::char_ptr_to_str(mount_path);
+
+    let target_paths = match build_map.get_file_paths_from_pkg(mount_path) {
+        Ok(v) => v,
+        Err(e) => {
+            OnceLog::new(e.to_string());
+            return std::ptr::null();
+        }
+    };
+
+    let assets: Vec<_> = target_paths.iter().map(|s| s.to_string()).collect();
+    Box::into_raw(Box::new(assets))
+}
+
+#[no_mangle]
+pub extern "C" fn bm_get_dylib_paths_from_pkg(
+    ptr: *mut BuildMap,
+    mount_path: *const c_char,
+) -> *const Vec<String> {
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let mount_path = ffi::char_ptr_to_str(mount_path);
+
+    let target_paths = match build_map.get_dylib_paths_from_pkg(mount_path) {
+        Ok(v) => v,
+        Err(e) => {
+            OnceLog::new(e.to_string());
+            return std::ptr::null();
+        }
+    };
+
+    let assets: Vec<_> = target_paths.iter().map(|s| s.to_string()).collect();
+    Box::into_raw(Box::new(assets))
+}
+
+#[no_mangle]
+pub extern "C" fn bm_get_zip_paths_from_pkg(
+    ptr: *mut BuildMap,
+    mount_path: *const c_char,
+) -> *const Vec<String> {
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let mount_path = ffi::char_ptr_to_str(mount_path);
+
+    let target_paths = match build_map.get_zip_paths_from_pkg(mount_path) {
+        Ok(v) => v,
+        Err(e) => {
+            OnceLog::new(e.to_string());
+            return std::ptr::null();
+        }
+    };
+
+    let assets: Vec<_> = target_paths.iter().map(|s| s.to_string()).collect();
+    Box::into_raw(Box::new(assets))
+}
+
+#[no_mangle]
 pub extern "C" fn bm_get_bundle_assets(
     ptr: *mut BuildMap,
     target_path: *const c_char,

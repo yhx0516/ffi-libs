@@ -170,7 +170,7 @@ mod tests {
     #[test]
     // tests/pkg_assets 目录下测试匹配 pkg patterns 的所有文件
     fn pkg_scan_files_ignore_pkg_test() {
-        let root_path = Path::new(r"../target/tmp/pkg_assets");
+        let root_path = Path::new("../target/tmp/pkg_assets");
         if root_path.is_dir() {
             fs::remove_dir_all(root_path).unwrap();
         }
@@ -297,7 +297,7 @@ mod tests {
 
     #[test]
     fn pkg_scan_pkg_files_test() {
-        let root_path = Path::new(r"../tests/pkg-dependencies/BuildAssets");
+        let root_path = Path::new("../tests/pkg-dependencies/BuildAssets");
         let patterns = ["**/.pkg", "!**/DepMaterial/**/.pkg"];
         let files = scan_files(root_path, &patterns);
         let expect_files = [

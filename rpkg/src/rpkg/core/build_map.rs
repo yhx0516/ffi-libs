@@ -77,6 +77,8 @@ impl BuildMap {
         &self.root_path
     }
 
+    
+
     pub fn get_bundle_paths(&self, mount_path: impl AsRef<str>) -> Result<Vec<&String>> {
         let mount_path = norm_path(canonicalize_path(mount_path.as_ref())?);
         match self.mount_target_paths.get(&mount_path) {
@@ -112,6 +114,46 @@ impl BuildMap {
     pub fn get_zip_paths(&self, mount_path: impl AsRef<str>) -> Result<Vec<&String>> {
         let mount_path = norm_path(canonicalize_path(mount_path.as_ref())?);
         match self.mount_target_paths.get(&mount_path) {
+            Some(target_paths) => Ok(target_paths.get_zips()),
+            None => Ok(Vec::new()),
+        }
+    }
+
+    pub fn get_bundle_paths_from_pkg(&self, pkg_path: impl AsRef<str>) -> Result<Vec<&String>> {
+        let pkg_path = norm_path(canonicalize_path(pkg_path.as_ref())?);
+        match self.target_paths.get(&pkg_path) {
+            Some(target_paths) => Ok(target_paths.get_bundles()),
+            None => Ok(Vec::new()),
+        }
+    }
+
+    pub fn get_subscene_paths_from_pkg(&self, pkg_path: impl AsRef<str>) -> Result<Vec<&String>> {
+        let pkg_path = norm_path(canonicalize_path(pkg_path.as_ref())?);
+        match self.target_paths.get(&pkg_path) {
+            Some(target_paths) => Ok(target_paths.get_subscenes()),
+            None => Ok(Vec::new()),
+        }
+    }
+
+    pub fn get_file_paths_from_pkg(&self, pkg_path: impl AsRef<str>) -> Result<Vec<&String>> {
+        let pkg_path = norm_path(canonicalize_path(pkg_path.as_ref())?);
+        match self.target_paths.get(&pkg_path) {
+            Some(target_paths) => Ok(target_paths.get_files()),
+            None => Ok(Vec::new()),
+        }
+    }
+
+    pub fn get_dylib_paths_from_pkg(&self, pkg_path: impl AsRef<str>) -> Result<Vec<&String>> {
+        let pkg_path = norm_path(canonicalize_path(pkg_path.as_ref())?);
+        match self.target_paths.get(&pkg_path) {
+            Some(target_paths) => Ok(target_paths.get_dylibs()),
+            None => Ok(Vec::new()),
+        }
+    }
+
+    pub fn get_zip_paths_from_pkg(&self, pkg_path: impl AsRef<str>) -> Result<Vec<&String>> {
+        let pkg_path = norm_path(canonicalize_path(pkg_path.as_ref())?);
+        match self.target_paths.get(&pkg_path) {
             Some(target_paths) => Ok(target_paths.get_zips()),
             None => Ok(Vec::new()),
         }
@@ -541,7 +583,7 @@ mod tests {
 
     #[test]
     fn circular_dep_test() {
-        let root_path = r"../tests/pkg-dependencies/";
+        let root_path = "../tests/pkg-dependencies/";
         let asset_path = "../tests/pkg-dependencies/CircularDep";
         let patterns = ["**/.pkg"];
         let pkgs = scan_files(asset_path, &patterns);

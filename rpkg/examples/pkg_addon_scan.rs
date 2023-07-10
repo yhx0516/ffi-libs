@@ -4,7 +4,7 @@ use rutils::path::norm_path;
 use std::path::Path;
 
 fn main() {
-    let root_path = r"./tests/pkg-dependencies/";
+    let root_path = "./tests/pkg-dependencies/";
     let asset_path = "./tests/pkg-dependencies/BuildAssets";
     let patterns = ["**/.pkg"];
 
@@ -44,10 +44,28 @@ fn main() {
     // 根据 bundle_path 查询与之关联的所有 target
     let mount_path = "./tests/pkg-dependencies/BuildAssets/addon1";
     let target_path = "BuildAssets/addon1/Prefab";
-    let to_build = match build_map.resolve_bundle_deps(target_path) {
+    let deps = match build_map.resolve_bundle_deps(target_path) {
         Err(e) => panic!("{}", e.to_string()),
         Ok(r) => r,
     };
+
+    // 可判断是否依赖循环
+    assert_eq!(deps.is_circular, false);
+
+    // 获取依赖项
+    let mut to_build = deps.build_targets.clone();
+
+    // 加入自身
+    to_build.push(target_path.to_string());
+
+    // 根据 target 获取与之关联的所有资源路径
+    println!("to_build:");
+    for target_path in &to_build {
+        println!("  {} assets:", target_path);
+        for asset in build_map.get_bundle_assets(target_path) {
+            println!("    {}", asset);
+        }
+    }
 
     // 获取 asset_urls
     println!("asset_urls:");
@@ -56,21 +74,8 @@ fn main() {
     }
     println!();
 
-    // 可判断是否依赖循环
-    assert_eq!(to_build.is_circular, false);
-
-    // 根据 target 获取与之关联的所有资源路径
-    println!("to_build:");
-    for target_path in &to_build.build_targets {
-        println!("  {} assets:", target_path);
-        for asset in build_map.get_bundle_assets(target_path) {
-            println!("    {}", asset);
-        }
-    }
-
     // file 类型
     // 根据 file 查询与之关联的所有 target
-    let mount_path = "./tests/pkg-dependencies/BuildAssets/addon2";
     let target_path = "BuildAssets/addon2";
     let to_build = match build_map.resolve_file_deps(target_path) {
         Err(e) => panic!("{}", e.to_string()),

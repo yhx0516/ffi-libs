@@ -89,6 +89,10 @@ namespace csharp_link_rust.libs
 
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_asset_urls(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string mount_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
         public static extern IntPtr bm_get_bundle_paths(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string mount_path);
 
         // return Vec<String> ptr
@@ -109,7 +113,23 @@ namespace csharp_link_rust.libs
 
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr bm_get_asset_urls(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string mount_path);
+        public static extern IntPtr bm_get_bundle_paths_from_pkg(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string pkg_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_subscene_paths_from_pkg(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string pkg_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_file_paths_from_pkg(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string pkg_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_dylib_paths_from_pkg(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string pkg_path);
+
+        // return Vec<String> ptr
+        [DllImport("../../../../../target/debug/rpkg.dll")]
+        public static extern IntPtr bm_get_zip_paths_from_pkg(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string pkg_path);
 
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
