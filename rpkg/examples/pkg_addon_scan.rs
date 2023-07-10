@@ -77,16 +77,22 @@ fn main() {
     // file 类型
     // 根据 file 查询与之关联的所有 target
     let target_path = "BuildAssets/addon2";
-    let to_build = match build_map.resolve_file_deps(target_path) {
+    let deps = match build_map.resolve_file_deps(target_path) {
         Err(e) => panic!("{}", e.to_string()),
         Ok(r) => r,
     };
 
-    assert_eq!(to_build.is_circular, false);
+    assert_eq!(deps.is_circular, false);
+
+    // 获取依赖项
+    let mut to_build = deps.build_targets.clone();
+
+    // 加入自身
+    to_build.push(target_path.to_string());
 
     // 获取与之关联的所有资源路径
     println!("to_build:");
-    for target_path in &to_build.build_targets {
+    for target_path in &to_build {
         println!("  {} assets:", target_path);
         for asset in build_map.get_file_assets(target_path) {
             println!("    {}", asset);

@@ -27,10 +27,10 @@ pub struct BuildMap {
     root_path: String,
 
     /// key: pkg path, value: target paths
-    target_paths: BTreeMap<String, TargetPaths>,
+    pkg_to_targets: BTreeMap<String, TargetPaths>,
 
     /// key: mount path, value: target paths
-    addon_target_paths: BTreeMap<String, TargetPaths>,
+    addon_to_targets: BTreeMap<String, TargetPaths>,
 
     /// key: bundle path, value: bundle url
     bundle_urls: BTreeMap<String, String>,
@@ -79,80 +79,80 @@ impl BuildMap {
 
     pub fn get_bundle_paths(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
         let addon_path = norm_path(canonicalize_path(addon_path.as_ref())?);
-        match self.addon_target_paths.get(&addon_path) {
-            Some(target_paths) => Ok(target_paths.get_bundles()),
+        match self.addon_to_targets.get(&addon_path) {
+            Some(pkg_to_targets) => Ok(pkg_to_targets.get_bundles()),
             None => Ok(Vec::new()),
         }
     }
 
     pub fn get_subscene_paths(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
         let addon_path = norm_path(canonicalize_path(addon_path.as_ref())?);
-        match self.addon_target_paths.get(&addon_path) {
-            Some(target_paths) => Ok(target_paths.get_subscenes()),
+        match self.addon_to_targets.get(&addon_path) {
+            Some(pkg_to_targets) => Ok(pkg_to_targets.get_subscenes()),
             None => Ok(Vec::new()),
         }
     }
 
     pub fn get_file_paths(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
         let addon_path = norm_path(canonicalize_path(addon_path.as_ref())?);
-        match self.addon_target_paths.get(&addon_path) {
-            Some(target_paths) => Ok(target_paths.get_files()),
+        match self.addon_to_targets.get(&addon_path) {
+            Some(pkg_to_targets) => Ok(pkg_to_targets.get_files()),
             None => Ok(Vec::new()),
         }
     }
 
     pub fn get_dylib_paths(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
         let addon_path = norm_path(canonicalize_path(addon_path.as_ref())?);
-        match self.addon_target_paths.get(&addon_path) {
-            Some(target_paths) => Ok(target_paths.get_dylibs()),
+        match self.addon_to_targets.get(&addon_path) {
+            Some(pkg_to_targets) => Ok(pkg_to_targets.get_dylibs()),
             None => Ok(Vec::new()),
         }
     }
 
     pub fn get_zip_paths(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
         let addon_path = norm_path(canonicalize_path(addon_path.as_ref())?);
-        match self.addon_target_paths.get(&addon_path) {
-            Some(target_paths) => Ok(target_paths.get_zips()),
+        match self.addon_to_targets.get(&addon_path) {
+            Some(pkg_to_targets) => Ok(pkg_to_targets.get_zips()),
             None => Ok(Vec::new()),
         }
     }
 
     pub fn get_bundle_paths_from_pkg(&self, pkg_path: impl AsRef<str>) -> Result<Vec<&String>> {
         let pkg_path = norm_path(canonicalize_path(pkg_path.as_ref())?);
-        match self.target_paths.get(&pkg_path) {
-            Some(target_paths) => Ok(target_paths.get_bundles()),
+        match self.pkg_to_targets.get(&pkg_path) {
+            Some(pkg_to_targets) => Ok(pkg_to_targets.get_bundles()),
             None => Ok(Vec::new()),
         }
     }
 
     pub fn get_subscene_paths_from_pkg(&self, pkg_path: impl AsRef<str>) -> Result<Vec<&String>> {
         let pkg_path = norm_path(canonicalize_path(pkg_path.as_ref())?);
-        match self.target_paths.get(&pkg_path) {
-            Some(target_paths) => Ok(target_paths.get_subscenes()),
+        match self.pkg_to_targets.get(&pkg_path) {
+            Some(pkg_to_targets) => Ok(pkg_to_targets.get_subscenes()),
             None => Ok(Vec::new()),
         }
     }
 
     pub fn get_file_paths_from_pkg(&self, pkg_path: impl AsRef<str>) -> Result<Vec<&String>> {
         let pkg_path = norm_path(canonicalize_path(pkg_path.as_ref())?);
-        match self.target_paths.get(&pkg_path) {
-            Some(target_paths) => Ok(target_paths.get_files()),
+        match self.pkg_to_targets.get(&pkg_path) {
+            Some(pkg_to_targets) => Ok(pkg_to_targets.get_files()),
             None => Ok(Vec::new()),
         }
     }
 
     pub fn get_dylib_paths_from_pkg(&self, pkg_path: impl AsRef<str>) -> Result<Vec<&String>> {
         let pkg_path = norm_path(canonicalize_path(pkg_path.as_ref())?);
-        match self.target_paths.get(&pkg_path) {
-            Some(target_paths) => Ok(target_paths.get_dylibs()),
+        match self.pkg_to_targets.get(&pkg_path) {
+            Some(pkg_to_targets) => Ok(pkg_to_targets.get_dylibs()),
             None => Ok(Vec::new()),
         }
     }
 
     pub fn get_zip_paths_from_pkg(&self, pkg_path: impl AsRef<str>) -> Result<Vec<&String>> {
         let pkg_path = norm_path(canonicalize_path(pkg_path.as_ref())?);
-        match self.target_paths.get(&pkg_path) {
-            Some(target_paths) => Ok(target_paths.get_zips()),
+        match self.pkg_to_targets.get(&pkg_path) {
+            Some(pkg_to_targets) => Ok(pkg_to_targets.get_zips()),
             None => Ok(Vec::new()),
         }
     }
@@ -237,18 +237,18 @@ impl BuildMap {
     ) -> Result<()> {
         let root_path = self.get_root_path().clone();
         let addon_path = canonicalize_path(addon_path.as_ref())?;
-        let mut addon_target_paths = TargetPaths::new();
+        let mut addon_to_targets = TargetPaths::new();
 
         for pkg_path in pkg_paths {
             let pkg_path = pkg_path.as_ref();
             let cur_path = pkg_path.parent().unwrap();
             let toml_pkg = TomlPKG::parse(&pkg_path)?;
-            let mut target_paths = TargetPaths::new();
+            let mut pkg_to_targets = TargetPaths::new();
 
             // bundle
             for target in toml_pkg.bundles.unwrap_or(Vec::new()) {
                 let target_path = resolve_target_path(&root_path, cur_path, target.path.as_ref())?;
-                target_paths.push_bundle(&target_path)?;
+                pkg_to_targets.push_bundle(&target_path)?;
 
                 // update bundle_targets map
                 self.bundle_targets
@@ -270,7 +270,7 @@ impl BuildMap {
             // subscene
             for target in toml_pkg.subscenes.unwrap_or(Vec::new()) {
                 let target_path = resolve_target_path(&root_path, cur_path, target.path.as_ref())?;
-                target_paths.push_subscene(&target_path)?;
+                pkg_to_targets.push_subscene(&target_path)?;
 
                 // update subscene_targets map
                 self.subscene_targets
@@ -292,7 +292,7 @@ impl BuildMap {
             // file
             for target in toml_pkg.files.unwrap_or(Vec::new()) {
                 let target_path = resolve_target_path(&root_path, cur_path, target.path.as_ref())?;
-                target_paths.push_file(&target_path)?;
+                pkg_to_targets.push_file(&target_path)?;
 
                 // update file_targets map
                 self.file_targets
@@ -307,7 +307,7 @@ impl BuildMap {
             // dylib
             for target in toml_pkg.dylibs.unwrap_or(Vec::new()) {
                 let target_path = resolve_target_path(&root_path, cur_path, target.path.as_ref())?;
-                target_paths.push_dylib(&target_path)?;
+                pkg_to_targets.push_dylib(&target_path)?;
 
                 // update dylib_targets map
                 self.dylib_targets
@@ -322,7 +322,7 @@ impl BuildMap {
             // zip
             for target in toml_pkg.zips.unwrap_or(Vec::new()) {
                 let target_path = resolve_target_path(&root_path, cur_path, target.path.as_ref())?;
-                target_paths.push_zip(&target_path)?;
+                pkg_to_targets.push_zip(&target_path)?;
 
                 // update zip_targets map
                 self.zip_targets
@@ -334,16 +334,17 @@ impl BuildMap {
                 self.zip_assets.entry(target_path).or_insert(assets);
             }
 
-            // append addon_target_paths
-            addon_target_paths.append(&target_paths);
+            // append addon_to_targets
+            addon_to_targets.append(&pkg_to_targets);
 
             // update pkgs map
-            self.target_paths.insert(norm_path(pkg_path), target_paths);
+            self.pkg_to_targets
+                .insert(norm_path(pkg_path), pkg_to_targets);
         }
 
-        // update addon_target_paths
-        self.addon_target_paths
-            .insert(norm_path(addon_path), addon_target_paths);
+        // update addon_to_targets
+        self.addon_to_targets
+            .insert(norm_path(addon_path), addon_to_targets);
 
         Ok(())
     }
@@ -532,10 +533,10 @@ impl Display for BuildMap {
         output.push_str("\n");
 
         output.push_str("pkgs:\n    ");
-        output.push_str(&pkgs_to_str(&self.target_paths));
+        output.push_str(&pkgs_to_str(&self.pkg_to_targets));
 
         output.push_str("mount_pkgs:\n    ");
-        output.push_str(&pkgs_to_str(&self.addon_target_paths));
+        output.push_str(&pkgs_to_str(&self.addon_to_targets));
 
         output.push_str("bundle_urls:\n");
         output.push_str(&urls_to_str(&self.bundle_urls));
