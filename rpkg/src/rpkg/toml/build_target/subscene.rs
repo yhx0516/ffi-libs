@@ -9,6 +9,10 @@ pub struct TomlSubscene {
     pub dependencies: Option<Vec<String>>,
 }
 
+impl TomlSubscene {
+    pub const TYPE_NAME: &'static str = "subscene";
+}
+
 impl BuildTarget for TomlSubscene {
     fn get_path(&self) -> Option<&String> {
         self.path.as_ref()

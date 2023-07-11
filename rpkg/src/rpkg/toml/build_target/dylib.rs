@@ -13,6 +13,10 @@ pub struct TomlDylib {
     pub dependencies: Option<Vec<String>>,
 }
 
+impl TomlDylib {
+    pub const TYPE_NAME: &'static str = "dylib";
+}
+
 impl BuildTarget for TomlDylib {
     fn get_path(&self) -> Option<&String> {
         self.path.as_ref()

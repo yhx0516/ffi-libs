@@ -9,6 +9,10 @@ pub struct TomlFile {
     pub dependencies: Option<Vec<String>>,
 }
 
+impl TomlFile {
+    pub const TYPE_NAME: &'static str = "file";
+}
+
 impl BuildTarget for TomlFile {
     fn get_path(&self) -> Option<&String> {
         self.path.as_ref()

@@ -44,26 +44,33 @@ fn main() {
     // 根据 bundle_path 查询与之关联的所有 target
     let addon_path = "./tests/pkg-dependencies/BuildAssets/addon1";
     let target_path = "BuildAssets/addon1/Prefab";
-    let deps = match build_map.resolve_bundle_deps(target_path) {
-        Err(e) => panic!("{}, {}", e.root_cause().to_string(), e.to_string()),
-        Ok(r) => r,
-    };
 
-    // 可判断是否依赖循环
-    assert_eq!(deps.is_circular, false);
+    // 获取所有 target_types
+    let target_types = build_map.get_target_types(addon_path).unwrap();
 
-    // 获取依赖项
-    let mut to_build = deps.target_paths.clone();
+    // 遍历 target_types
+    for target_type in target_types {
+        // 获取依赖项
+        let deps = match build_map.resolve_target_deps(target_path, target_type) {
+            Err(e) => panic!("{}", e.to_string()),
+            Ok(r) => r,
+        };
 
-    // 加入自身
-    to_build.push(target_path.to_string());
+        // 可判断是否依赖循环
+        assert_eq!(deps.is_circular, false);
 
-    // 根据 target 获取与之关联的所有资源路径
-    println!("to_build:");
-    for target_path in &to_build {
-        println!("  {} assets:", target_path);
-        for asset in build_map.get_bundle_assets(target_path) {
-            println!("    {}", asset);
+        // 获取要 build 的 target_path
+        let mut to_build = deps.target_paths.clone();
+        // 加入自身
+        to_build.push(target_path.to_string());
+
+        // 根据 target 获取与之关联的所有资源路径
+        println!("to_build:");
+        for target_path in &to_build {
+            println!("  {} assets:", target_path);
+            for asset in build_map.get_target_assets(target_path, target_type) {
+                println!("    {}", asset);
+            }
         }
     }
 
@@ -78,25 +85,31 @@ fn main() {
     // 根据 file 查询与之关联的所有 target
     let addon_path = "./tests/pkg-dependencies/BuildAssets/addon2";
     let target_path = "BuildAssets/addon2";
-    let deps = match build_map.resolve_file_deps(target_path) {
-        Err(e) => panic!("{}", e.to_string()),
-        Ok(r) => r,
-    };
+    // 获取所有 target_types
+    let target_types = build_map.get_target_types(addon_path).unwrap();
 
-    assert_eq!(deps.is_circular, false);
+    // 遍历 target_types
+    for target_type in target_types {
+        let deps = match build_map.resolve_target_deps(target_path, target_type) {
+            Err(e) => panic!("{}", e.to_string()),
+            Ok(r) => r,
+        };
 
-    // 获取依赖项
-    let mut to_build = deps.target_paths.clone();
+        assert_eq!(deps.is_circular, false);
 
-    // 加入自身
-    to_build.push(target_path.to_string());
+        // 获取依赖项
+        let mut to_build = deps.target_paths.clone();
 
-    // 获取与之关联的所有资源路径
-    println!("to_build:");
-    for target_path in &to_build {
-        println!("  {} assets:", target_path);
-        for asset in build_map.get_file_assets(target_path) {
-            println!("    {}", asset);
+        // 加入自身
+        to_build.push(target_path.to_string());
+
+        // 获取与之关联的所有资源路径
+        println!("to_build:");
+        for target_path in &to_build {
+            println!("  {} assets:", target_path);
+            for asset in build_map.get_target_assets(target_path, target_type) {
+                println!("    {}", asset);
+            }
         }
     }
 
