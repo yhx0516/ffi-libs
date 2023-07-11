@@ -158,6 +158,41 @@ impl BuildMap {
         }
     }
 
+    pub fn get_bundle_target(&self, target_path: impl AsRef<str>) -> Result<&Box <dyn BuildTarget>>{
+        match self.bundle_targets.get(target_path.as_ref()){
+            Some(v)=>Ok(v),
+            None=>Err(anyhow!("not found bundle target {}",target_path.as_ref()))
+        }
+    }
+
+    pub fn get_subscene_target(&self, target_path: impl AsRef<str>) -> Result<&Box <dyn BuildTarget>>{
+        match self.subscene_targets.get(target_path.as_ref()){
+            Some(v)=>Ok(v),
+            None=>Err(anyhow!("not found subscene target {}",target_path.as_ref()))
+        }
+    }
+
+    pub fn get_file_target(&self, target_path: impl AsRef<str>) -> Result<&Box <dyn BuildTarget>>{
+        match self.file_targets.get(target_path.as_ref()){
+            Some(v)=>Ok(v),
+            None=>Err(anyhow!("not found file target {}",target_path.as_ref()))
+        }
+    }
+
+    pub fn get_dylib_target(&self, target_path: impl AsRef<str>) -> Result<&Box <dyn BuildTarget>>{
+        match self.dylib_targets.get(target_path.as_ref()){
+            Some(v)=>Ok(v),
+            None=>Err(anyhow!("not found dylib target {}",target_path.as_ref()))
+        }
+    }
+
+    pub fn get_zip_target(&self, target_path: impl AsRef<str>) -> Result<&Box <dyn BuildTarget>>{
+        match self.zip_targets.get(target_path.as_ref()){
+            Some(v)=>Ok(v),
+            None=>Err(anyhow!("not found zip target {}",target_path.as_ref()))
+        }
+    }
+
     pub fn get_bundle_assets(&self, target_path: impl AsRef<str>) -> Vec<&String> {
         match self.bundle_assets.get(target_path.as_ref()) {
             Some(assets) => assets.get_paths(),
