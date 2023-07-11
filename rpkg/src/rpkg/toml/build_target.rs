@@ -48,8 +48,8 @@ pub trait BuildTarget {
                 Some(path)
             }
             (true, false) => {
-                let path = pkg_path;
-                let path = Path::new(path).with_extension(ASSET_PKG_EXTENSION);
+                let path = format!("{}.{}",norm_path_extreme(pkg_path),ASSET_PKG_EXTENSION);
+                let path = Path::new(&path).to_path_buf();
                 Some(path)
             }
             _ => None,
