@@ -43,7 +43,7 @@ namespace csharp_link_rust.libs
 
         // return Vec<String> ptr
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern IntPtr rpkg_scan_files_block_pkg_by_manifest(
+        public static extern IntPtr rpkg_scan_files_block_by_pkg_manifest(
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
                 string[] patterns,
                 uint patterns_len

@@ -18,12 +18,12 @@ fn main() {
     let members = ["./", "addon1", "addon2"];
 
     // 遍历 members
-    println!("mounts and pkgs:");
+    println!("addons and pkgs:");
     for member in members {
         // 搜索 member 下的 pkg 文件
         let addon_path = Path::new(asset_path).join(member);
         let addon_pkgs = scan_files_block_by_manifest(&addon_path, &patterns);
-        println!("  mount \"{}\" pkgs:", member);
+        println!("  addon \"{}\" pkgs:", member);
         for item in &addon_pkgs {
             println!("    {}", item);
         }
@@ -76,6 +76,7 @@ fn main() {
 
     // file 类型
     // 根据 file 查询与之关联的所有 target
+    let addon_path = "./tests/pkg-dependencies/BuildAssets/addon2";
     let target_path = "BuildAssets/addon2";
     let deps = match build_map.resolve_file_deps(target_path) {
         Err(e) => panic!("{}", e.to_string()),
@@ -98,4 +99,11 @@ fn main() {
             println!("    {}", asset);
         }
     }
+
+    // 获取 asset_urls
+    println!("asset_urls:");
+    for url in build_map.get_asset_urls(addon_path).unwrap() {
+        println!("  {}", url);
+    }
+    println!();
 }
