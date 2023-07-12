@@ -554,13 +554,13 @@ pub extern "C" fn bm_get_asset_urls(
 }
 
 #[no_mangle]
-pub extern "C" fn bm_find_bundle_url(
+pub extern "C" fn bm_find_bundle_path(
     ptr: *const BuildMap,
     bundle_path: *const c_char,
 ) -> *const c_char {
     let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let bundle_path = ffi::char_ptr_to_str(bundle_path);
-    match build_map.find_bundle_url(bundle_path) {
+    match build_map.find_bundle_path(bundle_path) {
         Ok(v) => ffi::str_to_char_ptr(v),
         Err(e) => {
             OnceLog::new(e.to_string());

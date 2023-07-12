@@ -155,7 +155,7 @@ namespace csharp_link_rust.libs
         public static extern string bm_get_root_path(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern string bm_find_bundle_url(IntPtr ptr, string bundle_path);
+        public static extern string bm_find_bundle_path(IntPtr ptr, string target_path);
 
         [DllImport("../../../../../target/debug/rpkg.dll")]
         public static extern string bm_debug_info(IntPtr ptr);
@@ -253,7 +253,7 @@ namespace csharp_link_rust.libs
             // 获取 pkg 文件里的某个 bundle
             string bundle_path = "BuildAssets/addon1/Prefab";
             string addon_path1 = "../../../../../tests/pkg-dependencies/BuildAssets/addon1";
-            string bundle_url = bm_find_bundle_url(build_map_ptr, bundle_path);
+            string bundle_url = bm_find_bundle_path(build_map_ptr, bundle_path);
             Console.WriteLine(bundle_path + "(" + bundle_url + ")" + " deps");
 
             // 获取这个 bundle 的依赖（含自身）
@@ -285,7 +285,7 @@ namespace csharp_link_rust.libs
             // 获取错误 bundle 并提示信息
             {
                 string err_bundle_path = "BuildAssets/addon1/Prefab/A";
-                string url = bm_find_bundle_url(build_map_ptr, err_bundle_path);
+                string url = bm_find_bundle_path(build_map_ptr, err_bundle_path);
                 if (string.IsNullOrEmpty(url))
                 {
                     Console.WriteLine("error:");
