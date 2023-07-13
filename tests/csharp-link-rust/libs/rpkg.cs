@@ -187,7 +187,7 @@ namespace csharp_link_rust.libs
         public static extern void strs_dispose(IntPtr ptr);
 
         [DllImport("../../../../../target/debug/rpkg.dll")]
-        public static extern string try_log_once();
+        public static extern string try_get_err();
 
 
         public static void PkgMatchTest()
@@ -289,7 +289,7 @@ namespace csharp_link_rust.libs
                 if (string.IsNullOrEmpty(url))
                 {
                     Console.WriteLine("error:");
-                    Console.WriteLine(try_log_once());
+                    Console.WriteLine(try_get_err());
                 }
             }
 

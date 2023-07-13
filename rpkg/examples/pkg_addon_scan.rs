@@ -45,7 +45,7 @@ fn main() {
     let addon_path = "./tests/pkg-dependencies/BuildAssets/addon1";
     let target_path = "BuildAssets/addon1/Prefab";
     let deps = match build_map.resolve_bundle_deps(target_path) {
-        Err(e) => panic!("{}", e.to_string()),
+        Err(e) => panic!("{}, {}", e.root_cause().to_string(), e.to_string()),
         Ok(r) => r,
     };
 
