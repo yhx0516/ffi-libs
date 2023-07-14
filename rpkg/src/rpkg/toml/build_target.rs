@@ -44,12 +44,11 @@ pub trait BuildTarget {
 
         let pkg_path = match (self.is_pkg(), addon_path == target_path) {
             (true, true) => {
-                let path = Path::new("assets").with_extension(ASSET_PKG_EXTENSION);
+                let path = Path::new("assets").to_path_buf();
                 Some(path)
             }
             (true, false) => {
-                let path = format!("{}.{}", norm_path_extreme(pkg_path), ASSET_PKG_EXTENSION);
-                let path = Path::new(&path).to_path_buf();
+                let path = Path::new(&norm_path_extreme(pkg_path)).to_path_buf();
                 Some(path)
             }
             _ => None,
