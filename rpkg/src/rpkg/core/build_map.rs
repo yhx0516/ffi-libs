@@ -169,6 +169,29 @@ impl BuildMap {
         }
     }
 
+    pub fn get_target_asset_urls(
+        &self,
+        target_path: impl AsRef<str>,
+        target_type: impl AsRef<str>,
+    ) -> Vec<&String> {
+        let target_path = target_path.as_ref();
+        let target_type = target_type.as_ref();
+
+        let assets = match target_type {
+            TomlBundle::TYPE_NAME => self.bundle_assets.get(target_path),
+            TomlSubscene::TYPE_NAME => self.subscene_assets.get(target_path),
+            TomlFile::TYPE_NAME => self.file_assets.get(target_path),
+            TomlDylib::TYPE_NAME => self.dylib_assets.get(target_path),
+            TomlZip::TYPE_NAME => self.zip_assets.get(target_path),
+            _ => None,
+        };
+
+        match assets {
+            Some(assets) => assets.get_urls(),
+            None => Vec::new(),
+        }
+    }
+
     // contain:
     //   - bundle assets
     //   - subscene assets
@@ -190,9 +213,8 @@ impl BuildMap {
             }
 
             for target_path in &target_paths {
-                if let Some(assets) = self.bundle_assets.get(target_path) {
-                    asset_urls.append(&mut assets.get_urls());
-                }
+                let mut urls = self.get_target_asset_urls(target_path, target_type) ;
+                asset_urls.append(&mut urls);
             }
         }
 

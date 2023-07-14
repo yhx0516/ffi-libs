@@ -1,8 +1,7 @@
-use lazy_static::lazy_static;
+
 use rutils::ffi;
-use rutils::path::norm_path_extreme;
 use std::ffi::c_char;
-use std::sync::Mutex;
+
 
 use crate::core::{BuildMap, Dependencies};
 use crate::scan_files;
@@ -11,8 +10,11 @@ use crate::scan_files_block_by_pkg;
 use crate::scan_files_block_by_pkg_manifest;
 
 // ============================================================
-// OnceLog 一次性日志，便于外部接入时调试
+// ErrorBuffer 便于外部接入时调试
 // ============================================================
+use lazy_static::lazy_static;
+use std::sync::Mutex;
+
 lazy_static! {
     static ref ERR_BUFF_INS: Mutex<ErrorBuffer> = Mutex::new(ErrorBuffer::default());
 }
@@ -180,7 +182,7 @@ pub extern "C" fn bm_get_target_types(
     let target_types = match build_map.get_target_types(addon_path) {
         Ok(v) => v,
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return std::ptr::null();
         }
     };
@@ -200,7 +202,7 @@ pub extern "C" fn bm_get_target_types_from_pkg(
     let target_types = match build_map.get_target_types_from_pkg(pkg_path) {
         Ok(v) => v,
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return std::ptr::null();
         }
     };
@@ -222,7 +224,7 @@ pub extern "C" fn bm_get_target_paths(
     let target_paths = match build_map.get_target_paths(addon_path, target_type) {
         Ok(v) => v,
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return std::ptr::null();
         }
     };
@@ -244,7 +246,7 @@ pub extern "C" fn bm_get_target_paths_from_pkg(
     let target_paths = match build_map.get_target_paths_from_pkg(pkg_path, target_type) {
         Ok(v) => v,
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return std::ptr::null();
         }
     };
