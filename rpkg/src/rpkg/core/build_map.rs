@@ -213,7 +213,7 @@ impl BuildMap {
             }
 
             for target_path in &target_paths {
-                let mut urls = self.get_target_asset_urls(target_path, target_type) ;
+                let mut urls = self.get_target_asset_urls(target_path, target_type);
                 asset_urls.append(&mut urls);
             }
         }
