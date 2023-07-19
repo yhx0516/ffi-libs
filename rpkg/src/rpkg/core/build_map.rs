@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::collections::HashSet;
 use std::fmt::Display;
 use std::path::Path;
 
@@ -29,7 +30,7 @@ pub struct BuildMap {
     /// key: pkg path, value: target paths
     pkg_to_targets: BTreeMap<String, PKGTargetPaths>,
 
-    /// key: mount path, value: target paths
+    /// key: addon path, value: target paths
     addon_to_targets: BTreeMap<String, PKGTargetPaths>,
 
     /// key: bundle path, value: bundle url
@@ -195,37 +196,88 @@ impl BuildMap {
     pub fn get_asset_urls(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
         let addon_path = addon_path.as_ref();
         let mut asset_urls = Vec::new();
+        let mut target_paths = HashSet::new();
 
+        // bundle assets
         for target_path in self.get_bundle_paths(addon_path)? {
+            let deps = self.resolve_bundle_deps(target_path)?;
+            let mut to_build = deps.target_paths.clone();
+
+            to_build.push(target_path.to_owned());
+            target_paths.extend(to_build);
+        }
+
+        for target_path in &target_paths {
             if let Some(assets) = self.bundle_assets.get(target_path) {
                 asset_urls.append(&mut assets.get_urls());
             }
         }
 
+        // subscene assets
+        target_paths.clear();
         for target_path in self.get_subscene_paths(addon_path)? {
+            let deps = self.resolve_subscene_deps(target_path)?;
+            let mut to_build = deps.target_paths.clone();
+
+            to_build.push(target_path.to_owned());
+            target_paths.extend(to_build);
+        }
+
+        for target_path in &target_paths {
             if let Some(assets) = self.subscene_assets.get(target_path) {
                 asset_urls.append(&mut assets.get_urls());
             }
         }
 
+        // file assets
+        target_paths.clear();
         for target_path in self.get_file_paths(addon_path)? {
+            let deps = self.resolve_file_deps(target_path)?;
+            let mut to_build = deps.target_paths.clone();
+
+            to_build.push(target_path.to_owned());
+            target_paths.extend(to_build);
+        }
+
+        for target_path in &target_paths {
             if let Some(assets) = self.file_assets.get(target_path) {
                 asset_urls.append(&mut assets.get_urls());
             }
         }
 
+        // dylib assets
+        target_paths.clear();
         for target_path in self.get_dylib_paths(addon_path)? {
+            let deps = self.resolve_dylib_deps(target_path)?;
+            let mut to_build = deps.target_paths.clone();
+
+            to_build.push(target_path.to_owned());
+            target_paths.extend(to_build);
+        }
+
+        for target_path in &target_paths {
             if let Some(assets) = self.dylib_assets.get(target_path) {
                 asset_urls.append(&mut assets.get_urls());
             }
         }
 
+        // zip assets
+        target_paths.clear();
         for target_path in self.get_zip_paths(addon_path)? {
+            let deps = self.resolve_zip_deps(target_path)?;
+            let mut to_build = deps.target_paths.clone();
+
+            to_build.push(target_path.to_owned());
+            target_paths.extend(to_build);
+        }
+
+        for target_path in &target_paths {
             if let Some(assets) = self.zip_assets.get(target_path) {
                 asset_urls.append(&mut assets.get_urls());
             }
         }
 
+        asset_urls.sort();
         Ok(asset_urls)
     }
 
@@ -535,7 +587,7 @@ impl Display for BuildMap {
         output.push_str("pkgs:\n    ");
         output.push_str(&pkgs_to_str(&self.pkg_to_targets));
 
-        output.push_str("mount_pkgs:\n    ");
+        output.push_str("addon_pkgs:\n    ");
         output.push_str(&pkgs_to_str(&self.addon_to_targets));
 
         output.push_str("bundle_urls:\n");

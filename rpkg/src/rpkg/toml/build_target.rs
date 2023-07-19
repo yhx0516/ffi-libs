@@ -38,7 +38,7 @@ pub trait BuildTarget {
     fn build_asset_url(&self, addon_path: &str, target_path: &str, asset_path: &str) -> String {
         // NOTE: 出现要 build 的资源不在指定的 addon_path 下，则直接返回空字符串
         let Some(pkg_path) =  target_path.strip_prefix(addon_path) else {
-            println!("mount path {} is not the prefix of {}",addon_path,target_path);
+            println!("addon path {} is not the prefix of {}",addon_path,target_path);
             return String::new();
         };
 
