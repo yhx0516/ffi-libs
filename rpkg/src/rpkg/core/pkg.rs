@@ -3,6 +3,12 @@ use anyhow::Result;
 use std::collections::HashSet;
 use std::fmt::Display;
 
+use crate::TomlBundle;
+use crate::TomlDylib;
+use crate::TomlFile;
+use crate::TomlSubscene;
+use crate::TomlZip;
+
 #[derive(Debug, Default)]
 pub struct PKGTargetPaths {
     bundles: HashSet<String>,
@@ -15,6 +21,43 @@ pub struct PKGTargetPaths {
 impl PKGTargetPaths {
     pub fn new() -> Self {
         PKGTargetPaths::default()
+    }
+
+    pub fn get_target_types(&self) -> Vec<&str> {
+        let mut types = Vec::new();
+
+        if !self.bundles.is_empty() {
+            types.push(TomlBundle::TYPE_NAME);
+        }
+
+        if !self.subscenes.is_empty() {
+            types.push(TomlSubscene::TYPE_NAME);
+        }
+
+        if !self.files.is_empty() {
+            types.push(TomlFile::TYPE_NAME);
+        }
+
+        if !self.dylibs.is_empty() {
+            types.push(TomlDylib::TYPE_NAME);
+        }
+
+        if !self.zips.is_empty() {
+            types.push(TomlZip::TYPE_NAME);
+        }
+
+        types
+    }
+
+    pub fn get_target_paths(&self, target_type: impl AsRef<str>) -> Vec<&String> {
+        match target_type.as_ref() {
+            TomlBundle::TYPE_NAME => self.get_bundles(),
+            TomlSubscene::TYPE_NAME => self.get_subscenes(),
+            TomlFile::TYPE_NAME => self.get_files(),
+            TomlDylib::TYPE_NAME => self.get_dylibs(),
+            TomlZip::TYPE_NAME => self.get_zips(),
+            _ => Vec::new(),
+        }
     }
 
     pub fn get_bundles(&self) -> Vec<&String> {

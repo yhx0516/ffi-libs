@@ -28,14 +28,19 @@ fn main() {
     println!("build map:");
     println!("{}\n", build_map.to_string());
 
-    // 获取所有 bundles
-    // 同理 subscene、file、dylib、zip
-    println!("bundles and scan assets:");
-    for target_path in build_map.get_bundle_paths(addon_path).unwrap() {
-        println!("  {} assets:", target_path);
+    // 获取所有 target_types
+    let target_types = build_map.get_target_types(addon_path).unwrap();
 
-        for asset in build_map.get_bundle_assets(target_path) {
-            println!("    {}", asset);
+    // 遍历 target_types
+    for target_type in target_types {
+        // 遍历获取所有 bundles、subscene、file、dylib、zip 的 target_path
+        println!("{} and scan assets:", target_type);
+        for target_path in build_map.get_target_paths(addon_path, target_type).unwrap() {
+            // 获取所有 bundles、subscene、file、dylib、zip 对应的资源
+            println!("  {} assets:", target_path);
+            for asset in build_map.get_target_assets(target_path, target_type) {
+                println!("    {}", asset);
+            }
         }
     }
 }

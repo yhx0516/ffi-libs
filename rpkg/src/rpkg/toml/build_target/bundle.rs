@@ -9,6 +9,10 @@ pub struct TomlBundle {
     pub dependencies: Option<Vec<String>>,
 }
 
+impl TomlBundle {
+    pub const TYPE_NAME: &'static str = "bundle";
+}
+
 impl BuildTarget for TomlBundle {
     fn get_path(&self) -> Option<&String> {
         self.path.as_ref()

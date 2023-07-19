@@ -9,6 +9,10 @@ pub struct TomlZip {
     pub dependencies: Option<Vec<String>>,
 }
 
+impl TomlZip {
+    pub const TYPE_NAME: &'static str = "zip";
+}
+
 impl BuildTarget for TomlZip {
     fn get_path(&self) -> Option<&String> {
         self.path.as_ref()

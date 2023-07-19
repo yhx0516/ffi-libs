@@ -16,7 +16,12 @@ use crate::core::Assets;
 use crate::core::Dependencies;
 use crate::core::PKGTargetPaths;
 use crate::BuildTarget;
+use crate::TomlBundle;
+use crate::TomlDylib;
+use crate::TomlFile;
 use crate::TomlPKG;
+use crate::TomlSubscene;
+use crate::TomlZip;
 
 use crate::resolve_target_path;
 use crate::scan_files_block_by_pkg_manifest;
@@ -78,243 +83,138 @@ impl BuildMap {
         &self.root_path
     }
 
-    pub fn get_bundle_paths(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
+    pub fn get_target_types(&self, addon_path: impl AsRef<str>) -> Result<Vec<&str>> {
         let addon_path = norm_path(canonicalize_path(addon_path.as_ref())?);
         match self.addon_to_targets.get(&addon_path) {
-            Some(pkg_to_targets) => Ok(pkg_to_targets.get_bundles()),
+            Some(pkg_to_targets) => Ok(pkg_to_targets.get_target_types()),
             None => Ok(Vec::new()),
         }
     }
 
-    pub fn get_subscene_paths(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
+    pub fn get_target_types_from_pkg(&self, pkg_path: impl AsRef<str>) -> Result<Vec<&str>> {
+        let pkg_path = norm_path(canonicalize_path(pkg_path.as_ref())?);
+        match self.pkg_to_targets.get(&pkg_path) {
+            Some(pkg_to_targets) => Ok(pkg_to_targets.get_target_types()),
+            None => Ok(Vec::new()),
+        }
+    }
+
+    pub fn get_target_paths(
+        &self,
+        addon_path: impl AsRef<str>,
+        target_type: impl AsRef<str>,
+    ) -> Result<Vec<&String>> {
         let addon_path = norm_path(canonicalize_path(addon_path.as_ref())?);
         match self.addon_to_targets.get(&addon_path) {
-            Some(pkg_to_targets) => Ok(pkg_to_targets.get_subscenes()),
+            Some(pkg_to_targets) => Ok(pkg_to_targets.get_target_paths(target_type)),
             None => Ok(Vec::new()),
         }
     }
 
-    pub fn get_file_paths(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
-        let addon_path = norm_path(canonicalize_path(addon_path.as_ref())?);
-        match self.addon_to_targets.get(&addon_path) {
-            Some(pkg_to_targets) => Ok(pkg_to_targets.get_files()),
-            None => Ok(Vec::new()),
-        }
-    }
-
-    pub fn get_dylib_paths(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
-        let addon_path = norm_path(canonicalize_path(addon_path.as_ref())?);
-        match self.addon_to_targets.get(&addon_path) {
-            Some(pkg_to_targets) => Ok(pkg_to_targets.get_dylibs()),
-            None => Ok(Vec::new()),
-        }
-    }
-
-    pub fn get_zip_paths(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
-        let addon_path = norm_path(canonicalize_path(addon_path.as_ref())?);
-        match self.addon_to_targets.get(&addon_path) {
-            Some(pkg_to_targets) => Ok(pkg_to_targets.get_zips()),
-            None => Ok(Vec::new()),
-        }
-    }
-
-    pub fn get_bundle_paths_from_pkg(&self, pkg_path: impl AsRef<str>) -> Result<Vec<&String>> {
+    pub fn get_target_paths_from_pkg(
+        &self,
+        pkg_path: impl AsRef<str>,
+        target_type: impl AsRef<str>,
+    ) -> Result<Vec<&String>> {
         let pkg_path = norm_path(canonicalize_path(pkg_path.as_ref())?);
         match self.pkg_to_targets.get(&pkg_path) {
-            Some(pkg_to_targets) => Ok(pkg_to_targets.get_bundles()),
+            Some(pkg_to_targets) => Ok(pkg_to_targets.get_target_paths(target_type)),
             None => Ok(Vec::new()),
         }
     }
 
-    pub fn get_subscene_paths_from_pkg(&self, pkg_path: impl AsRef<str>) -> Result<Vec<&String>> {
-        let pkg_path = norm_path(canonicalize_path(pkg_path.as_ref())?);
-        match self.pkg_to_targets.get(&pkg_path) {
-            Some(pkg_to_targets) => Ok(pkg_to_targets.get_subscenes()),
-            None => Ok(Vec::new()),
-        }
-    }
-
-    pub fn get_file_paths_from_pkg(&self, pkg_path: impl AsRef<str>) -> Result<Vec<&String>> {
-        let pkg_path = norm_path(canonicalize_path(pkg_path.as_ref())?);
-        match self.pkg_to_targets.get(&pkg_path) {
-            Some(pkg_to_targets) => Ok(pkg_to_targets.get_files()),
-            None => Ok(Vec::new()),
-        }
-    }
-
-    pub fn get_dylib_paths_from_pkg(&self, pkg_path: impl AsRef<str>) -> Result<Vec<&String>> {
-        let pkg_path = norm_path(canonicalize_path(pkg_path.as_ref())?);
-        match self.pkg_to_targets.get(&pkg_path) {
-            Some(pkg_to_targets) => Ok(pkg_to_targets.get_dylibs()),
-            None => Ok(Vec::new()),
-        }
-    }
-
-    pub fn get_zip_paths_from_pkg(&self, pkg_path: impl AsRef<str>) -> Result<Vec<&String>> {
-        let pkg_path = norm_path(canonicalize_path(pkg_path.as_ref())?);
-        match self.pkg_to_targets.get(&pkg_path) {
-            Some(pkg_to_targets) => Ok(pkg_to_targets.get_zips()),
-            None => Ok(Vec::new()),
-        }
-    }
-
-    pub fn get_bundle_target(&self, target_path: impl AsRef<str>) -> Result<&Box<dyn BuildTarget>> {
-        match self.bundle_targets.get(target_path.as_ref()) {
-            Some(v) => Ok(v),
-            None => Err(anyhow!("not found bundle target {}", target_path.as_ref())),
-        }
-    }
-
-    pub fn get_subscene_target(
+    pub fn get_build_target(
         &self,
         target_path: impl AsRef<str>,
+        target_type: impl AsRef<str>,
     ) -> Result<&Box<dyn BuildTarget>> {
-        match self.subscene_targets.get(target_path.as_ref()) {
-            Some(v) => Ok(v),
-            None => Err(anyhow!(
-                "not found subscene target {}",
-                target_path.as_ref()
-            )),
+        let target_path = target_path.as_ref();
+        let target_type = target_type.as_ref();
+
+        let res = match target_type {
+            TomlBundle::TYPE_NAME => self.bundle_targets.get(target_path),
+            TomlSubscene::TYPE_NAME => self.subscene_targets.get(target_path),
+            TomlFile::TYPE_NAME => self.file_targets.get(target_path),
+            TomlDylib::TYPE_NAME => self.dylib_targets.get(target_path),
+            TomlZip::TYPE_NAME => self.zip_targets.get(target_path),
+            _ => None,
+        };
+
+        match res {
+            Some(target) => Ok(target),
+            None => Err(anyhow!("not found {} target {}", target_type, target_path)),
         }
     }
 
-    pub fn get_file_target(&self, target_path: impl AsRef<str>) -> Result<&Box<dyn BuildTarget>> {
-        match self.file_targets.get(target_path.as_ref()) {
-            Some(v) => Ok(v),
-            None => Err(anyhow!("not found file target {}", target_path.as_ref())),
-        }
-    }
+    pub fn get_target_assets(
+        &self,
+        target_path: impl AsRef<str>,
+        target_type: impl AsRef<str>,
+    ) -> Vec<&String> {
+        let target_path = target_path.as_ref();
+        let target_type = target_type.as_ref();
 
-    pub fn get_dylib_target(&self, target_path: impl AsRef<str>) -> Result<&Box<dyn BuildTarget>> {
-        match self.dylib_targets.get(target_path.as_ref()) {
-            Some(v) => Ok(v),
-            None => Err(anyhow!("not found dylib target {}", target_path.as_ref())),
-        }
-    }
+        let assets = match target_type {
+            TomlBundle::TYPE_NAME => self.bundle_assets.get(target_path),
+            TomlSubscene::TYPE_NAME => self.subscene_assets.get(target_path),
+            TomlFile::TYPE_NAME => self.file_assets.get(target_path),
+            TomlDylib::TYPE_NAME => self.dylib_assets.get(target_path),
+            TomlZip::TYPE_NAME => self.zip_assets.get(target_path),
+            _ => None,
+        };
 
-    pub fn get_zip_target(&self, target_path: impl AsRef<str>) -> Result<&Box<dyn BuildTarget>> {
-        match self.zip_targets.get(target_path.as_ref()) {
-            Some(v) => Ok(v),
-            None => Err(anyhow!("not found zip target {}", target_path.as_ref())),
-        }
-    }
-
-    pub fn get_bundle_assets(&self, target_path: impl AsRef<str>) -> Vec<&String> {
-        match self.bundle_assets.get(target_path.as_ref()) {
+        match assets {
             Some(assets) => assets.get_paths(),
             None => Vec::new(),
         }
     }
 
-    pub fn get_subscene_assets(&self, target_path: impl AsRef<str>) -> Vec<&String> {
-        match self.subscene_assets.get(target_path.as_ref()) {
-            Some(assets) => assets.get_paths(),
+    pub fn get_target_asset_urls(
+        &self,
+        target_path: impl AsRef<str>,
+        target_type: impl AsRef<str>,
+    ) -> Vec<&String> {
+        let target_path = target_path.as_ref();
+        let target_type = target_type.as_ref();
+
+        let assets = match target_type {
+            TomlBundle::TYPE_NAME => self.bundle_assets.get(target_path),
+            TomlSubscene::TYPE_NAME => self.subscene_assets.get(target_path),
+            TomlFile::TYPE_NAME => self.file_assets.get(target_path),
+            TomlDylib::TYPE_NAME => self.dylib_assets.get(target_path),
+            TomlZip::TYPE_NAME => self.zip_assets.get(target_path),
+            _ => None,
+        };
+
+        match assets {
+            Some(assets) => assets.get_urls(),
             None => Vec::new(),
         }
     }
 
-    pub fn get_file_assets(&self, target_path: impl AsRef<str>) -> Vec<&String> {
-        match self.file_assets.get(target_path.as_ref()) {
-            Some(assets) => assets.get_paths(),
-            None => Vec::new(),
-        }
-    }
-
-    pub fn get_dylib_assets(&self, target_path: impl AsRef<str>) -> Vec<&String> {
-        match self.dylib_assets.get(target_path.as_ref()) {
-            Some(assets) => assets.get_paths(),
-            None => Vec::new(),
-        }
-    }
-
-    pub fn get_zip_assets(&self, target_path: impl AsRef<str>) -> Vec<&String> {
-        match self.zip_assets.get(target_path.as_ref()) {
-            Some(assets) => assets.get_paths(),
-            None => Vec::new(),
-        }
-    }
-
+    // contain:
+    //   - bundle assets
+    //   - subscene assets
+    //   - file assets
+    //   - dylib assets
+    //   - zip assets
     pub fn get_asset_urls(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
         let addon_path = addon_path.as_ref();
         let mut asset_urls = Vec::new();
         let mut target_paths = HashSet::new();
 
-        // bundle assets
-        for target_path in self.get_bundle_paths(addon_path)? {
-            let deps = self.resolve_bundle_deps(target_path)?;
-            let mut to_build = deps.target_paths.clone();
+        for target_type in self.get_target_types(addon_path)? {
+            for target_path in self.get_target_paths(addon_path, target_type)? {
+                let deps = self.resolve_target_deps(target_path, target_type)?;
+                let mut to_build = deps.target_paths.clone();
 
-            to_build.push(target_path.to_owned());
-            target_paths.extend(to_build);
-        }
-
-        for target_path in &target_paths {
-            if let Some(assets) = self.bundle_assets.get(target_path) {
-                asset_urls.append(&mut assets.get_urls());
+                to_build.push(target_path.to_owned());
+                target_paths.extend(to_build);
             }
-        }
 
-        // subscene assets
-        target_paths.clear();
-        for target_path in self.get_subscene_paths(addon_path)? {
-            let deps = self.resolve_subscene_deps(target_path)?;
-            let mut to_build = deps.target_paths.clone();
-
-            to_build.push(target_path.to_owned());
-            target_paths.extend(to_build);
-        }
-
-        for target_path in &target_paths {
-            if let Some(assets) = self.subscene_assets.get(target_path) {
-                asset_urls.append(&mut assets.get_urls());
-            }
-        }
-
-        // file assets
-        target_paths.clear();
-        for target_path in self.get_file_paths(addon_path)? {
-            let deps = self.resolve_file_deps(target_path)?;
-            let mut to_build = deps.target_paths.clone();
-
-            to_build.push(target_path.to_owned());
-            target_paths.extend(to_build);
-        }
-
-        for target_path in &target_paths {
-            if let Some(assets) = self.file_assets.get(target_path) {
-                asset_urls.append(&mut assets.get_urls());
-            }
-        }
-
-        // dylib assets
-        target_paths.clear();
-        for target_path in self.get_dylib_paths(addon_path)? {
-            let deps = self.resolve_dylib_deps(target_path)?;
-            let mut to_build = deps.target_paths.clone();
-
-            to_build.push(target_path.to_owned());
-            target_paths.extend(to_build);
-        }
-
-        for target_path in &target_paths {
-            if let Some(assets) = self.dylib_assets.get(target_path) {
-                asset_urls.append(&mut assets.get_urls());
-            }
-        }
-
-        // zip assets
-        target_paths.clear();
-        for target_path in self.get_zip_paths(addon_path)? {
-            let deps = self.resolve_zip_deps(target_path)?;
-            let mut to_build = deps.target_paths.clone();
-
-            to_build.push(target_path.to_owned());
-            target_paths.extend(to_build);
-        }
-
-        for target_path in &target_paths {
-            if let Some(assets) = self.zip_assets.get(target_path) {
-                asset_urls.append(&mut assets.get_urls());
+            for target_path in &target_paths {
+                let mut urls = self.get_target_asset_urls(target_path, target_type) ;
+                asset_urls.append(&mut urls);
             }
         }
 
@@ -356,7 +256,8 @@ impl BuildMap {
                 }
 
                 // update bundle_assets map
-                let assets = self.scan_bundle_assets(norm_path(&addon_path), &target_path)?;
+                let target_type = TomlBundle::TYPE_NAME;
+                let assets = self.scan_assets(norm_path(&addon_path), &target_path, target_type)?;
                 self.bundle_assets.entry(target_path).or_insert(assets);
             }
 
@@ -378,7 +279,8 @@ impl BuildMap {
                 }
 
                 // update subscene_assets map
-                let assets = self.scan_subscene_assets(norm_path(&addon_path), &target_path)?;
+                let target_type = TomlSubscene::TYPE_NAME;
+                let assets = self.scan_assets(norm_path(&addon_path), &target_path, target_type)?;
                 self.subscene_assets.entry(target_path).or_insert(assets);
             }
 
@@ -393,7 +295,8 @@ impl BuildMap {
                     .or_insert(Box::new(target));
 
                 // update file_assets map
-                let assets = self.scan_file_assets(norm_path(&addon_path), &target_path)?;
+                let target_type = TomlFile::TYPE_NAME;
+                let assets = self.scan_assets(norm_path(&addon_path), &target_path, target_type)?;
                 self.file_assets.entry(target_path).or_insert(assets);
             }
 
@@ -408,7 +311,8 @@ impl BuildMap {
                     .or_insert(Box::new(target));
 
                 // update dylib_assets map
-                let assets = self.scan_dylib_assets(norm_path(&addon_path), &target_path)?;
+                let target_type = TomlDylib::TYPE_NAME;
+                let assets = self.scan_assets(norm_path(&addon_path), &target_path, target_type)?;
                 self.dylib_assets.entry(target_path).or_insert(assets);
             }
 
@@ -423,7 +327,8 @@ impl BuildMap {
                     .or_insert(Box::new(target));
 
                 // update dylib_assets map
-                let assets = self.scan_zip_assets(norm_path(&addon_path), &target_path)?;
+                let target_type = TomlZip::TYPE_NAME;
+                let assets = self.scan_assets(norm_path(&addon_path), &target_path, target_type)?;
                 self.zip_assets.entry(target_path).or_insert(assets);
             }
 
@@ -450,99 +355,47 @@ impl BuildMap {
         }
     }
 
-    pub fn resolve_bundle_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
+    pub fn resolve_target_deps(
+        &self,
+        target_path: impl AsRef<str>,
+        target_type: impl AsRef<str>,
+    ) -> Result<Dependencies> {
         let root_path = self.get_root_path();
-        resolve_build_deps(
-            root_path,
-            &norm_path(target_path.as_ref()),
-            &self.bundle_targets,
-        )
-        .with_context(|| "type: bundle")
+        let target_path = norm_path(target_path.as_ref());
+        let target_type = target_type.as_ref();
+
+        let target_map = match target_type {
+            TomlBundle::TYPE_NAME => &self.bundle_targets,
+            TomlSubscene::TYPE_NAME => &self.subscene_targets,
+            TomlFile::TYPE_NAME => &self.file_targets,
+            TomlDylib::TYPE_NAME => &self.dylib_targets,
+            TomlZip::TYPE_NAME => &self.zip_targets,
+            _ => return Err(anyhow!("not fount {} type", target_type)),
+        };
+
+        resolve_build_deps(root_path, &target_path, target_map)
+            .with_context(|| format!("type: {}", target_type))
     }
 
-    pub fn resolve_subscene_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
-        let root_path = self.get_root_path();
-        resolve_build_deps(
-            root_path,
-            &norm_path(target_path.as_ref()),
-            &self.subscene_targets,
-        )
-        .with_context(|| "type: subscene")
-    }
-
-    pub fn resolve_dylib_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
-        let root_path = self.get_root_path();
-        resolve_build_deps(
-            root_path,
-            &norm_path(target_path.as_ref()),
-            &self.dylib_targets,
-        )
-        .with_context(|| "type: dylib")
-    }
-
-    pub fn resolve_file_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
-        let root_path = self.get_root_path();
-        resolve_build_deps(
-            root_path,
-            &norm_path(target_path.as_ref()),
-            &self.file_targets,
-        )
-        .with_context(|| "type: file")
-    }
-
-    pub fn resolve_zip_deps(&self, target_path: impl AsRef<str>) -> Result<Dependencies> {
-        let root_path = self.get_root_path();
-        resolve_build_deps(
-            root_path,
-            &norm_path(target_path.as_ref()),
-            &self.zip_targets,
-        )
-        .with_context(|| "type: zip")
-    }
-
-    pub fn scan_bundle_assets(
+    fn scan_assets(
         &self,
         addon_path: impl AsRef<str>,
         target_path: impl AsRef<str>,
+        target_type: impl AsRef<str>,
     ) -> Result<Assets> {
         let root_path = self.get_root_path();
-        inner_scan_assets(root_path, addon_path, target_path, &self.bundle_targets)
-    }
+        let target_type = target_type.as_ref();
 
-    pub fn scan_subscene_assets(
-        &self,
-        addon_path: impl AsRef<str>,
-        target_path: impl AsRef<str>,
-    ) -> Result<Assets> {
-        let root_path = self.get_root_path();
-        inner_scan_assets(root_path, addon_path, target_path, &self.subscene_targets)
-    }
+        let target_map = match target_type {
+            TomlBundle::TYPE_NAME => &self.bundle_targets,
+            TomlSubscene::TYPE_NAME => &self.subscene_targets,
+            TomlFile::TYPE_NAME => &self.file_targets,
+            TomlDylib::TYPE_NAME => &self.dylib_targets,
+            TomlZip::TYPE_NAME => &self.zip_targets,
+            _ => return Err(anyhow!("not fount {} type", target_type)),
+        };
 
-    pub fn scan_dylib_assets(
-        &self,
-        addon_path: impl AsRef<str>,
-        target_path: impl AsRef<str>,
-    ) -> Result<Assets> {
-        let root_path = self.get_root_path();
-        inner_scan_assets(root_path, addon_path, target_path, &self.dylib_targets)
-    }
-
-    pub fn scan_file_assets(
-        &self,
-        addon_path: impl AsRef<str>,
-        target_path: impl AsRef<str>,
-    ) -> Result<Assets> {
-        let root_path = self.get_root_path();
-        inner_scan_assets(root_path, addon_path, target_path, &self.file_targets)
-    }
-
-    pub fn scan_zip_assets(
-        &self,
-        addon_path: impl AsRef<str>,
-        target_path: impl AsRef<str>,
-    ) -> Result<Assets> {
-        let root_path = self.get_root_path();
-        inner_scan_assets(root_path, addon_path, target_path, &self.zip_targets)
+        inner_scan_assets(root_path, addon_path, target_path, target_map)
     }
 }
 
@@ -671,7 +524,7 @@ impl Display for BuildMap {
 #[cfg(test)]
 mod tests {
     use crate::core::BuildMap;
-    use crate::scan_files;
+    use crate::{scan_files, TomlBundle};
 
     #[test]
     fn circular_dep_test() {
@@ -685,7 +538,11 @@ mod tests {
         build_map.insert(asset_path, pkgs).unwrap();
 
         let target_path = "CircularDep/A";
-        let deps = build_map.resolve_bundle_deps(target_path).err().unwrap();
+        let target_type = TomlBundle::TYPE_NAME;
+        let deps = build_map
+            .resolve_target_deps(target_path, target_type)
+            .err()
+            .unwrap();
         let e = format!("{}, {}", deps.root_cause().to_string(), deps.to_string());
         println!("{e}");
         // assert_eq!(deps.is_circular, true);
