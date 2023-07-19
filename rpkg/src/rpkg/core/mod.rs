@@ -15,3 +15,4 @@ pub use scan::scan_files;
 pub use scan::scan_files_block_by_manifest;
 pub use scan::scan_files_block_by_pkg;
 pub use scan::scan_files_block_by_pkg_manifest;
+pub use scan::scan_files_rel_path;

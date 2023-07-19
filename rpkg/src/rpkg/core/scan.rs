@@ -1,5 +1,5 @@
 use globset::{GlobBuilder, GlobMatcher};
-use rutils::path::{canonicalize_path, norm_path};
+use rutils::path::{canonicalize_path, norm_path, norm_path_extreme};
 use std::path::Path;
 use walkdir::WalkDir;
 
@@ -15,6 +15,31 @@ pub fn scan_files(root_path: impl AsRef<Path>, patterns: &[impl AsRef<str>]) -> 
     };
 
     inner_scan_files(root_path, patterns, &options)
+}
+
+pub fn scan_files_rel_path(
+    root_path: impl AsRef<Path>,
+    patterns: &[impl AsRef<str>],
+) -> Vec<String> {
+    let options = ScanOptions {
+        block_by_pkg: false,
+        block_by_manifest: false,
+    };
+
+    let files = inner_scan_files(root_path.as_ref(), patterns, &options);
+    let Ok(root_path) =  canonicalize_path(root_path) else {
+        return Vec::new();
+    };
+    let root_path = norm_path(root_path);
+
+    files
+        .iter()
+        .map(|p| {
+            let msg = format!("{} is not prefix of {}", p, &root_path);
+            let path = p.strip_prefix(&root_path).expect(&msg);
+            norm_path_extreme(path)
+        })
+        .collect()
 }
 
 pub fn scan_files_block_by_pkg(
@@ -100,6 +125,10 @@ fn inner_scan_files(
             }
         }
 
+        if path.is_dir() {
+            continue;
+        }
+
         // skip .git directory
         if git_glob.is_match(path) {
             walk_iter.skip_current_dir();
@@ -163,9 +192,11 @@ fn create_git_glob_macther() -> GlobMatcher {
 
 #[cfg(test)]
 mod tests {
-
-    use super::{scan_files, scan_files_block_by_pkg};
     use std::{fs, path::Path};
+
+    use super::scan_files;
+    use super::scan_files_block_by_pkg;
+    use super::scan_files_rel_path;
 
     #[test]
     // tests/pkg_assets 目录下测试匹配 pkg patterns 的所有文件
@@ -203,8 +234,8 @@ mod tests {
         let patterns = ["*.asset"];
         let files = scan_files_block_by_pkg(foo1_path, &patterns);
         let expect_files = [
-            "../target/tmp/pkg_assets/foo1/0.asset",
-            "../target/tmp/pkg_assets/foo1/1.asset",
+            "F:/SoFunny/ffi-libs/target/tmp/pkg_assets/foo1/0.asset",
+            "F:/SoFunny/ffi-libs/target/tmp/pkg_assets/foo1/1.asset",
         ];
         let expect_files: Vec<String> = expect_files.iter().map(|s| s.to_string()).collect();
         assert_eq!(files, expect_files);
@@ -236,7 +267,7 @@ mod tests {
 
         let patterns = ["bar/*.txt", "!bar/*3.txt"];
         let files = scan_files_block_by_pkg(foo2_path, &patterns);
-        let expect_files = ["../target/tmp/pkg_assets/foo2/bar/2.txt"];
+        let expect_files = ["F:/SoFunny/ffi-libs/target/tmp/pkg_assets/foo2/bar/2.txt"];
         let expect_files: Vec<String> = expect_files.iter().map(|s| s.to_string()).collect();
         assert_eq!(files, expect_files);
 
@@ -275,16 +306,38 @@ mod tests {
         let patterns = ["*.txt", "**/*.txt"];
         let files = scan_files_block_by_pkg(foo3_path, &patterns);
         let expect_files = [
-            "../target/tmp/pkg_assets/foo3/2.txt",
-            "../target/tmp/pkg_assets/foo3/3.txt",
-            "../target/tmp/pkg_assets/foo3/bar2/2.txt",
-            "../target/tmp/pkg_assets/foo3/bar2/3.txt",
+            "F:/SoFunny/ffi-libs/target/tmp/pkg_assets/foo3/2.txt",
+            "F:/SoFunny/ffi-libs/target/tmp/pkg_assets/foo3/3.txt",
+            "F:/SoFunny/ffi-libs/target/tmp/pkg_assets/foo3/bar2/2.txt",
+            "F:/SoFunny/ffi-libs/target/tmp/pkg_assets/foo3/bar2/3.txt",
         ];
         let expect_files: Vec<String> = expect_files.iter().map(|s| s.to_string()).collect();
         assert_eq!(files, expect_files);
 
         // NOTE: 注释本行代码，可以运行 charp 示例代码
         fs::remove_dir_all(root_path).unwrap();
+    }
+
+    #[test]
+    fn pkg_scan_files_rel_path() {
+        let root_path = Path::new("../tests/pkg-dependencies/BuildAssets/addon1");
+        let files = scan_files_rel_path(root_path, &["**/*"]);
+        let expect_files = [
+            "Material/.pkg",
+            "Material/DepMaterial/.pkg",
+            "Material/DepMaterial/foo.mat",
+            "Material/SubMaterial/.pkg",
+            "Material/SubMaterial/foo.mat",
+            "Material/foo.mat",
+            "Prefab/.pkg",
+            "Prefab/bar.prefab",
+            "Prefab/foo.prefab",
+            "Shader/.pkg",
+            "Shader/foo.shader",
+            "manifest.toml",
+        ];
+        let expect_files: Vec<String> = expect_files.iter().map(|s| s.to_string()).collect();
+        assert_eq!(files, expect_files);
     }
 
     #[allow(dead_code)]
@@ -301,11 +354,14 @@ mod tests {
         let patterns = ["**/.pkg", "!**/DepMaterial/**/.pkg"];
         let files = scan_files(root_path, &patterns);
         let expect_files = [
-            "../tests/pkg-dependencies/BuildAssets/Material/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/Material/SubMaterial/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/PKGTest/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/Prefab/.pkg",
-            "../tests/pkg-dependencies/BuildAssets/Shader/.pkg",
+            "F:/SoFunny/ffi-libs/tests/pkg-dependencies/BuildAssets/.pkg",
+            "F:/SoFunny/ffi-libs/tests/pkg-dependencies/BuildAssets/addon1/Material/.pkg",
+            "F:/SoFunny/ffi-libs/tests/pkg-dependencies/BuildAssets/addon1/Material/SubMaterial/.pkg",
+            "F:/SoFunny/ffi-libs/tests/pkg-dependencies/BuildAssets/addon1/Prefab/.pkg",
+            "F:/SoFunny/ffi-libs/tests/pkg-dependencies/BuildAssets/addon1/Shader/.pkg",
+            "F:/SoFunny/ffi-libs/tests/pkg-dependencies/BuildAssets/addon2/.pkg",
+            "F:/SoFunny/ffi-libs/tests/pkg-dependencies/BuildAssets/arts/.pkg",
+            "F:/SoFunny/ffi-libs/tests/pkg-dependencies/BuildAssets/gameplay/.pkg"
         ];
         let expect_files: Vec<String> = expect_files.iter().map(|s| s.to_string()).collect();
         assert_eq!(files, expect_files);
