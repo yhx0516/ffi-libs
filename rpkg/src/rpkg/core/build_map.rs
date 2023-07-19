@@ -18,9 +18,9 @@ use crate::core::PKGTargetPaths;
 use crate::BuildTarget;
 use crate::TomlPKG;
 
-use crate::build_target_url;
 use crate::resolve_target_path;
 use crate::scan_files_block_by_pkg_manifest;
+use crate::to_bundle_path;
 
 #[derive(Default)]
 pub struct BuildMap {
@@ -33,37 +33,37 @@ pub struct BuildMap {
     /// key: addon path, value: target paths
     addon_to_targets: BTreeMap<String, PKGTargetPaths>,
 
-    /// key: bundle path, value: bundle url
-    bundle_urls: BTreeMap<String, String>,
+    /// key: target path, value: bundle path
+    bundle_paths: BTreeMap<String, String>,
 
-    /// key: bundle path, value: TomlBundle target
+    /// key: target path, value: TomlBundle target
     bundle_targets: BTreeMap<String, Box<dyn BuildTarget>>,
 
-    /// key: subscene path, value: TomlSubscene target
+    /// key: target path, value: TomlSubscene target
     subscene_targets: BTreeMap<String, Box<dyn BuildTarget>>,
 
-    /// key: file path, value: TomlFile target
+    /// key: target path, value: TomlFile target
     file_targets: BTreeMap<String, Box<dyn BuildTarget>>,
 
-    /// key: dylib path, value: TomlDylib target
+    /// key: target path, value: TomlDylib target
     dylib_targets: BTreeMap<String, Box<dyn BuildTarget>>,
 
-    /// key: zip path, value: TomlZip target
+    /// key: target path, value: TomlZip target
     zip_targets: BTreeMap<String, Box<dyn BuildTarget>>,
 
-    /// key: bundle path, value: Assets
+    /// key: target path, value: Assets
     bundle_assets: BTreeMap<String, Assets>,
 
-    /// key: subscene path, value: Assets
+    /// key: target path, value: Assets
     subscene_assets: BTreeMap<String, Assets>,
 
-    /// key: file path, value: Assets
+    /// key: target path, value: Assets
     file_assets: BTreeMap<String, Assets>,
 
-    /// key: dylib path, value: Assets
+    /// key: target path, value: Assets
     dylib_assets: BTreeMap<String, Assets>,
 
-    /// key: zip path, value: Assets
+    /// key: target path, value: Assets
     zip_assets: BTreeMap<String, Assets>,
 }
 
@@ -155,6 +155,47 @@ impl BuildMap {
         match self.pkg_to_targets.get(&pkg_path) {
             Some(pkg_to_targets) => Ok(pkg_to_targets.get_zips()),
             None => Ok(Vec::new()),
+        }
+    }
+
+    pub fn get_bundle_target(&self, target_path: impl AsRef<str>) -> Result<&Box<dyn BuildTarget>> {
+        match self.bundle_targets.get(target_path.as_ref()) {
+            Some(v) => Ok(v),
+            None => Err(anyhow!("not found bundle target {}", target_path.as_ref())),
+        }
+    }
+
+    pub fn get_subscene_target(
+        &self,
+        target_path: impl AsRef<str>,
+    ) -> Result<&Box<dyn BuildTarget>> {
+        match self.subscene_targets.get(target_path.as_ref()) {
+            Some(v) => Ok(v),
+            None => Err(anyhow!(
+                "not found subscene target {}",
+                target_path.as_ref()
+            )),
+        }
+    }
+
+    pub fn get_file_target(&self, target_path: impl AsRef<str>) -> Result<&Box<dyn BuildTarget>> {
+        match self.file_targets.get(target_path.as_ref()) {
+            Some(v) => Ok(v),
+            None => Err(anyhow!("not found file target {}", target_path.as_ref())),
+        }
+    }
+
+    pub fn get_dylib_target(&self, target_path: impl AsRef<str>) -> Result<&Box<dyn BuildTarget>> {
+        match self.dylib_targets.get(target_path.as_ref()) {
+            Some(v) => Ok(v),
+            None => Err(anyhow!("not found dylib target {}", target_path.as_ref())),
+        }
+    }
+
+    pub fn get_zip_target(&self, target_path: impl AsRef<str>) -> Result<&Box<dyn BuildTarget>> {
+        match self.zip_targets.get(target_path.as_ref()) {
+            Some(v) => Ok(v),
+            None => Err(anyhow!("not found zip target {}", target_path.as_ref())),
         }
     }
 
@@ -309,9 +350,9 @@ impl BuildMap {
 
                 // update bundle_url map
                 {
-                    let target_url = build_target_url(&root_path, &addon_path, &target_path)?;
+                    let target_url = to_bundle_path(&root_path, &addon_path, &target_path)?;
                     let target_path = target_path.to_lowercase();
-                    self.bundle_urls.entry(target_path).or_insert(target_url);
+                    self.bundle_paths.entry(target_path).or_insert(target_url);
                 }
 
                 // update bundle_assets map
@@ -331,9 +372,9 @@ impl BuildMap {
 
                 // update bundle_url map
                 {
-                    let target_url = build_target_url(&root_path, &addon_path, &target_path)?;
+                    let target_url = to_bundle_path(&root_path, &addon_path, &target_path)?;
                     let target_path = target_path.to_lowercase();
-                    self.bundle_urls.entry(target_path).or_insert(target_url);
+                    self.bundle_paths.entry(target_path).or_insert(target_url);
                 }
 
                 // update subscene_assets map
@@ -401,9 +442,9 @@ impl BuildMap {
         Ok(())
     }
 
-    pub fn find_bundle_url(&self, bundle_path: impl AsRef<str>) -> Result<String> {
+    pub fn find_bundle_path(&self, bundle_path: impl AsRef<str>) -> Result<String> {
         let bundle_path = bundle_path.as_ref().to_lowercase();
-        match self.bundle_urls.get(&bundle_path) {
+        match self.bundle_paths.get(&bundle_path) {
             Some(v) => Ok(v.to_owned()),
             None => Err(anyhow!("not found url {} in map", bundle_path)),
         }
@@ -591,7 +632,7 @@ impl Display for BuildMap {
         output.push_str(&pkgs_to_str(&self.addon_to_targets));
 
         output.push_str("bundle_urls:\n");
-        output.push_str(&urls_to_str(&self.bundle_urls));
+        output.push_str(&urls_to_str(&self.bundle_paths));
 
         output.push_str("bundle_targets:\n");
         output.push_str(&targets_to_str(&self.bundle_targets));

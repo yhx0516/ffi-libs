@@ -1,6 +1,8 @@
-use once_cell::sync::OnceCell;
+use lazy_static::lazy_static;
 use rutils::ffi;
+use rutils::path::norm_path_extreme;
 use std::ffi::c_char;
+use std::sync::Mutex;
 
 use crate::core::{BuildMap, Dependencies};
 use crate::scan_files;
@@ -11,38 +13,42 @@ use crate::scan_files_block_by_pkg_manifest;
 // ============================================================
 // OnceLog 一次性日志，便于外部接入时调试
 // ============================================================
-static ERR_BUFFERR_INS: OnceCell<OnceLog> = OnceCell::new();
+lazy_static! {
+    static ref ERR_BUFF_INS: Mutex<ErrorBuffer> = Mutex::new(ErrorBuffer::default());
+}
 
-#[derive(Debug)]
-struct OnceLog {
+#[derive(Debug, Default)]
+struct ErrorBuffer {
     buffer: String,
 }
 
-impl OnceLog {
+impl ErrorBuffer {
     pub fn new(str: impl AsRef<str>) {
-        let ins = OnceLog {
-            buffer: str.as_ref().to_string(),
-        };
-        if ERR_BUFFERR_INS.set(ins).is_err() {
-            eprintln!("set OnceLog instance multiple times")
-        }
+        let mut ins = ERR_BUFF_INS.lock().unwrap();
+        ins.set_buffer(str);
     }
 
     pub fn output() -> String {
-        match ERR_BUFFERR_INS.get() {
-            Some(ins) => ins.get_buff().to_owned(),
-            None => String::from("no error in rpkg"),
+        let ins = ERR_BUFF_INS.lock().unwrap();
+        let buffer = ins.get_buffer();
+        match buffer.is_empty() {
+            true => String::from("no error in rpkg"),
+            false => buffer.to_owned(),
         }
     }
 
-    fn get_buff(&self) -> &String {
+    pub fn set_buffer(&mut self, buffer: impl AsRef<str>) {
+        self.buffer = buffer.as_ref().to_string();
+    }
+
+    fn get_buffer(&self) -> &String {
         &self.buffer
     }
 }
 
 #[no_mangle]
-pub extern "C" fn try_log_once() -> *const c_char {
-    let info = OnceLog::output();
+pub extern "C" fn try_get_err() -> *const c_char {
+    let info = ErrorBuffer::output();
     ffi::str_to_char_ptr(info)
 }
 
@@ -128,7 +134,7 @@ pub extern "C" fn bm_new(root_path: *const c_char) -> *const BuildMap {
     match BuildMap::new(root_path) {
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return std::ptr::null();
         }
     }
@@ -149,7 +155,7 @@ pub extern "C" fn bm_insert(
     match build_map.insert(addon_path, pkg_paths) {
         Ok(_) => true,
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return false;
         }
     }
@@ -175,7 +181,7 @@ pub extern "C" fn bm_resolve_bundle_deps(
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
             let str = format!("{}, {}", e.root_cause().to_string(), e.to_string());
-            OnceLog::new(str);
+            ErrorBuffer::new(str);
             std::ptr::null()
         }
     }
@@ -193,7 +199,7 @@ pub extern "C" fn bm_resolve_subscene_deps(
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
             let str = format!("{}, {}", e.root_cause().to_string(), e.to_string());
-            OnceLog::new(str);
+            ErrorBuffer::new(str);
             std::ptr::null()
         }
     }
@@ -211,7 +217,7 @@ pub extern "C" fn bm_resolve_dylib_deps(
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
             let str = format!("{}, {}", e.root_cause().to_string(), e.to_string());
-            OnceLog::new(str);
+            ErrorBuffer::new(str);
             std::ptr::null()
         }
     }
@@ -229,7 +235,7 @@ pub extern "C" fn bm_resolve_file_deps(
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
             let str = format!("{}, {}", e.root_cause().to_string(), e.to_string());
-            OnceLog::new(str);
+            ErrorBuffer::new(str);
             std::ptr::null()
         }
     }
@@ -247,7 +253,7 @@ pub extern "C" fn bm_resolve_zip_deps(
         Ok(v) => Box::into_raw(Box::new(v)),
         Err(e) => {
             let str = format!("{}, {}", e.root_cause().to_string(), e.to_string());
-            OnceLog::new(str);
+            ErrorBuffer::new(str);
             std::ptr::null()
         }
     }
@@ -264,7 +270,7 @@ pub extern "C" fn bm_get_bundle_paths(
     let target_paths = match build_map.get_bundle_paths(addon_path) {
         Ok(v) => v,
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return std::ptr::null();
         }
     };
@@ -284,7 +290,7 @@ pub extern "C" fn bm_get_subscene_paths(
     let target_paths = match build_map.get_subscene_paths(addon_path) {
         Ok(v) => v,
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return std::ptr::null();
         }
     };
@@ -304,7 +310,7 @@ pub extern "C" fn bm_get_file_paths(
     let target_paths = match build_map.get_file_paths(addon_path) {
         Ok(v) => v,
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return std::ptr::null();
         }
     };
@@ -324,7 +330,7 @@ pub extern "C" fn bm_get_dylib_paths(
     let target_paths = match build_map.get_dylib_paths(addon_path) {
         Ok(v) => v,
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return std::ptr::null();
         }
     };
@@ -344,7 +350,7 @@ pub extern "C" fn bm_get_zip_paths(
     let target_paths = match build_map.get_zip_paths(addon_path) {
         Ok(v) => v,
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return std::ptr::null();
         }
     };
@@ -364,7 +370,7 @@ pub extern "C" fn bm_get_bundle_paths_from_pkg(
     let target_paths = match build_map.get_bundle_paths_from_pkg(addon_path) {
         Ok(v) => v,
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return std::ptr::null();
         }
     };
@@ -384,7 +390,7 @@ pub extern "C" fn bm_get_subscene_paths_from_pkg(
     let target_paths = match build_map.get_subscene_paths_from_pkg(addon_path) {
         Ok(v) => v,
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return std::ptr::null();
         }
     };
@@ -404,7 +410,7 @@ pub extern "C" fn bm_get_file_paths_from_pkg(
     let target_paths = match build_map.get_file_paths_from_pkg(addon_path) {
         Ok(v) => v,
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return std::ptr::null();
         }
     };
@@ -424,7 +430,7 @@ pub extern "C" fn bm_get_dylib_paths_from_pkg(
     let target_paths = match build_map.get_dylib_paths_from_pkg(addon_path) {
         Ok(v) => v,
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return std::ptr::null();
         }
     };
@@ -444,7 +450,7 @@ pub extern "C" fn bm_get_zip_paths_from_pkg(
     let target_paths = match build_map.get_zip_paths_from_pkg(addon_path) {
         Ok(v) => v,
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return std::ptr::null();
         }
     };
@@ -453,6 +459,7 @@ pub extern "C" fn bm_get_zip_paths_from_pkg(
     Box::into_raw(Box::new(assets))
 }
 
+// asset path's ancestor is "Assets"
 #[no_mangle]
 pub extern "C" fn bm_get_bundle_assets(
     ptr: *mut BuildMap,
@@ -465,6 +472,26 @@ pub extern "C" fn bm_get_bundle_assets(
         .get_bundle_assets(target_path)
         .iter()
         .map(|s| s.to_string())
+        .collect();
+    Box::into_raw(Box::new(assets))
+}
+
+// asset path's ancestor is target_path, and
+#[no_mangle]
+pub extern "C" fn bm_get_bundle_addresable_assets(
+    ptr: *mut BuildMap,
+    target_path: *const c_char,
+) -> *const Vec<String> {
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let target_path = ffi::char_ptr_to_str(target_path);
+
+    let assets: Vec<_> = build_map
+        .get_bundle_assets(&target_path)
+        .iter()
+        .map(|s| {
+            let path = s.strip_prefix(&target_path).unwrap();
+            norm_path_extreme(path).to_lowercase()
+        })
         .collect();
     Box::into_raw(Box::new(assets))
 }
@@ -544,7 +571,7 @@ pub extern "C" fn bm_get_asset_urls(
     let urls = match build_map.get_asset_urls(addon_path) {
         Ok(v) => v,
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             return std::ptr::null();
         }
     };
@@ -554,16 +581,16 @@ pub extern "C" fn bm_get_asset_urls(
 }
 
 #[no_mangle]
-pub extern "C" fn bm_find_bundle_url(
+pub extern "C" fn bm_find_bundle_path(
     ptr: *const BuildMap,
     bundle_path: *const c_char,
 ) -> *const c_char {
     let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
     let bundle_path = ffi::char_ptr_to_str(bundle_path);
-    match build_map.find_bundle_url(bundle_path) {
+    match build_map.find_bundle_path(bundle_path) {
         Ok(v) => ffi::str_to_char_ptr(v),
         Err(e) => {
-            OnceLog::new(e.to_string());
+            ErrorBuffer::new(e.to_string());
             std::ptr::null()
         }
     }

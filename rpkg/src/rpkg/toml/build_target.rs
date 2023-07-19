@@ -44,12 +44,11 @@ pub trait BuildTarget {
 
         let pkg_path = match (self.is_pkg(), addon_path == target_path) {
             (true, true) => {
-                let path = Path::new("assets").with_extension(ASSET_PKG_EXTENSION);
+                let path = Path::new("assets").to_path_buf();
                 Some(path)
             }
             (true, false) => {
-                let path = pkg_path;
-                let path = Path::new(path).with_extension(ASSET_PKG_EXTENSION);
+                let path = Path::new(&norm_path_extreme(pkg_path)).to_path_buf();
                 Some(path)
             }
             _ => None,
@@ -94,7 +93,7 @@ pub fn resolve_target_path(
     Ok(res)
 }
 
-pub fn build_target_url(
+pub fn to_bundle_path(
     root_path: impl AsRef<Path>,
     addon_path: impl AsRef<Path>,
     target_path: impl AsRef<Path>,
@@ -108,7 +107,7 @@ pub fn build_target_url(
         false => norm_path_extreme(target_path.strip_prefix(addon_path)?),
     };
 
-    let url = format!("{}://{}.{}", ASSET_PROTOCAL, rel_path, ASSET_PKG_EXTENSION);
+    let url = format!("{}.{}", rel_path, ASSET_PKG_EXTENSION);
     Ok(url.to_lowercase())
 }
 
