@@ -236,7 +236,7 @@ namespace csharp_link_rust.libs
 
                 foreach(string target_path in target_paths)
                 {
-                    // 获取这个 bundle 的依赖（含自身）
+                    // 获取这个 bundle 的依赖（不含自身）
                     IntPtr deps_ptr = bm_resolve_target_deps(build_map_ptr, bundle_path, target_type);
                     IntPtr to_build_ptr = dependencies_get_targets(deps_ptr);
                     string[] to_build = Ptr2StringList(to_build_ptr);
