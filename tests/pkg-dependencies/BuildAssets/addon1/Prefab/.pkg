@@ -1,6 +1,14 @@
+# 方式一
+# [[bundle]]
+# patterns = ["**/*.prefab"]
+# dependencies = [
+#     "../Material",
+#     "../Material/DepMaterial"
+# ]
+
+# 方式二
 [[bundle]]
 patterns = ["**/*.prefab"]
 dependencies = [
-    "../Material",
-    "../Material/DepMaterial"
+    "/BuildAssets/addon1/Material/**",
 ]

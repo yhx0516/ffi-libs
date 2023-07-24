@@ -52,7 +52,7 @@ fn main() {
     for target_type in target_types {
         // 获取依赖项
         let deps = match build_map.resolve_target_deps(target_path, target_type) {
-            Err(e) => panic!("{}", e.to_string()),
+            Err(e) => panic!("{}, {}", e.root_cause().to_string(), e.to_string()),
             Ok(r) => r,
         };
 

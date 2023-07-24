@@ -1,5 +1,7 @@
 use anyhow::anyhow;
 use anyhow::Result;
+use globset::Glob;
+use globset::GlobSetBuilder;
 use std::collections::{BTreeMap, HashMap};
 
 use crate::toml::build_target::resolve_dep_path;
@@ -40,7 +42,8 @@ pub fn resolve_build_deps(
 
     let mut res = Dependencies::default();
 
-    let deps = resolve_dep_path(root_path, target_path, target.get_deps())?;
+    let dep_patterns = resolve_dep_path(root_path, target_path, target.get_deps())?;
+    let deps = glob_match_deps(dep_patterns, target_map)?;
     check_deps_valid(target_path, &deps, target_map)?;
 
     let mut indegree_map = HashMap::new();
@@ -98,4 +101,23 @@ pub fn resolve_build_deps(
     res.target_paths.reverse();
 
     Ok(res)
+}
+
+fn glob_match_deps(
+    patterns: Vec<String>,
+    target_map: &BTreeMap<String, Box<dyn BuildTarget>>,
+) -> Result<Vec<String>> {
+    let mut builder = GlobSetBuilder::new();
+    for pattern in patterns {
+        builder.add(Glob::new(&pattern)?);
+    }
+
+    let set = builder.build()?;
+    let mut deps = Vec::new();
+    for (target_path, _) in target_map {
+        if set.is_match(target_path) {
+            deps.push(target_path.to_owned());
+        }
+    }
+    Ok(deps)
 }
