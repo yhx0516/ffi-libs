@@ -1,5 +1,6 @@
 use anyhow::Result;
 use rutils::path::canonicalize_path;
+use rutils::path::norm_path;
 use rutils::path::norm_path_extreme;
 use std::path::Path;
 
@@ -144,6 +145,12 @@ fn norm_dep_path(
         return Ok(norm_path_extreme(dep_path));
     }
 
-    let path = canonicalize_path(root_path.join(cur_path).join(dep_path))?;
+    let path = match norm_path(dep_path).split_once('*') {
+        Some((rhs, lhs)) => {
+            canonicalize_path(root_path.join(cur_path).join(rhs))?.join(format!("*{}", lhs))
+        }
+        None => canonicalize_path(root_path.join(cur_path).join(&dep_path))?,
+    };
+
     Ok(norm_path_extreme(path.strip_prefix(root_path)?))
 }
