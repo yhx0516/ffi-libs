@@ -1,5 +1,4 @@
 use std::collections::BTreeMap;
-use std::collections::HashSet;
 use std::fmt::Display;
 use std::path::Path;
 
@@ -201,18 +200,9 @@ impl BuildMap {
     pub fn get_asset_urls(&self, addon_path: impl AsRef<str>) -> Result<Vec<&String>> {
         let addon_path = addon_path.as_ref();
         let mut asset_urls = Vec::new();
-        let mut target_paths = HashSet::new();
 
         for target_type in self.get_target_types(addon_path)? {
             for target_path in self.get_target_paths(addon_path, target_type)? {
-                let deps = self.resolve_target_deps(target_path, target_type)?;
-                let mut to_build = deps.target_paths.clone();
-
-                to_build.push(target_path.to_owned());
-                target_paths.extend(to_build);
-            }
-
-            for target_path in &target_paths {
                 let mut urls = self.get_target_asset_urls(target_path, target_type);
                 asset_urls.append(&mut urls);
             }
