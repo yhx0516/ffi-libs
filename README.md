@@ -11,7 +11,7 @@ cross build --release -p rtoml
 
 - android
 ```
-cross build --target aarch64-unknown-linux-gnu --release -p rtoml
+cross build --target aarch64-linux-android --release -p rtoml
 ```
 
 - linux
@@ -41,7 +41,7 @@ cross build --release -p rpkg
 
 - android
 ```
-cross build --target aarch64-unknown-linux-gnu --release -p rpkg
+cross build --target aarch64-linux-android --release -p rpkg
 ```
 
 - linux
@@ -77,7 +77,7 @@ cross build --release -p rhandlebars
 
 - android
 ```
-cross build --target aarch64-unknown-linux-gnu --release -p rhandlebars
+cross build --target aarch64-linux-android --release -p rhandlebars
 ```
 
 - linux

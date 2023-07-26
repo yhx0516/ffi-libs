@@ -9,4 +9,4 @@ rutils =  { version ="0.0.1", path="../rutils" }
 
 [lib]
 name = "rtoml"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "staticlib"]
