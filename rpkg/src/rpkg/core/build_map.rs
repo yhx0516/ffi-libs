@@ -524,17 +524,13 @@ mod tests {
         let pkgs = scan_files(asset_path, &patterns);
 
         let mut build_map = BuildMap::new(root_path).unwrap();
-
         build_map.insert(asset_path, pkgs).unwrap();
 
         let target_path = "CircularDep/A";
         let target_type = TomlBundle::TYPE_NAME;
         let deps = build_map
             .resolve_target_deps(target_path, target_type)
-            .err()
             .unwrap();
-        let e = format!("{}, {}", deps.root_cause().to_string(), deps.to_string());
-        println!("{e}");
-        // assert_eq!(deps.is_circular, true);
+        assert_eq!(deps.is_circular, true);
     }
 }

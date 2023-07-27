@@ -63,7 +63,8 @@ pub fn resolve_build_deps(
         }
 
         let target = target_map.get(&target_path).unwrap();
-        let deps = resolve_dep_path(root_path, &target_path, target.get_deps())?;
+        let dep_patterns = resolve_dep_path(root_path, &target_path, target.get_deps())?;
+        let deps = glob_match_deps(dep_patterns, target_map)?;
         check_deps_valid(&target_path, &deps, target_map)?;
 
         indegree_map.insert(target_path.clone(), 1);
