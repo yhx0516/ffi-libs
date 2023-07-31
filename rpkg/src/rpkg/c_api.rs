@@ -1,5 +1,6 @@
-use rutils::ffi;
 use std::ffi::c_char;
+
+use funny_utils_rs::ffi;
 
 use crate::core::{BuildMap, Dependencies};
 use crate::scan_files;

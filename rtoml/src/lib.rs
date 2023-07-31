@@ -3,8 +3,8 @@ use std::fs;
 use toml_edit::{Array, ArrayOfTables, Document, InlineTable, Item, Table, Value};
 
 // NOTE: 作为第三方库可以直接调用
-pub use rutils::c_api::*;
-pub use rutils::ffi;
+pub use funny_utils_rs::ffi;
+pub use funny_utils_rs::ffi::c_api::*;
 
 // ============================================================
 // Info

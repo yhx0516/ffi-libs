@@ -6,9 +6,9 @@ use anyhow::anyhow;
 use anyhow::Context;
 use anyhow::Result;
 
-use rutils::path::canonicalize_path;
-use rutils::path::norm_path;
-use rutils::path::norm_path_extreme;
+use funny_utils_rs::path::canonicalize_path;
+use funny_utils_rs::path::norm_path;
+use funny_utils_rs::path::trim_path2;
 
 use crate::core::resolve_build_deps;
 use crate::core::Assets;
@@ -418,7 +418,7 @@ fn inner_scan_assets(
         let target_path = format!("{}/{}", root_path, target_path);
         let url = target.build_asset_url(&addon_path, &target_path, &item);
 
-        assets.push_asset(norm_path_extreme(rel_path), url)
+        assets.push_asset(trim_path2(rel_path), url)
     }
 
     Ok(assets)
@@ -513,8 +513,10 @@ impl Display for BuildMap {
 
 #[cfg(test)]
 mod tests {
+    use funny_utils_rs::scan::scan_files;
+
     use crate::core::BuildMap;
-    use crate::{scan_files, TomlBundle};
+    use crate::TomlBundle;
 
     #[test]
     fn circular_dep_test() {

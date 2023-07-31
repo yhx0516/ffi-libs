@@ -1,6 +1,6 @@
+use funny_utils_rs::path::norm_path;
 use rpkg::scan_files_block_by_manifest;
 use rpkg::BuildMap;
-use rutils::path::norm_path;
 use std::path::Path;
 
 fn main() {

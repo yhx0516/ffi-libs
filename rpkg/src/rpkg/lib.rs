@@ -1,4 +1,4 @@
-pub use rutils::c_api::*;
+pub use funny_utils_rs::ffi::c_api::*;
 
 mod c_api;
 mod core;

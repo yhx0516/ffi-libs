@@ -1,4 +1,4 @@
-use rutils::path::norm_path_extreme;
+use funny_utils_rs::path::trim_path2;
 use serde::Deserialize;
 use std::path::Path;
 
@@ -38,7 +38,7 @@ impl BuildTarget for TomlDylib {
         let asset_path = Path::new(asset_path).with_extension("dll");
         let rel_asset_path = asset_path.strip_prefix(addon_path).unwrap();
 
-        let url = format!("{}://{}", ASSET_PROTOCAL, norm_path_extreme(rel_asset_path));
+        let url = format!("{}://{}", ASSET_PROTOCAL, trim_path2(rel_asset_path));
         url.to_lowercase()
     }
 }

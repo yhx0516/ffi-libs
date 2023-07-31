@@ -1,5 +1,5 @@
+use funny_utils_rs::ffi;
 use handlebars::{to_json, Context, Handlebars, Helper, Output, RenderContext};
-use rutils::ffi;
 use std::ffi::c_char;
 
 mod render;
