@@ -163,7 +163,7 @@ pub extern "C" fn bm_insert(
     pkg_paths: *const *const c_char,
     pkg_paths_len: usize,
 ) -> bool {
-    let build_map = unsafe { ptr.as_mut().expect("invalid ptr: ") };
+    let build_map = unsafe { ptr.as_mut().expect("invalid ptr") };
     let addon_path = ffi::char_ptr_to_str(addon_path);
     let pkg_paths = ffi::arr_ptr_to_strs(pkg_paths, pkg_paths_len as usize);
     let pkg_paths: Vec<&str> = pkg_paths.iter().map(|s| s.as_ref()).collect();
@@ -190,7 +190,7 @@ pub extern "C" fn bm_get_target_types(
     ptr: *mut BuildMap,
     addon_path: *const c_char,
 ) -> *const Vec<String> {
-    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr") };
     let addon_path = ffi::char_ptr_to_str(addon_path);
 
     let target_types = match build_map.get_target_types(addon_path) {
@@ -210,7 +210,7 @@ pub extern "C" fn bm_get_target_types_from_pkg(
     ptr: *mut BuildMap,
     pkg_path: *const c_char,
 ) -> *const Vec<String> {
-    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr") };
     let pkg_path = ffi::char_ptr_to_str(pkg_path);
 
     let target_types = match build_map.get_target_types_from_pkg(pkg_path) {
@@ -231,7 +231,7 @@ pub extern "C" fn bm_get_target_paths(
     addon_path: *const c_char,
     target_type: *const c_char,
 ) -> *const Vec<String> {
-    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr") };
     let addon_path = ffi::char_ptr_to_str(addon_path);
     let target_type = ffi::char_ptr_to_str(target_type);
 
@@ -253,7 +253,7 @@ pub extern "C" fn bm_get_target_paths_from_pkg(
     pkg_path: *const c_char,
     target_type: *const c_char,
 ) -> *const Vec<String> {
-    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr") };
     let pkg_path = ffi::char_ptr_to_str(pkg_path);
     let target_type = ffi::char_ptr_to_str(target_type);
 
@@ -275,7 +275,7 @@ pub extern "C" fn bm_resolve_target_deps(
     target_path: *const c_char,
     target_type: *const c_char,
 ) -> *const Dependencies {
-    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr") };
     let target_path = ffi::char_ptr_to_str(target_path);
     let target_type = ffi::char_ptr_to_str(target_type);
 
@@ -295,7 +295,7 @@ pub extern "C" fn bm_get_target_assets(
     target_path: *const c_char,
     target_type: *const c_char,
 ) -> *const Vec<String> {
-    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr") };
     let target_path = ffi::char_ptr_to_str(target_path);
     let target_type = ffi::char_ptr_to_str(target_type);
 
@@ -312,7 +312,7 @@ pub extern "C" fn bm_get_asset_urls(
     ptr: *const BuildMap,
     addon_path: *const c_char,
 ) -> *const Vec<String> {
-    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr") };
     let addon_path = ffi::char_ptr_to_str(addon_path);
 
     let urls = match build_map.get_asset_urls(addon_path) {
@@ -332,7 +332,7 @@ pub extern "C" fn bm_find_bundle_path(
     ptr: *const BuildMap,
     bundle_path: *const c_char,
 ) -> *const c_char {
-    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr") };
     let bundle_path = ffi::char_ptr_to_str(bundle_path);
     match build_map.find_bundle_path(bundle_path) {
         Ok(v) => ffi::str_to_char_ptr(v),
@@ -345,14 +345,14 @@ pub extern "C" fn bm_find_bundle_path(
 
 #[no_mangle]
 pub extern "C" fn bm_get_root_path(ptr: *const BuildMap) -> *const c_char {
-    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr") };
     let root_path = build_map.get_root_path();
     ffi::str_to_char_ptr(root_path)
 }
 
 #[no_mangle]
 pub extern "C" fn bm_debug_info(ptr: *const BuildMap) -> *const c_char {
-    let build_map = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr") };
     ffi::str_to_char_ptr(&build_map.to_string())
 }
 
@@ -361,13 +361,13 @@ pub extern "C" fn bm_debug_info(ptr: *const BuildMap) -> *const c_char {
 // ============================================================
 #[no_mangle]
 pub extern "C" fn dependencies_get_targets(ptr: *const Dependencies) -> *const Vec<String> {
-    let deps = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let deps = unsafe { ptr.as_ref().expect("invalid ptr") };
     Box::into_raw(Box::new(deps.target_paths.clone()))
 }
 
 #[no_mangle]
 pub extern "C" fn dependencies_is_circular(ptr: *const Dependencies) -> bool {
-    let deps = unsafe { ptr.as_ref().expect("invalid ptr: ") };
+    let deps = unsafe { ptr.as_ref().expect("invalid ptr") };
     deps.is_circular
 }
 
