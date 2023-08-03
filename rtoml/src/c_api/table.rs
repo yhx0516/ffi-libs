@@ -15,13 +15,13 @@ pub extern "C" fn table_len(ptr: *const Table) -> usize {
 }
 
 #[no_mangle]
-pub extern "C" fn table_get(ptr: *const Table, key: *const c_char) -> *const Item {
-    let table = unsafe { ptr.as_ref().expect("invalid ptr") };
+pub extern "C" fn table_get(ptr: *mut Table, key: *const c_char) -> *mut Item {
+    let table = unsafe { ptr.as_mut().expect("invalid ptr") };
     let key = ffi::char_ptr_to_str(key);
 
-    match table.get(&key) {
-        Some(val) => Box::into_raw(Box::new(val.to_owned())),
-        _ => std::ptr::null(),
+    match table.get_mut(&key) {
+        Some(item) => item as *mut _,
+        _ => std::ptr::null_mut(),
     }
 }
 

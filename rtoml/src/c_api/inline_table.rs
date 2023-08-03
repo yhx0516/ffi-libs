@@ -15,16 +15,16 @@ pub extern "C" fn inline_table_len(ptr: *const InlineTable) -> usize {
 }
 
 #[no_mangle]
-pub extern "C" fn inline_table_get(ptr: *const InlineTable, key: *const c_char) -> *const Value {
-    let inline_table = unsafe { ptr.as_ref().expect("invalid ptr") };
+pub extern "C" fn inline_table_get(ptr: *mut InlineTable, key: *const c_char) -> *mut Value {
+    let inline_table = unsafe { ptr.as_mut().expect("invalid ptr") };
     let key = unsafe {
         assert!(!key.is_null());
         CStr::from_ptr(key).to_str().unwrap()
     };
 
-    match inline_table.get(key) {
-        Some(val) => Box::into_raw(Box::new(val.to_owned())),
-        _ => std::ptr::null(),
+    match inline_table.get_mut(key) {
+        Some(val) => val as *mut _,
+        _ => std::ptr::null_mut(),
     }
 }
 

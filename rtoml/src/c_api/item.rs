@@ -9,12 +9,12 @@ pub extern "C" fn item_is_value(ptr: *const Item) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn item_as_value(ptr: *const Item) -> *const Value {
-    let item = unsafe { ptr.as_ref().expect("invalid ptr") };
+pub extern "C" fn item_as_value(ptr: *mut Item) -> *mut Value {
+    let item = unsafe { ptr.as_mut().expect("invalid ptr") };
 
-    match item.as_value() {
-        Some(val) => Box::into_raw(Box::new(val.to_owned())),
-        _ => std::ptr::null(),
+    match item.as_value_mut() {
+        Some(val) => val as *mut _,
+        _ => std::ptr::null_mut(),
     }
 }
 
@@ -25,12 +25,12 @@ pub extern "C" fn item_is_table(ptr: *const Item) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn item_as_table(ptr: *const Item) -> *const Table {
-    let item = unsafe { ptr.as_ref().expect("invalid ptr") };
+pub extern "C" fn item_as_table(ptr: *mut Item) -> *mut Table {
+    let item = unsafe { ptr.as_mut().expect("invalid ptr") };
 
-    match item.as_table() {
-        Some(val) => Box::into_raw(Box::new(val.to_owned())),
-        _ => std::ptr::null(),
+    match item.as_table_mut() {
+        Some(table) => table as *mut _,
+        _ => std::ptr::null_mut(),
     }
 }
 
@@ -41,12 +41,12 @@ pub extern "C" fn item_is_array_of_tables(ptr: *const Item) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn item_as_array_of_tables(ptr: *const Item) -> *const ArrayOfTables {
-    let item = unsafe { ptr.as_ref().expect("invalid ptr") };
+pub extern "C" fn item_as_array_of_tables(ptr: *mut Item) -> *mut ArrayOfTables {
+    let item = unsafe { ptr.as_mut().expect("invalid ptr") };
 
-    match item.as_array_of_tables() {
-        Some(val) => Box::into_raw(Box::new(val.to_owned())),
-        _ => std::ptr::null(),
+    match item.as_array_of_tables_mut() {
+        Some(table_array) => table_array as *mut _,
+        _ => std::ptr::null_mut(),
     }
 }
 
@@ -147,12 +147,12 @@ pub extern "C" fn item_is_array(ptr: *const Item) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn item_as_array(ptr: *const Item) -> *const Array {
-    let item = unsafe { ptr.as_ref().expect("invalid ptr") };
+pub extern "C" fn item_as_array(ptr: *mut Item) -> *mut Array {
+    let item = unsafe { ptr.as_mut().expect("invalid ptr") };
 
-    match item.as_array() {
-        Some(val) => Box::into_raw(Box::new(val.to_owned())),
-        _ => std::ptr::null(),
+    match item.as_array_mut() {
+        Some(array) => array as *mut _,
+        _ => std::ptr::null_mut(),
     }
 }
 
@@ -163,12 +163,12 @@ pub extern "C" fn item_is_inline_table(ptr: *const Item) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn item_as_inline_table(ptr: *const Item) -> *const InlineTable {
-    let item = unsafe { ptr.as_ref().expect("invalid ptr") };
+pub extern "C" fn item_as_inline_table(ptr: *mut Item) -> *const InlineTable {
+    let item = unsafe { ptr.as_mut().expect("invalid ptr") };
 
-    match item.as_inline_table() {
-        Some(val) => Box::into_raw(Box::new(val.to_owned())),
-        _ => std::ptr::null(),
+    match item.as_inline_table_mut() {
+        Some(inline_table) => inline_table as *mut _,
+        _ => std::ptr::null_mut(),
     }
 }
 

@@ -15,12 +15,12 @@ pub extern "C" fn table_array_len(ptr: *const ArrayOfTables) -> usize {
 }
 
 #[no_mangle]
-pub extern "C" fn table_array_get(ptr: *const ArrayOfTables, index: usize) -> *const Table {
-    let table_array = unsafe { ptr.as_ref().expect("invalid ptr") };
+pub extern "C" fn table_array_get(ptr: *mut ArrayOfTables, index: usize) -> *mut Table {
+    let table_array = unsafe { ptr.as_mut().expect("invalid ptr") };
 
-    match table_array.get(index) {
-        Some(table) => Box::into_raw(Box::new(table.to_owned())),
-        _ => std::ptr::null(),
+    match table_array.get_mut(index) {
+        Some(table) => table as *mut _,
+        _ => std::ptr::null_mut(),
     }
 }
 
@@ -58,7 +58,7 @@ pub extern "C" fn table_array_clear(ptr: *mut ArrayOfTables) {
 }
 
 #[no_mangle]
-pub extern "C" fn table_array_to_array(ptr: *const ArrayOfTables) -> *const Array {
+pub extern "C" fn table_array_to_array(ptr: *const ArrayOfTables) -> *mut Array {
     let table_array = unsafe { ptr.as_ref().expect("invalid ptr") };
     let array = table_array.to_owned().into_array();
     Box::into_raw(Box::new(array))

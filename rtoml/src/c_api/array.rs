@@ -15,12 +15,12 @@ pub extern "C" fn array_len(ptr: *const Array) -> usize {
 }
 
 #[no_mangle]
-pub extern "C" fn array_get(ptr: *const Array, index: usize) -> *const Value {
-    let array = unsafe { ptr.as_ref().expect("invalid ptr") };
+pub extern "C" fn array_get(ptr: *mut Array, index: usize) -> *mut Value {
+    let array = unsafe { ptr.as_mut().expect("invalid ptr") };
 
-    match array.get(index) {
-        Some(val) => Box::into_raw(Box::new(val.to_owned())),
-        _ => std::ptr::null(),
+    match array.get_mut(index) {
+        Some(val) => val as *mut _,
+        _ => std::ptr::null_mut(),
     }
 }
 
@@ -42,7 +42,9 @@ pub extern "C" fn array_new() -> *mut Array {
 pub extern "C" fn array_push(ptr: *mut Array, val: *const Value) {
     let array = unsafe { ptr.as_mut().expect("invalid ptr") };
     let val = unsafe { val.as_ref().expect("invalid ptr") };
-    array.push(val.to_owned());
+    let val = val.to_owned();
+    let val = val.decorated(format!("\n{}", " ".repeat(4)), "");
+    array.push(val);
 }
 
 #[no_mangle]
@@ -76,4 +78,14 @@ pub extern "C" fn array_to_string(ptr: *const Array) -> *const c_char {
     let array = unsafe { ptr.as_ref().expect("invalid ptr") };
     let str = array.to_string();
     ffi::str_to_char_ptr(str)
+}
+
+#[no_mangle]
+pub extern "C" fn array_pretty(ptr: *mut Array) {
+    let array = unsafe { ptr.as_mut().expect("invalid ptr") };
+    array.iter_mut().for_each(|val| {
+        val.as_inline_table_mut().and_then(|t| Some(t.fmt()));
+
+        val.decor_mut().set_prefix(format!("\n{}", " ".repeat(4)));
+    });
 }
