@@ -9,103 +9,109 @@ namespace csharp_link_rust.libs
 {
     public class rxml
     {
+        #if !UNITY_EDITOR && UNITY_IPHONE
+            const string dllName = "__Internal";
+        #else
+            const string dllName = "../../../../../target/debug/rxml";
+        #endif
+
         // ===============================================
         // Info
         // ===============================================
         // return c_char ptr
         // convert to string by using Marshal.PtrToStringUTF8(ptr)
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern IntPtr get_version();
 
         // ===============================================
         // Document
         // ===============================================
         // return Document ptr
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern IntPtr document_parse_file([MarshalAs(UnmanagedType.LPUTF8Str)] string path);
 
         // return Document ptr
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern IntPtr document_parse_content([MarshalAs(UnmanagedType.LPUTF8Str)] string content);
 
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern void document_dispose(IntPtr ptr);
 
         // return c_char ptr
         // convert to string by using Marshal.PtrToStringUTF8(ptr)
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern IntPtr document_get_version(IntPtr ptr);
 
         // return c_char ptr
         // convert to string by using Marshal.PtrToStringUTF8(ptr)
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern IntPtr document_get_encoding(IntPtr ptr);
 
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern Int32 document_get_children_len(IntPtr ptr);
 
         // return Element ptr
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern IntPtr document_get_child(IntPtr ptr, UInt32 index);
 
         // return c_char ptr
         // convert to string by using Marshal.PtrToStringUTF8(ptr)
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern IntPtr document_tree_text(IntPtr ptr);
 
         // ===============================================
         // Element
         // ===============================================
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern void element_dispose(IntPtr ptr);
 
         // return c_char ptr
         // convert to string by using Marshal.PtrToStringUTF8(ptr)
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern IntPtr element_get_name(IntPtr ptr);
 
         // return c_char ptr
         // convert to string by using Marshal.PtrToStringUTF8(ptr)
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern IntPtr element_get_text(IntPtr ptr);
 
         // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern IntPtr element_get_attribute_keys(IntPtr ptr);
 
         // return c_char ptr
         // convert to string by using Marshal.PtrToStringUTF8(ptr)
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern IntPtr element_get_attribute_value(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string key);
 
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern Int32 element_get_children_len(IntPtr ptr);
 
         // return Element ptr
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern IntPtr element_get_child(IntPtr ptr, UInt32 index);
 
         // ============================================================
         // Vec<String> | c_char | error
         // ============================================================
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern uint strs_len(IntPtr ptr);
 
         // return c_char ptr
         // convert to string by using Marshal.PtrToStringUTF8(ptr)
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern IntPtr strs_get(IntPtr ptr, uint index);
 
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern void strs_dispose(IntPtr ptr);
 
         // ptr: c_char ptr
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern void str_dispose(IntPtr ptr);
 
         // return c_char ptr
         // convert to string by using Marshal.PtrToStringUTF8(ptr)
-        [DllImport("../../../../../target/debug/rxml")]
+        [DllImport(dllName)]
         public static extern IntPtr try_get_err();
 
         public static void ParseXmlTest()
