@@ -146,6 +146,8 @@ pub extern "C" fn value_from_i64(val: i64) -> *mut Value {
 }
 #[no_mangle]
 pub extern "C" fn value_from_float(val: f32) -> *mut Value {
+    let str = val.to_string();
+    let val = str.parse::<f64>().expect("convert f32 str to f64 failed");
     let val = Value::from(val as f64);
     Box::into_raw(Box::new(val))
 }

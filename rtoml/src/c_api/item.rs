@@ -194,6 +194,8 @@ pub extern "C" fn item_from_i64(val: i64) -> *mut Item {
 
 #[no_mangle]
 pub extern "C" fn item_from_float(val: f32) -> *mut Item {
+    let str = val.to_string();
+    let val = str.parse::<f64>().expect("convert f32 str to f64 failed");
     let item = toml_edit::value(val as f64);
     Box::into_raw(Box::new(item))
 }
