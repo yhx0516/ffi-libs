@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "rxml",
     "rtoml",
     "rpkg",
     "rhandlebars"

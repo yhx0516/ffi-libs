@@ -1,0 +1,16 @@
+[package]
+name = "rxml"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+xml-rs = "0.8.16"
+indexmap = "2.0.0"
+anyhow = "1.0.71"
+lazy_static = "1.4.0"
+
+funny-utils-rs = { git = "https://git.sofunny.io/devtools/libs/funny-utils-rs", rev = "1d79aa972d48aff" }
+
+[lib]
+name = "rxml"
+crate-type = ["cdylib", "staticlib"]
