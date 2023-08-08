@@ -8,17 +8,23 @@ namespace csharp_link_rust.libs
 {
     public class rpkg
     {
+        #if !UNITY_EDITOR && UNITY_IPHONE
+            const string dllName = "__Internal";
+        #else
+            const string dllName = "../../../../../target/debug/rpkg";
+        #endif
+
         // ===============================================
         // Info
         // ===============================================
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern string get_version();
 
         // ===============================================
         // Scan api
         // ===============================================
         // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern IntPtr rpkg_scan_files(
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
                 string[] patterns,
@@ -26,7 +32,7 @@ namespace csharp_link_rust.libs
             );
 
         // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern IntPtr rpkg_scan_files_rel_path(
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
                 string[] patterns,
@@ -34,7 +40,7 @@ namespace csharp_link_rust.libs
             );
 
         // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern IntPtr rpkg_scan_files_block_by_pkg(
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
                 string[] patterns,
@@ -42,7 +48,7 @@ namespace csharp_link_rust.libs
             );
 
         // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern IntPtr rpkg_scan_files_block_by_manifest(
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
                 string[] patterns,
@@ -50,7 +56,7 @@ namespace csharp_link_rust.libs
             );
 
         // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern IntPtr rpkg_scan_files_block_by_pkg_manifest(
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string root_path,
                 string[] patterns,
@@ -61,10 +67,10 @@ namespace csharp_link_rust.libs
         // BuildMap api
         // ============================================================
         // return BuildMap ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern IntPtr bm_new([MarshalAs(UnmanagedType.LPUTF8Str)] string root_path);
 
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern bool bm_insert(
                 IntPtr ptr,
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path,
@@ -72,19 +78,19 @@ namespace csharp_link_rust.libs
                 uint patterns_len
             );
 
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern void bm_dispose(IntPtr ptr);
 
         // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern IntPtr bm_get_target_types(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path);
 
         // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern IntPtr bm_get_target_types_from_pkg(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string pkg_path);
 
         // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern IntPtr bm_get_target_paths(
                 IntPtr ptr,
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path,
@@ -92,7 +98,7 @@ namespace csharp_link_rust.libs
             );
 
         // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern IntPtr bm_get_target_paths_from_pkg(
                 IntPtr ptr,
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string pkg_path,
@@ -100,7 +106,7 @@ namespace csharp_link_rust.libs
             );
 
         // return Dependencies ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern IntPtr bm_resolve_target_deps(
                 IntPtr ptr,
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path,
@@ -108,7 +114,7 @@ namespace csharp_link_rust.libs
             );
 
         // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern IntPtr bm_get_target_assets(
                 IntPtr ptr,
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string target_path,
@@ -116,46 +122,46 @@ namespace csharp_link_rust.libs
             );
 
         // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern IntPtr bm_get_asset_urls(IntPtr ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string addon_path);
 
 
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern string bm_get_root_path(IntPtr ptr);
 
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern string bm_find_bundle_path(IntPtr ptr, string target_path);
 
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern string bm_debug_info(IntPtr ptr);
 
         // ============================================================
         // Dependencies api
         // ============================================================
         // return Vec<String> ptr
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern IntPtr dependencies_get_targets(IntPtr ptr);
 
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern bool dependencies_is_circular(IntPtr ptr);
 
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern void dependencies_dispose(IntPtr ptr);
 
         // ============================================================
         // Vec<String> api
         // ============================================================
 
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern uint strs_len(IntPtr ptr);
 
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern string strs_get(IntPtr ptr, uint index);
 
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern void strs_dispose(IntPtr ptr);
 
-        [DllImport("../../../../../target/debug/rpkg.dll")]
+        [DllImport(dllName)]
         public static extern string try_get_err();
 
 

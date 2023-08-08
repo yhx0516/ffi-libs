@@ -24,6 +24,9 @@ namespace csharp_link_rust
             Console.WriteLine("");
 
             rhandlebars.HandlebarsTest();
+            Console.WriteLine("");
+
+            rxml.ParseXmlTest();
 
             Console.ReadLine();
         }

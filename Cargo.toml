@@ -1,6 +1,13 @@
 [workspace]
 members = [
+    "rxml",
     "rtoml",
     "rpkg",
     "rhandlebars"
 ]
+
+[profile.release]
+lto = true
+opt-level = 'z'
+codegen-units = 1
+strip = true  # Automatically strip symbols from the binary.

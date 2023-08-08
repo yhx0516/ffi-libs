@@ -13,36 +13,42 @@ namespace csharp_link_rust.libs
 
     public class rhandlebars
     {
+        #if !UNITY_EDITOR && UNITY_IPHONE
+            const string dllName = "__Internal";
+        #else
+            const string dllName = "../../../../../target/debug/rhandlebars";
+        #endif
+
         // ===============================================
         // Info
         // ===============================================
-        [DllImport("../../../../../target/debug/rhandlebars.dll")]
+        [DllImport(dllName)]
         public static extern string get_version();
 
         /// ===============================================
         /// Handlebars
         /// ===============================================
         // return Handlebars ptr
-        [DllImport("../../../../../target/debug/rhandlebars.dll")]
+        [DllImport(dllName)]
         public static extern IntPtr handlebars_new();
 
-        [DllImport("../../../../../target/debug/rhandlebars.dll")]
+        [DllImport(dllName)]
         public static extern void handlebars_dispose(IntPtr hb_ptr);
 
-        [DllImport("../../../../../target/debug/rhandlebars.dll")]
+        [DllImport(dllName)]
         public static extern void handlebars_register_helper_callback(
             IntPtr hb_ptr,
             [MarshalAs(UnmanagedType.LPUTF8Str)] string helper_name,
             HelperCallback callback
         );
 
-        [DllImport("../../../../../target/debug/rhandlebars.dll")]
+        [DllImport(dllName)]
         public static extern string handlebars_render_template(IntPtr hb_ptr, [MarshalAs(UnmanagedType.LPUTF8Str)] string tpl_str);
         
-        [DllImport("../../../../../target/debug/rhandlebars.dll")]
+        [DllImport(dllName)]
         public static extern string helper_get_arg_as_str(IntPtr h_ptr, uint idx);
 
-        [DllImport("../../../../../target/debug/rhandlebars.dll")]
+        [DllImport(dllName)]
         public static extern string render_template_from_toml(
                [MarshalAs(UnmanagedType.LPUTF8Str)] string tpl_path,
                [MarshalAs(UnmanagedType.LPUTF8Str)] string toml_path

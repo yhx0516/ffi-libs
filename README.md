@@ -96,3 +96,33 @@ cargo build --target aarch64-apple-darwin --release -p rhandlebars
 ```
 cargo build --target aarch64-apple-ios --release -p rhandlebars
 ```
+
+---
+### rxml - xml 的封装库
+build cmd
+- win64
+```
+cross build --release -p rxml
+```
+
+- android
+```
+cross build --target aarch64-linux-android --release -p rxml
+```
+
+- linux
+```
+cross build --target x86_64-unknown-linux-gnu --release -p rxml
+```
+
+- macos
+```
+cargo build --target x86_64-apple-darwin --release -p rxml
+
+cargo build --target aarch64-apple-darwin --release -p rxml
+```
+
+- ios
+```
+cargo build --target aarch64-apple-ios --release -p rxml
+```

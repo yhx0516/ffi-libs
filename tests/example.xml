@@ -1,0 +1,18 @@
+<constrain constrain-a = "1|anchor-chain1" constrain-b = "2|anchor-chain2">
+    <joint chain0Pos = "(0.1, 0.1, 0.1)" chain0Rot ="(0.2, 0.2, 0.2)" on-collision = "OnCollision" tags = "anchor-a" />
+    <joint chain1Pos = "(0.1, 0.1, 0.1)" chain1Rot ="(0.2, 0.2, 0.2)" tags = "anchor-b" />
+</constrain>
+
+<constrain constrain-a = "1|anchor-chain1" constrain-b = "2|anchor-chain2">
+    <joint chain0Pos = "(0.1, 0.1, 0.1)" chain0Rot ="(0.2, 0.2, 0.2)" on-collision = "OnCollision" tags = "anchor-a">
+        <joint chain1Pos = "(0.1, 0.1, 0.1)" chain1Rot ="(0.2, 0.2, 0.2)" tags = "anchor-b" />
+        <joint chain1Pos = "(0.1, 0.1, 0.1)" chain1Rot ="(0.2, 0.2, 0.2)" tags = "anchor-b" >
+            <custom chain1Pos = "(0.1, 0.1, 0.1)" chain1Rot ="(0.2, 0.2, 0.2)" tags = "anchor-b" />
+        </joint>
+        <joint chain1Pos = "(0.1, 0.1, 0.1)" chain1Rot ="(0.2, 0.2, 0.2)" tags = "anchor-b" >
+            <custom chain1Pos = "(0.1, 0.1, 0.1)" chain1Rot ="(0.2, 0.2, 0.2)" tags = "anchor-b" />
+            <custom chain1Pos = "(0.1, 0.1, 0.1)" chain1Rot ="(0.2, 0.2, 0.2)" tags = "anchor-b" />
+        </joint>
+    </joint>
+    <joint chain1Pos = "(0.1, 0.1, 0.1)" chain1Rot ="(0.2, 0.2, 0.2)" tags = "anchor-b" />
+</constrain>
