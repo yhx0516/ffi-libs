@@ -42,7 +42,7 @@ pub extern "C" fn handlebars_register_helper_callback(
 ) {
     // 将传入的 helper_callback 封装为 Rust 的闭包，并注册为 Handlebars 的 helper
     unsafe {
-        let handlebars = handlebars_ptr.as_mut().expect("invalid ptr: ");
+        let handlebars = handlebars_ptr.as_mut().expect("invalid ptr");
         let helper_name = ffi::char_ptr_to_str(helper_name);
 
         if let Some(callback) = helper_callback {
@@ -66,7 +66,7 @@ pub extern "C" fn handlebars_render_template(
     handlebars_ptr: *mut Handlebars,
     tpl_str: *const c_char,
 ) -> *const c_char {
-    let handlebars = unsafe { handlebars_ptr.as_mut().expect("invalid ptr: ") };
+    let handlebars = unsafe { handlebars_ptr.as_mut().expect("invalid ptr") };
     let tpl_str = ffi::char_ptr_to_str(tpl_str);
 
     match handlebars.render_template(&tpl_str, &to_json("")) {
@@ -77,7 +77,7 @@ pub extern "C" fn handlebars_render_template(
 
 #[no_mangle]
 pub extern "C" fn helper_get_arg_as_str(helper_ptr: *const Helper, idx: usize) -> *const c_char {
-    let helper = unsafe { helper_ptr.as_ref().expect("invalid ptr: ") };
+    let helper = unsafe { helper_ptr.as_ref().expect("invalid ptr") };
     let res = helper
         .param(idx)
         .and_then(|v| v.value().as_str())

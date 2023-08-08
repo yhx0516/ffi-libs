@@ -17,14 +17,16 @@ namespace csharp_link_rust
             rtoml.ParseTomlTest();
             Console.WriteLine("");
 
+            rtoml.WriteTomlTest();
+            Console.WriteLine("");
+
             rpkg.PkgMatchTest();
             Console.WriteLine("");
 
             rhandlebars.HandlebarsTest();
+
             Console.ReadLine();
-
-
-        } 
+        }
     }
 }
 
