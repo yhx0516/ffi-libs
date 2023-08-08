@@ -1,7 +1,0 @@
-[package]
-name = "rutils"
-version = "0.0.1"
-edition = "2021"
-
-[target.'cfg(windows)'.dependencies]
-dunce = "1.0.4"

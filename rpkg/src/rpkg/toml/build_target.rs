@@ -1,7 +1,7 @@
 use anyhow::Result;
-use rutils::path::canonicalize_path;
-use rutils::path::norm_path;
-use rutils::path::norm_path_extreme;
+use funny_utils_rs::path::canonicalize_path;
+use funny_utils_rs::path::norm_path;
+use funny_utils_rs::path::trim_path2;
 use std::path::Path;
 
 mod bundle;
@@ -49,7 +49,7 @@ pub trait BuildTarget {
                 Some(path)
             }
             (true, false) => {
-                let path = Path::new(&norm_path_extreme(pkg_path)).to_path_buf();
+                let path = Path::new(&trim_path2(pkg_path)).to_path_buf();
                 Some(path)
             }
             _ => None,
@@ -65,11 +65,11 @@ pub trait BuildTarget {
                 format!(
                     "{}://{}/{}",
                     ASSET_PROTOCAL,
-                    norm_path_extreme(p),
-                    norm_path_extreme(rel_asset_path)
+                    trim_path2(p),
+                    trim_path2(rel_asset_path)
                 )
             }
-            None => format!("{}://{}", ASSET_PROTOCAL, norm_path_extreme(rel_asset_path)),
+            None => format!("{}://{}", ASSET_PROTOCAL, trim_path2(rel_asset_path)),
         };
         url.to_lowercase()
     }
@@ -88,7 +88,7 @@ pub fn resolve_target_path(
         None => canonicalize_path(cur_path)?,
     };
 
-    let res = norm_path_extreme(path.strip_prefix(root_path)?)
+    let res = trim_path2(path.strip_prefix(root_path)?)
         .trim_start_matches('/')
         .to_string();
     Ok(res)
@@ -105,7 +105,7 @@ pub fn to_bundle_path(
 
     let rel_path = match addon_path == target_path {
         true => String::from("assets"),
-        false => norm_path_extreme(target_path.strip_prefix(addon_path)?),
+        false => trim_path2(target_path.strip_prefix(addon_path)?),
     };
 
     let url = format!("{}.{}", rel_path, ASSET_PKG_EXTENSION);
@@ -142,7 +142,7 @@ fn norm_dep_path(
     let dep_path = dep_path.as_ref();
 
     if dep_path.starts_with("/") {
-        return Ok(norm_path_extreme(dep_path));
+        return Ok(trim_path2(dep_path));
     }
 
     let path = match norm_path(dep_path).split_once('*') {
@@ -152,5 +152,5 @@ fn norm_dep_path(
         None => canonicalize_path(root_path.join(cur_path).join(&dep_path))?,
     };
 
-    Ok(norm_path_extreme(path.strip_prefix(root_path)?))
+    Ok(trim_path2(path.strip_prefix(root_path)?))
 }

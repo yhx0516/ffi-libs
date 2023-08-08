@@ -5,7 +5,8 @@ edition = "2021"
 
 [dependencies]
 toml_edit = "0.19.8"
-rutils =  { version ="0.0.1", path="../rutils" }
+
+funny-utils-rs = { git = "https://git.sofunny.io/devtools/libs/funny-utils-rs", tag = "0.1.1" }
 
 [lib]
 name = "rtoml"
