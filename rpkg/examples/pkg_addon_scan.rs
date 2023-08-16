@@ -43,6 +43,77 @@ fn main() {
     // bundle
     // 根据 bundle_path 查询与之关联的所有 target
     let addon_path = "./tests/pkg-dependencies/BuildAssets/addon1";
+
+    // 获取 addon pkgs
+    let addon_pkg_paths = build_map
+        .get_addon_pkg_paths("./tests/pkg-dependencies/BuildAssets/addon1")
+        .unwrap();
+    println!("addon1 addon_pkg_paths:");
+    for pkg_path in addon_pkg_paths {
+        println!("  {}", pkg_path);
+    }
+
+    // 判断目录是否是 addon
+    let is_addon = build_map.judge_path_is_addon(addon_path);
+
+    if is_addon {
+        let inner_addon_paths = build_map.get_inner_addon_paths(addon_path);
+        println!("inner addon path:");
+        for item in &inner_addon_paths {
+            println!("  {}", item);
+        }
+    }
+
+    // 判断目录下层是否关联 addon（含本身）
+    let is_ref_inner_addon = build_map.judge_path_ref_inner_addon(addon_path);
+
+    // 获取其关联的 addon_path
+    if is_ref_inner_addon {
+        let inner_addon_paths = build_map.get_inner_addon_paths(addon_path);
+        println!("ref inner addon path:");
+        for item in &inner_addon_paths {
+            println!("  {}", item);
+        }
+    }
+
+    // 判断上层目录是否关联 addon
+    let is_ref_outer_addon = build_map.judge_path_ref_outer_addon(addon_path);
+
+    // 获取最近上层的 addon_path
+    if is_ref_outer_addon {
+        let outer_addon_path = build_map.get_outer_addon_path(addon_path);
+        println!("ref outer addon path:");
+        println!("  {}", outer_addon_path);
+    }
+
+    // 收集指定目录 addon 与 pkg 的信息
+    let select_paths = [
+        "./tests/pkg-dependencies",
+        "./tests/pkg-dependencies/BuildAssets",
+        "./tests/pkg-dependencies/BuildAssets/addon1",
+        "./tests/pkg-dependencies/BuildAssets/addon2",
+        "./tests/pkg-dependencies/BuildAssets/manifest.toml",
+        "./tests/pkg-dependencies/BuildAssets/addon1/manifest.toml",
+        "./tests/pkg-dependencies/BuildAssets/addon1/Prefab/.pkg",
+        "./tests/pkg-dependencies/CircularDep",
+        "./tests/pkg-dependencies/CircularDep/A/.pkg",
+    ];
+
+    for select_path in select_paths {
+        let build_collection = build_map.seek_build_collection(select_path).unwrap();
+
+        println!("select_path: {}", select_path);
+        println!("  seek addon paths");
+        for addon_path in build_collection.get_addon_paths() {
+            println!("      {}", addon_path);
+        }
+
+        println!("  seek pkg paths");
+        for pkg_path in build_collection.get_pkg_paths() {
+            println!("      {}", pkg_path);
+        }
+    }
+
     let target_path = "BuildAssets/addon1/Prefab";
 
     // 获取所有 target_types

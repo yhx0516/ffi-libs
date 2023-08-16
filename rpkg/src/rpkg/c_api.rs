@@ -2,7 +2,7 @@ use std::ffi::c_char;
 
 use funny_utils_rs::ffi;
 
-use crate::core::{BuildMap, Dependencies};
+use crate::core::{BuildCollection, BuildMap, Dependencies};
 use crate::scan_files;
 use crate::scan_files_block_by_manifest;
 use crate::scan_files_block_by_pkg;
@@ -270,6 +270,42 @@ pub extern "C" fn bm_get_target_paths_from_pkg(
 }
 
 #[no_mangle]
+pub extern "C" fn bm_seek_build_collection(
+    ptr: *mut BuildMap,
+    select_path: *const c_char,
+) -> *const BuildCollection {
+    let build_map = unsafe { ptr.as_mut().expect("invalid ptr") };
+    let select_path = ffi::char_ptr_to_str(select_path);
+
+    match build_map.seek_build_collection(select_path) {
+        Ok(v) => Box::into_raw(Box::new(v)),
+        Err(e) => {
+            ErrorBuffer::new(e.to_string());
+            return std::ptr::null();
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn bm_get_addon_pkg_paths(
+    ptr: *mut BuildMap,
+    addon_path: *const c_char,
+) -> *const Vec<String> {
+    let build_map = unsafe { ptr.as_ref().expect("invalid ptr") };
+    let addon_path = ffi::char_ptr_to_str(addon_path);
+
+    let pkg_paths = match build_map.get_addon_pkg_paths(addon_path) {
+        Ok(v) => v,
+        Err(e) => {
+            ErrorBuffer::new(e.to_string());
+            return std::ptr::null();
+        }
+    };
+
+    Box::into_raw(Box::new(pkg_paths))
+}
+
+#[no_mangle]
 pub extern "C" fn bm_resolve_target_deps(
     ptr: *mut BuildMap,
     target_path: *const c_char,
@@ -373,6 +409,33 @@ pub extern "C" fn dependencies_is_circular(ptr: *const Dependencies) -> bool {
 
 #[no_mangle]
 pub extern "C" fn dependencies_dispose(ptr: *mut Dependencies) {
+    if ptr.is_null() {
+        return;
+    }
+    unsafe { Box::from_raw(ptr) };
+}
+
+// ============================================================
+// BuildCollection api
+// ============================================================
+#[no_mangle]
+pub extern "C" fn bc_get_addon_paths(ptr: *mut BuildCollection) -> *const Vec<String> {
+    let build_collection = unsafe { ptr.as_ref().expect("invalid ptr") };
+    let addon_paths = build_collection.get_addon_paths();
+    let addon_paths: Vec<_> = addon_paths.iter().map(|s| s.to_string()).collect();
+    Box::into_raw(Box::new(addon_paths))
+}
+
+#[no_mangle]
+pub extern "C" fn bc_get_pkg_paths(ptr: *mut BuildCollection) -> *const Vec<String> {
+    let build_collection = unsafe { ptr.as_ref().expect("invalid ptr") };
+    let pkg_paths = build_collection.get_pkg_paths();
+    let pkg_paths: Vec<_> = pkg_paths.iter().map(|s| s.to_string()).collect();
+    Box::into_raw(Box::new(pkg_paths))
+}
+
+#[no_mangle]
+pub extern "C" fn bc_dispose(ptr: *mut BuildCollection) {
     if ptr.is_null() {
         return;
     }

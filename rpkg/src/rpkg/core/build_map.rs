@@ -12,6 +12,7 @@ use funny_utils_rs::path::trim_path2;
 
 use crate::core::resolve_build_deps;
 use crate::core::Assets;
+use crate::core::BuildCollection;
 use crate::core::Dependencies;
 use crate::core::PKGTargetPaths;
 use crate::BuildTarget;
@@ -23,9 +24,9 @@ use crate::TomlSubscene;
 use crate::TomlZip;
 
 use crate::resolve_target_path;
+use crate::scan_files_block_by_manifest;
 use crate::scan_files_block_by_pkg_manifest;
 use crate::to_bundle_path;
-
 #[derive(Default)]
 pub struct BuildMap {
     /// project path
@@ -36,6 +37,9 @@ pub struct BuildMap {
 
     /// key: addon path, value: target paths
     addon_to_targets: BTreeMap<String, PKGTargetPaths>,
+
+    /// key: addon path, value: pkg paths
+    addon_to_pkgs: BTreeMap<String, Vec<String>>,
 
     /// key: target path, value: bundle path
     bundle_paths: BTreeMap<String, String>,
@@ -120,6 +124,168 @@ impl BuildMap {
             Some(pkg_to_targets) => Ok(pkg_to_targets.get_target_paths(target_type)),
             None => Ok(Vec::new()),
         }
+    }
+
+    pub fn seek_build_collection(&self, select_path: impl AsRef<str>) -> Result<BuildCollection> {
+        let select_path: String = norm_path(canonicalize_path(select_path.as_ref()).unwrap());
+        let path = Path::new(&select_path);
+
+        let mut build_collection = BuildCollection::new();
+
+        // path is addon
+        if path.is_dir() {
+            if self.judge_path_is_addon(&select_path) {
+                for path in self.get_inner_addon_paths(&select_path) {
+                    build_collection.add_addon_path(path.to_string());
+                }
+
+                return Ok(build_collection);
+            } else {
+                let mut pkg_files = None;
+
+                // get inner addon
+                if self.judge_path_ref_inner_addon(&select_path) {
+                    for path in self.get_inner_addon_paths(&select_path) {
+                        build_collection.add_addon_path(path.to_string());
+                    }
+
+                    pkg_files = Some(scan_files_block_by_manifest(&select_path, &["**/.pkg"]));
+
+                    // no pkg
+                    if matches!(pkg_files, Some(ref files) if files.is_empty()) {
+                        return Ok(build_collection);
+                    }
+                }
+
+                // get outer addon
+                if self.judge_path_ref_outer_addon(&select_path) {
+                    build_collection.add_addon_path(self.get_outer_addon_path(&select_path));
+                    return Ok(build_collection);
+                }
+
+                if pkg_files.is_none() {
+                    pkg_files = Some(scan_files_block_by_manifest(&select_path, &["**/.pkg"]));
+                }
+
+                if let Some(files) = pkg_files {
+                    build_collection.set_pkg_path(files);
+                }
+
+                return Ok(build_collection);
+            }
+        } else {
+            let directory = norm_path(path.parent().unwrap());
+            let is_manifest = path.file_name().unwrap() == "manifest.toml";
+
+            // path is addon or path is root manifest.toml
+            if self.judge_path_is_addon(&directory) || (is_manifest && directory == self.root_path)
+            {
+                for path in self.get_inner_addon_paths(&directory) {
+                    build_collection.add_addon_path(path.to_string());
+                }
+
+                return Ok(build_collection);
+            }
+
+            // get outer addon
+            if self.judge_path_ref_outer_addon(&select_path) {
+                build_collection.add_addon_path(self.get_outer_addon_path(&select_path));
+                return Ok(build_collection);
+            }
+
+            let pkg_path = Path::new(&directory).join(".pkg");
+
+            if pkg_path.exists() {
+                build_collection.add_pkg_path(norm_path(pkg_path));
+            }
+        }
+
+        Ok(build_collection)
+    }
+
+    pub fn get_addon_pkg_paths(&self, addon_path: impl AsRef<str>) -> Result<Vec<String>> {
+        let addon_path: String = norm_path(canonicalize_path(addon_path.as_ref())?);
+        match self.addon_to_pkgs.get(&addon_path) {
+            Some(addon_to_pkgs) => Ok(addon_to_pkgs.to_owned()),
+            None => Ok(Vec::new()),
+        }
+    }
+
+    pub fn judge_path_is_addon(&self, path: impl AsRef<str>) -> bool {
+        let path: String = norm_path(canonicalize_path(path.as_ref()).unwrap());
+
+        for addon_path in self.addon_to_targets.keys() {
+            if path.eq(addon_path) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    pub fn judge_path_ref_inner_addon(&self, path: impl AsRef<str>) -> bool {
+        let path: String = norm_path(canonicalize_path(path.as_ref()).unwrap());
+
+        for addon_path in self.addon_to_targets.keys() {
+            if addon_path.starts_with(&path) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    pub fn get_inner_addon_paths(&self, path: impl AsRef<str>) -> Vec<&str> {
+        let path: String = norm_path(canonicalize_path(path.as_ref()).unwrap());
+        let mut addon_paths = Vec::new();
+
+        for addon_path in self.addon_to_targets.keys() {
+            if addon_path == &self.root_path {
+                addon_paths.push("./");
+            } else if addon_path.starts_with(&path) {
+                let addon = &addon_path[self.root_path.len() + 1..];
+                addon_paths.push(addon);
+            }
+        }
+
+        return addon_paths;
+    }
+
+    pub fn judge_path_ref_outer_addon(&self, path: impl AsRef<str>) -> bool {
+        let path: String = norm_path(canonicalize_path(path.as_ref()).unwrap());
+
+        for addon_path in self.addon_to_targets.keys() {
+            if path.len() == addon_path.len() {
+                return false;
+            }
+
+            if path.starts_with(addon_path) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    pub fn get_outer_addon_path(&self, path: impl AsRef<str>) -> String {
+        let path: String = norm_path(canonicalize_path(path.as_ref()).unwrap());
+        let mut outer_addon_path = String::new();
+
+        for addon_path in self.addon_to_targets.keys() {
+            if path.len() == addon_path.len() {
+                continue;
+            }
+
+            if addon_path != &self.root_path && path.starts_with(addon_path) {
+                let addon = &addon_path[self.root_path.len() + 1..];
+
+                if outer_addon_path.len() < addon.len() {
+                    outer_addon_path = addon.to_string();
+                }
+            }
+        }
+
+        return outer_addon_path;
     }
 
     pub fn get_build_target(
@@ -221,6 +387,12 @@ impl BuildMap {
         let root_path = self.get_root_path().clone();
         let addon_path = canonicalize_path(addon_path.as_ref())?;
         let mut addon_to_targets = PKGTargetPaths::new();
+
+        // update addon_to_pkgs map
+        self.addon_to_pkgs.insert(
+            norm_path(&addon_path),
+            pkg_paths.iter().map(|s| norm_path(s)).collect(),
+        );
 
         for pkg_path in pkg_paths {
             let pkg_path = pkg_path.as_ref();
@@ -437,6 +609,18 @@ impl Display for BuildMap {
             output
         };
 
+        let addon_to_strs = |target_map: &BTreeMap<String, Vec<String>>| {
+            let mut output = String::new();
+            for (key, val) in target_map {
+                output.push_str(&format!("  {}:\n", key));
+
+                for v in val {
+                    output.push_str(&format!("    {}\n", v.to_string()));
+                }
+            }
+            output
+        };
+
         let urls_to_str = |target_map: &BTreeMap<String, String>| {
             let mut output = String::new();
             for (key, val) in target_map {
@@ -471,8 +655,11 @@ impl Display for BuildMap {
         output.push_str("pkgs:\n    ");
         output.push_str(&pkgs_to_str(&self.pkg_to_targets));
 
-        output.push_str("addon_pkgs:\n    ");
+        output.push_str("addon_targets:\n    ");
         output.push_str(&pkgs_to_str(&self.addon_to_targets));
+
+        output.push_str("addon_pkgs:\n    ");
+        output.push_str(&addon_to_strs(&self.addon_to_pkgs));
 
         output.push_str("bundle_urls:\n");
         output.push_str(&urls_to_str(&self.bundle_paths));
