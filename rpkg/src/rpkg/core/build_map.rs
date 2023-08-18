@@ -134,7 +134,7 @@ impl BuildMap {
 
         // path is addon
         if path.is_dir() {
-            if self.judge_path_is_addon(&select_path) {
+            if self.is_addon(&select_path) {
                 for path in self.get_inner_addon_paths(&select_path) {
                     build_collection.add_addon_path(path.to_string());
                 }
@@ -144,7 +144,7 @@ impl BuildMap {
                 let mut pkg_files = None;
 
                 // get inner addon
-                if self.judge_path_ref_inner_addon(&select_path) {
+                if self.has_inner_addon(&select_path) {
                     for path in self.get_inner_addon_paths(&select_path) {
                         build_collection.add_addon_path(path.to_string());
                     }
@@ -158,7 +158,7 @@ impl BuildMap {
                 }
 
                 // get outer addon
-                if self.judge_path_ref_outer_addon(&select_path) {
+                if self.has_outer_addon(&select_path) {
                     build_collection.add_addon_path(self.get_outer_addon_path(&select_path));
                     return Ok(build_collection);
                 }
@@ -178,8 +178,7 @@ impl BuildMap {
             let is_manifest = path.file_name().unwrap() == "manifest.toml";
 
             // path is addon or path is root manifest.toml
-            if self.judge_path_is_addon(&directory) || (is_manifest && directory == self.root_path)
-            {
+            if self.is_addon(&directory) || (is_manifest && directory == self.root_path) {
                 for path in self.get_inner_addon_paths(&directory) {
                     build_collection.add_addon_path(path.to_string());
                 }
@@ -188,7 +187,7 @@ impl BuildMap {
             }
 
             // get outer addon
-            if self.judge_path_ref_outer_addon(&select_path) {
+            if self.has_outer_addon(&select_path) {
                 build_collection.add_addon_path(self.get_outer_addon_path(&select_path));
                 return Ok(build_collection);
             }
@@ -211,7 +210,7 @@ impl BuildMap {
         }
     }
 
-    pub fn judge_path_is_addon(&self, path: impl AsRef<str>) -> bool {
+    pub fn is_addon(&self, path: impl AsRef<str>) -> bool {
         let path: String = norm_path(canonicalize_path(path.as_ref()).unwrap());
 
         for addon_path in self.addon_to_targets.keys() {
@@ -223,7 +222,7 @@ impl BuildMap {
         return false;
     }
 
-    pub fn judge_path_ref_inner_addon(&self, path: impl AsRef<str>) -> bool {
+    pub fn has_inner_addon(&self, path: impl AsRef<str>) -> bool {
         let path: String = norm_path(canonicalize_path(path.as_ref()).unwrap());
 
         for addon_path in self.addon_to_targets.keys() {
@@ -251,7 +250,7 @@ impl BuildMap {
         return addon_paths;
     }
 
-    pub fn judge_path_ref_outer_addon(&self, path: impl AsRef<str>) -> bool {
+    pub fn has_outer_addon(&self, path: impl AsRef<str>) -> bool {
         let path: String = norm_path(canonicalize_path(path.as_ref()).unwrap());
 
         for addon_path in self.addon_to_targets.keys() {

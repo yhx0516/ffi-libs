@@ -105,7 +105,7 @@ namespace csharp_link_rust.libs
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string target_type
             );
 
-        // return CollectPath ptr
+        // return BuildCollection ptr
         [DllImport(dllName)]
         public static extern IntPtr bm_seek_build_collection(
                 IntPtr ptr,
@@ -163,7 +163,7 @@ namespace csharp_link_rust.libs
         public static extern void dependencies_dispose(IntPtr ptr);
 
         // ============================================================
-        // CollectPath api
+        // BuildCollection api
         // ============================================================
         // return Vec<String> ptr
         [DllImport(dllName)]
