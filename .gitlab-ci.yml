@@ -4,6 +4,7 @@ stages: # 申明所有阶段
 
 variables:
   BUILD_PACKAGE: rtoml rpkg rhandlebars rxml # 默认构建的包列表 用 " " 分割
+  MANUAL_BUILD_PACKAGE: # 手动构建指定的包列表，为空则以 BUILD_PACKAGE 为准
 
 include: # 调用本地的 yml 文件
   - local: .gitlab-ci/stages/build_release.yml

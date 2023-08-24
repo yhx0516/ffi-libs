@@ -41,12 +41,16 @@ if [[ $CI_COMMIT_TAG =~ ^(.+)- ]]; then
 else
     echo "无法从 TAG: $CI_COMMIT_TAG 中提取 - 前面的内容"
     # PACKAGE_ARR=(rtoml rpkg rhandlebars)
-    IFS=' ' read -ra PACKAGE_ARR <<< "$BUILD_PACKAGE"
+    if [ ! -z "$MANUAL_BUILD_PACKAGE" ]; then
+        IFS=' ' read -ra PACKAGE_ARR <<< "$MANUAL_BUILD_PACKAGE"
+    else
+        IFS=' ' read -ra PACKAGE_ARR <<< "$BUILD_PACKAGE"
+    fi
 fi
 
 # 手动模式，BUILD_TAG 为当前分支
 if [ $CI_PIPELINE_SOURCE == "web" ] || [ $CI_PIPELINE_SOURCE == "schedule" ]; then
-    ehco $CI_COMMIT_BRANCH
+    echo $CI_COMMIT_BRANCH
     # 将分支的 \ 替换成 -
     BUILD_TAG=`echo $CI_COMMIT_BRANCH | sed 's/\//-/g'`
 fi 
