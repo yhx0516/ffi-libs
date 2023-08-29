@@ -1,6 +1,8 @@
 .common:
   stage: build-release
   rules:
+    - if: $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "schedule"
+      when: on_success
     - if: $CI_COMMIT_TAG =~ /.*[0-9]+\.[0-9]+\.[0-9]+$/
       when: on_success
     - when: never
