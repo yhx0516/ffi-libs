@@ -57,10 +57,9 @@ fn main() {
     let is_addon = build_map.is_addon(addon_path);
 
     if is_addon {
-        let inner_addon_paths = build_map.get_inner_addon_paths(addon_path);
-        println!("inner addon path:");
-        for item in &inner_addon_paths {
-            println!("  {}", item);
+        if let Some(addon_path) = build_map.get_addon_path(addon_path) {
+            println!("addon path:");
+            println!("  {}", addon_path);
         }
     }
 
@@ -81,9 +80,10 @@ fn main() {
 
     // 获取最近上层的 addon_path
     if has_outer_addon {
-        let outer_addon_path = build_map.get_outer_addon_path(addon_path);
-        println!("outer addon path:");
-        println!("  {}", outer_addon_path);
+        if let Some(outer_addon_path) = build_map.get_outer_addon_path(addon_path) {
+            println!("outer addon path:");
+            println!("  {}", outer_addon_path);
+        }
     }
 
     // 收集指定目录 addon 与 pkg 的信息
