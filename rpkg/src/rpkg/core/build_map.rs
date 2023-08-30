@@ -235,7 +235,7 @@ impl BuildMap {
             }
         }
 
-        return false;
+        false
     }
 
     pub fn get_addon_path(&self, path: impl AsRef<str>) -> Option<String> {
@@ -248,7 +248,7 @@ impl BuildMap {
             }
         }
 
-        return None;
+        None
     }
 
     pub fn has_inner_addon(&self, path: impl AsRef<str>) -> bool {
@@ -260,7 +260,7 @@ impl BuildMap {
             }
         }
 
-        return false;
+        false
     }
 
     pub fn get_inner_addon_paths(&self, path: impl AsRef<str>) -> Vec<&str> {
@@ -276,7 +276,7 @@ impl BuildMap {
             }
         }
 
-        return addon_paths;
+        addon_paths
     }
 
     pub fn has_outer_addon(&self, path: impl AsRef<str>) -> bool {
@@ -292,7 +292,7 @@ impl BuildMap {
             }
         }
 
-        return false;
+        false
     }
 
     pub fn get_outer_addon_path(&self, path: impl AsRef<str>) -> Option<String> {
@@ -313,7 +313,7 @@ impl BuildMap {
             }
         }
 
-        return Some(outer_addon_path);
+        Some(outer_addon_path)
     }
 
     pub fn get_build_target(
