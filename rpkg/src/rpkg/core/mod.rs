@@ -1,10 +1,12 @@
 mod assets;
+mod build_collection;
 mod build_map;
 mod dependencies;
 mod pkg;
 mod scan;
 
 pub use assets::Assets;
+pub use build_collection::BuildCollection;
 pub use build_map::BuildMap;
 pub use pkg::PKGTargetPaths;
 

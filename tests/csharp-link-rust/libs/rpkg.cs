@@ -105,6 +105,20 @@ namespace csharp_link_rust.libs
                 [MarshalAs(UnmanagedType.LPUTF8Str)] string target_type
             );
 
+        // return BuildCollection ptr
+        [DllImport(dllName)]
+        public static extern IntPtr bm_seek_build_collection(
+                IntPtr ptr,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string select_path
+            );
+
+        // return Vec<String> ptr
+        [DllImport(dllName)]
+        public static extern IntPtr bm_get_addon_pkg_paths(
+                IntPtr ptr,
+                [MarshalAs(UnmanagedType.LPUTF8Str)] string pkg_path
+            );
+
         // return Dependencies ptr
         [DllImport(dllName)]
         public static extern IntPtr bm_resolve_target_deps(
@@ -147,6 +161,20 @@ namespace csharp_link_rust.libs
 
         [DllImport(dllName)]
         public static extern void dependencies_dispose(IntPtr ptr);
+
+        // ============================================================
+        // BuildCollection api
+        // ============================================================
+        // return Vec<String> ptr
+        [DllImport(dllName)]
+        public static extern IntPtr bc_get_addon_paths(IntPtr ptr);
+
+        // return Vec<String> ptr
+        [DllImport(dllName)]
+        public static extern IntPtr bc_get_pkg_paths(IntPtr ptr);
+
+        [DllImport(dllName)]
+        public static extern void bc_dispose(IntPtr ptr);
 
         // ============================================================
         // Vec<String> api
@@ -228,6 +256,51 @@ namespace csharp_link_rust.libs
             // 获取 pkg 文件里的某个 bundle
             string bundle_path = "BuildAssets/addon1/Prefab";
             string addon_path1 = "../../../../../tests/pkg-dependencies/BuildAssets/addon1";
+
+            IntPtr addon_pkg_paths_ptr = bm_get_addon_pkg_paths(build_map_ptr, addon_path1);
+            string[] addon_pkg_paths = Ptr2StringList(addon_pkg_paths_ptr);
+            Console.WriteLine($"{addon_path1} pkg_paths: ");
+
+            foreach (string pkg_path in addon_pkg_paths) {
+                Console.WriteLine($"    {pkg_path}");
+            }
+
+            // 收集指定目录 addon 与 pkg 的信息
+            string[] select_paths = {
+                "../../../../../tests/pkg-dependencies",
+                "../../../../../tests/pkg-dependencies/BuildAssets",
+                "../../../../../tests/pkg-dependencies/BuildAssets/addon1",
+                "../../../../../tests/pkg-dependencies/BuildAssets/addon2",
+                "../../../../../tests/pkg-dependencies/BuildAssets/manifest.toml",
+                "../../../../../tests/pkg-dependencies/BuildAssets/addon1/manifest.toml",
+                "../../../../../tests/pkg-dependencies/BuildAssets/addon1/Prefab/.pkg",
+                "../../../../../tests/pkg-dependencies/CircularDep",
+                "../../../../../tests/pkg-dependencies/CircularDep/A/.pkg",
+            };
+
+            foreach (string select_path in select_paths) {
+                IntPtr build_collection_ptr = bm_seek_build_collection(build_map_ptr, select_path);
+
+                Console.WriteLine("  select_path:" + select_path);
+                Console.WriteLine("     seek addon paths");
+
+                IntPtr addon_paths_ptr = bc_get_addon_paths(build_collection_ptr);
+                string[] addon_paths = Ptr2StringList(addon_paths_ptr);
+                foreach (string addon_path in addon_paths) {
+                    Console.WriteLine("        " + addon_path);
+                }
+
+                Console.WriteLine("     seek pkg paths");
+                IntPtr pkg_paths_ptr = bc_get_pkg_paths(build_collection_ptr);
+                string[] pkg_paths = Ptr2StringList(pkg_paths_ptr);
+                foreach (string pkg_path in pkg_paths) {
+                    Console.WriteLine("    " + pkg_path);
+                }
+
+                bc_dispose(build_collection_ptr);
+            }
+
+
             string bundle_url = bm_find_bundle_path(build_map_ptr, bundle_path);
             Console.WriteLine(bundle_path + "(" + bundle_url + ")" + " deps");
 
