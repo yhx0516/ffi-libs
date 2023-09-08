@@ -27,7 +27,7 @@ fi
 # example:
 #   BUILD_TAG = rpkg-0.2.9
 #   SUFFIX = 0.2.9
-if [[ $BUILD_TAG =~ -(.+)$ ]]; then
+if [[ $BUILD_TAG =~ ([0-9.]+)$ ]]; then
     SUFFIX=${BASH_REMATCH[1]}
     BUILD_TAG=$SUFFIX
 fi
@@ -76,8 +76,8 @@ mkdir $VAR_ASSET_DIR
 for CUR_PACKAGE in ${PACKAGE_ARR[@]}; do
     echo "当前构建 Package: $CUR_PACKAGE"
 
-    local aarch64_darwin_name=""
-    local x86_64_darwin_name=""
+    aarch64_darwin_name=""
+    x86_64_darwin_name=""
     
     for CUR_TARGET in ${TARGET_ARR[@]}; do
         echo "当前构建平台: $CUR_TARGET"
