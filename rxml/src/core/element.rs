@@ -1,24 +1,28 @@
 use std::collections::BTreeMap;
 
+use xml::name::OwnedName;
+
+#[derive(Debug, Default)]
 pub struct Element {
     name: String,
+    prefix: Option<String>,
+    namespace: Option<String>,
     text: String,
     attributes: BTreeMap<String, String>,
     children: Vec<Element>,
 }
 
 impl Element {
-    pub fn new(name: String) -> Element {
-        Self {
-            name,
-            text: String::new(),
-            attributes: BTreeMap::new(),
-            children: Vec::new(),
-        }
-    }
-
     pub fn get_name(&self) -> &String {
         &self.name
+    }
+
+    pub fn get_prefix(&self) -> &Option<String> {
+        &self.prefix
+    }
+
+    pub fn get_namespace(&self) -> &Option<String> {
+        &self.namespace
     }
 
     pub fn get_text(&self) -> &String {
@@ -58,6 +62,17 @@ impl Element {
     }
 }
 
+impl From<OwnedName> for Element {
+    fn from(value: OwnedName) -> Self {
+        Self {
+            name: value.local_name,
+            prefix: value.prefix,
+            namespace: value.namespace,
+            ..Default::default()
+        }
+    }
+}
+
 pub fn collect_tree_text(
     element: &Element,
     prefix: String,
@@ -68,6 +83,7 @@ pub fn collect_tree_text(
         true => format!("{}└── {}\n", prefix, &element.name),
         false => format!("{}├── {}\n", prefix, &element.name),
     };
+
     collected_text.push_str(&tree_text);
 
     let count = element.children.len();

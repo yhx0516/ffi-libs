@@ -73,6 +73,16 @@ namespace csharp_link_rust.libs
         // return c_char ptr
         // convert to string by using Marshal.PtrToStringUTF8(ptr)
         [DllImport(dllName)]
+        public static extern IntPtr element_get_prefix(IntPtr ptr);
+
+        // return c_char ptr
+        // convert to string by using Marshal.PtrToStringUTF8(ptr)
+        [DllImport(dllName)]
+        public static extern IntPtr element_get_namespace(IntPtr ptr);
+
+        // return c_char ptr
+        // convert to string by using Marshal.PtrToStringUTF8(ptr)
+        [DllImport(dllName)]
         public static extern IntPtr element_get_text(IntPtr ptr);
 
         // return Vec<String> ptr
