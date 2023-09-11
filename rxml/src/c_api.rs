@@ -153,6 +153,24 @@ pub extern "C" fn element_get_name(ptr: *const Element) -> *const c_char {
 }
 
 #[no_mangle]
+pub extern "C" fn element_get_prefix(ptr: *const Element) -> *const c_char {
+    let element = unsafe { ptr.as_ref().expect("invalid ptr") };
+    match element.get_prefix() {
+        Some(val) => ffi::str_to_char_ptr(val),
+        None => std::ptr::null(),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn element_get_namespace(ptr: *const Element) -> *const c_char {
+    let element = unsafe { ptr.as_ref().expect("invalid ptr") };
+    match element.get_namespace() {
+        Some(val) => ffi::str_to_char_ptr(val),
+        None => std::ptr::null(),
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn element_get_text(ptr: *const Element) -> *const c_char {
     let element = unsafe { ptr.as_ref().expect("invalid ptr") };
     ffi::str_to_char_ptr(element.get_text())

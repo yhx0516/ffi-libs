@@ -52,8 +52,7 @@ impl Document {
                 XmlEvent::StartElement {
                     name, attributes, ..
                 } => {
-                    let name = name.local_name;
-                    let mut element = Element::new(name);
+                    let mut element: Element = name.into();
 
                     for attr in attributes {
                         element.insert_attribute(attr.name.local_name, attr.value);
